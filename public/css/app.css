@@ -213,3 +213,23 @@ mark.ann.flash { outline: 2px solid var(--brand-2); }
 .decision-opts input:checked + label.revise { background: var(--amber-bg); color: var(--amber); border-color: var(--amber); }
 .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); font-weight: 700; margin: 16px 0 8px; }
 .toast { position: fixed; bottom: 20px; right: 20px; background: #1d2433; color: #fff; padding: 10px 16px; border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.25); z-index: 60; }
+
+/* author MSC preview */
+.preview-layout { display: grid; grid-template-columns: 250px 1fr; gap: 16px; align-items: start; }
+@media (max-width: 900px) { .preview-layout { grid-template-columns: 1fr; } }
+.preview-nav { position: sticky; top: 72px; border: 1px solid var(--line); border-radius: var(--radius); padding: 8px; background: #fafbfe; max-height: 70vh; overflow: auto; }
+.preview-nav a { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 6px; color: var(--ink); font-size: 13px; }
+.preview-nav a:hover, .preview-nav a.active { background: #eef4ff; color: var(--brand); text-decoration: none; }
+.preview-nav a .n { margin-left: auto; color: var(--muted); font-size: 11px; white-space: nowrap; }
+.preview-nav .missing { display: flex; gap: 6px; padding: 6px 8px; font-size: 13px; color: var(--red); }
+.preview-paper { max-height: 75vh; padding: 28px 40px; }
+.preview-paper section { padding-bottom: 6px; border-bottom: 1px dashed var(--line); margin-bottom: 14px; }
+.preview-paper section:last-child { border-bottom: 0; }
+.preview-paper .sec-head { display: flex; align-items: baseline; gap: 10px; font-family: -apple-system, "Segoe UI", sans-serif; }
+.preview-paper .sec-head h2 { margin: 0.6em 0 0.4em; }
+.preview-paper .sec-head .meta { font-size: 11px; color: var(--muted); }
+.title-page { font-family: -apple-system, "Segoe UI", sans-serif; background: #f7f9fc; border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; margin-bottom: 14px; }
+.title-page h1 { font-family: Georgia, serif; font-size: 1.35rem; color: var(--ink); margin: 0 0 8px; }
+.title-page .kv { grid-template-columns: 130px 1fr; }
+.preview-paper .refs p { font-size: 13px; line-height: 1.5; margin: 0 0 6px; }
+.msc-paper td p, .msc-paper th p { margin: 0; }

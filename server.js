@@ -18,6 +18,7 @@ const { analyzeManuscript } = require('./src/integrity');
 const { buildTemplate } = require('./src/template');
 const { JOURNALS, getJournal } = require('./src/journals');
 const service = require('./src/service');
+const { buildOutline } = require('./src/outline');
 
 const PORT = Number(process.env.PORT) || 3000;
 const POC_USER = 'Admin';
@@ -151,7 +152,14 @@ app.post('/api/author/check', requireRole('Author'), (req, res, next) => {
     // keep only the latest 50 checks to bound file size
     if (db.checks.length > 50) db.checks.splice(0, db.checks.length - 50);
     store.save();
-    res.json({ checkId: check.id, attempt: check.attempt, revisingMscId: check.revisingMscId, report: service.compactReport(report) });
+    res.json({
+      checkId: check.id,
+      attempt: check.attempt,
+      revisingMscId: check.revisingMscId,
+      fileName: req.file.originalname,
+      report: service.compactReport(report),
+      preview: report.html ? buildOutline(report.html, report) : null
+    });
   } catch (e) { next(e); }
 });
 

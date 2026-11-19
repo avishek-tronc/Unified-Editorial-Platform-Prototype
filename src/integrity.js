@@ -829,4 +829,4 @@ async function analyzeManuscript({ buffer, originalName, journalId, corpus }) {
   };
 }
 
-module.exports = { analyzeManuscript, PASS_THRESHOLD, WEIGHTS, CATEGORY_LABELS, validOrcid, computeFitment };
+module.exports = { analyzeManuscript, PASS_THRESHOLD, WEIGHTS, CATEGORY_LABELS, SECTION_DEFS, matchSection, validOrcid, computeFitment };

@@ -82,6 +82,7 @@
     checkBtn.textContent = 'Checking…';
     try {
       lastCheck = await api('/api/author/check', { method: 'POST', body: fd });
+      renderPreview(lastCheck);
       renderResult(lastCheck);
     } catch (ex) {
       uploadErr.textContent = ex.message;
@@ -162,6 +163,7 @@
         <button class="active" data-tab="issues">Feedback (${r.issues.filter(i => i.severity !== 'info').length})</button>
         <button data-tab="scope">Journal fit</button>
         <button data-tab="details">MSC details</button>
+        <button type="button" id="jumpPreview" style="margin-left:auto">View uploaded MSC ↓</button>
       </div>
       <div data-pane="issues">
         ${r.issues.length ? r.issues.map(issueHtml).join('') : '<div class="alert ok">No issues found.</div>'}
@@ -194,15 +196,64 @@
         </dl>
       </div>`;
 
-    result.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
-      result.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('active', x === b));
+    result.querySelectorAll('.tabs button[data-tab]').forEach(b => b.addEventListener('click', () => {
+      result.querySelectorAll('.tabs button[data-tab]').forEach(x => x.classList.toggle('active', x === b));
       result.querySelectorAll('[data-pane]').forEach(p => p.classList.toggle('hidden', p.dataset.pane !== b.dataset.tab));
     }));
+    const jump = document.getElementById('jumpPreview');
+    if (jump) jump.addEventListener('click', e => { e.stopPropagation(); previewCard.scrollIntoView({ behavior: 'smooth' }); });
     const submitBtn = document.getElementById('submitBtn');
     if (submitBtn) submitBtn.addEventListener('click', submit);
     const resubmitBtn = document.getElementById('resubmitBtn');
     if (resubmitBtn) resubmitBtn.addEventListener('click', () => { fileInput.value = ''; showFile(); fileInput.click(); });
     result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ----- organized MSC preview -----
+  const previewCard = document.getElementById('previewCard');
+  function renderPreview(check) {
+    const pv = check.preview;
+    if (!pv) { previewCard.classList.add('hidden'); return; }
+    previewCard.classList.remove('hidden');
+    const f = pv.front;
+    document.getElementById('previewSub').textContent = `${check.fileName} · read-only preview, organized by section`;
+    document.getElementById('previewStats').innerHTML = `
+      <span class="pill grey">${pv.sections.length} parts</span>
+      <span class="pill grey">${pv.totals.words.toLocaleString()} words</span>
+      <span class="pill grey">${pv.totals.figures} figure(s)</span>
+      <span class="pill grey">${pv.totals.tables} table(s)</span>
+      ${pv.missing.length ? `<span class="pill red">${pv.missing.length} required section(s) missing</span>` : '<span class="pill green">All required sections present</span>'}`;
+
+    const counts = s => [s.words ? `${s.words} w` : '', s.figures ? `${s.figures} fig` : '', s.tables ? `${s.tables} tbl` : '', s.references !== undefined ? `${s.references} refs` : ''].filter(Boolean).join(' · ');
+    document.getElementById('previewNav').innerHTML =
+      pv.sections.map(s => `<a href="#${s.id}" data-target="${s.id}">${esc(s.label)}<span class="n">${counts(s)}</span></a>`).join('') +
+      pv.missing.map(m => `<div class="missing">✕ ${esc(m)} <span class="n">missing</span></div>`).join('');
+
+    document.getElementById('previewPaper').innerHTML = pv.sections.map(s => {
+      if (s.key === 'front') {
+        return `<section id="${s.id}"><div class="title-page">
+          <h1>${esc(f.title) || '<span class="muted">Title not found</span>'}</h1>
+          <dl class="kv">
+            <dt>Authors</dt><dd>${esc(f.authors.join(', ')) || '—'}</dd>
+            <dt>Affiliations</dt><dd>${f.affiliations.map(esc).join('<br>') || '—'}</dd>
+            <dt>Corresponding</dt><dd>${esc(f.correspondingAuthor)}${f.correspondingEmail ? ` · <a href="mailto:${esc(f.correspondingEmail)}">${esc(f.correspondingEmail)}</a>` : ''}</dd>
+            <dt>ORCID</dt><dd>${esc(f.orcids.join(', ')) || '—'}</dd>
+          </dl></div></section>`;
+      }
+      return `<section id="${s.id}">
+        <div class="sec-head"><h2>${esc(s.heading)}</h2><span class="meta">${counts(s)}</span></div>
+        <div class="${s.key === 'references' ? 'refs' : ''}">${s.html || '<p class="muted">(empty)</p>'}</div>
+      </section>`;
+    }).join('');
+
+    const paperEl = document.getElementById('previewPaper');
+    paperEl.scrollTop = 0;
+    document.querySelectorAll('#previewNav a').forEach(a => a.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.getElementById(a.dataset.target);
+      paperEl.scrollTo({ top: target.offsetTop - 8, behavior: 'smooth' });
+      document.querySelectorAll('#previewNav a').forEach(x => x.classList.toggle('active', x === a));
+    }));
   }
 
   async function submit() {

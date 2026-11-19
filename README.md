@@ -76,6 +76,7 @@ To start a demo from a clean slate at any time, use **Manual Deploy → Restart 
 | Download a template (e.g. JACS) | `GET /api/template/:journalId` generates a .docx with the required structure, grey placeholders and a *Guidelines & specifications* section |
 | Valid format & required details | Rejects non-.docx, legacy .doc, corrupted or renamed files, and documents without a body or under 200 words. Detects title, authors, affiliations, corresponding e-mail, ORCID and required sections |
 | Integrity score 1–10 | Weighted score across 7 checks (below). **Above 6 = PASS**, so the author can submit. **6 or below** = the author must apply the feedback and re-submit (submit is blocked server-side too) |
+| Organized MSC preview | After upload, an *Uploaded MSC* pane shows the manuscript read-only and organized into its parts: a title page (title, authors, affiliations, corresponding author, ORCID), then each recognised section with word, figure, table and reference counts. A section navigator jumps to each part and lists any missing required sections. Figures and tables are shown inline |
 | Score + feedback | Score ring, PASS/FAIL verdict, per-category breakdown, issues ranked critical / major / minor, each with **How to fix** guidance, a journal-fit tab and an MSC details tab |
 
 **Evaluation parameters** (`src/integrity.js`):
