@@ -24,7 +24,7 @@ On the first start the app seeds `data/db.json` with 4 editors, 9 reviewers and 
 
 | Command | What it does |
 |---|---|
-| `npm start` | Start the server (`PORT` env var, default 3000) |
+| `npm start` | Start the server (`PORT` env var, default 3000; `UEP_DATA_DIR` sets where data is stored) |
 | `npm run dev` | Start with auto-reload on file changes |
 | `npm run reset` | Delete all data and re-seed the demo database |
 | `npm test` | End-to-end API smoke test of the author and editor flows (uses a temporary database) |
@@ -44,6 +44,24 @@ On the first start the app seeds `data/db.json` with 4 editors, 9 reviewers and 
    * Open the **Decision** tab and choose Accept / Reject / Transfer / Revise. The alternate journal dropdown is only enabled for **Transfer**, and it is pre-filled with the system-proposed journal. **Revise** asks for Minor or Major and sends the MSC back to the author.
 
 > Note: uploading the same manuscript again as a *new* submission is flagged by the plagiarism check, because it matches the earlier submission (duplicate-submission detection). Revisions of the same MSC are excluded from that comparison.
+
+## Deploy to Render
+
+The repo includes a [`render.yaml`](render.yaml) Blueprint, so Render can set everything up from it.
+
+1. Sign in at [dashboard.render.com](https://dashboard.render.com) (signing in with GitHub is easiest).
+2. Click **New +** → **Blueprint**.
+3. Connect GitHub if asked, and give Render access to `Unified-Editorial-Platform-Prototype`.
+4. Select the repository. Render reads `render.yaml` and shows one web service, **unified-editorial-platform**, on the free plan. Click **Apply** / **Deploy Blueprint**.
+5. Wait for the build (`npm ci`) and the health check (`/healthz`) to go green. This takes a few minutes. Then open the `https://unified-editorial-platform-xxxx.onrender.com` URL shown on the service and log in with **Admin / Admin**.
+
+Every push to `master` redeploys automatically.
+
+What the Blueprint configures: Node 22, `npm ci` / `npm start`, `NODE_ENV=production` (secure session cookies), a generated `SESSION_SECRET`, and the `/healthz` health check. The app listens on Render's `PORT` variable.
+
+**Data on Render.** Data is stored in `data/db.json` on the instance's local disk. On Render that disk is temporary: every redeploy or restart wipes it, and the free plan also restarts after about 15 minutes idle (the first request then takes about a minute to wake the service). When that happens the app re-seeds the 12 demo manuscripts, and uploads, assignments, annotations and decisions are lost. Logged-in sessions are also held in memory, so users have to log in again. This is fine for demos. To keep data, use a paid instance with a [persistent disk](https://render.com/docs/disks) mounted at e.g. `/var/data` and set `UEP_DATA_DIR=/var/data` (commented out in `render.yaml`), or move `src/store.js` to a database such as Render PostgreSQL.
+
+To start a demo from a clean slate at any time, use **Manual Deploy → Restart service**.
 
 ## How the spec maps to the prototype
 

@@ -1,0 +1,23 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+# Deploy: Render Dashboard → New → Blueprint → select this repository.
+services:
+  - type: web
+    name: unified-editorial-platform
+    runtime: node
+    plan: free
+    branch: master
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: SESSION_SECRET
+        generateValue: true
+      # Optional: where data/db.json is written. Point this at a mounted
+      # persistent disk (paid plans) to keep data across deploys/restarts.
+      # - key: UEP_DATA_DIR
+      #   value: /var/data

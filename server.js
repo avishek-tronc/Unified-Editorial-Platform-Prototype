@@ -24,6 +24,9 @@ const POC_USER = 'Admin';
 const POC_PASS = 'Admin';
 
 const app = express();
+// Behind Render's (or any) HTTPS proxy: trust X-Forwarded-* so secure cookies work.
+app.set('trust proxy', 1);
+const IS_PROD = process.env.NODE_ENV === 'production';
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
 
 app.use(express.json({ limit: '1mb' }));
@@ -31,8 +34,12 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'uep-prototype-secret',
   resave: false,
   saveUninitialized: false,
-  cookie: { httpOnly: true, sameSite: 'lax', maxAge: 8 * 3600 * 1000 }
+  proxy: true,
+  cookie: { httpOnly: true, sameSite: 'lax', secure: IS_PROD, maxAge: 8 * 3600 * 1000 }
 }));
+
+// Health check for hosting platforms (Render, load balancers)
+app.get('/healthz', (req, res) => res.json({ ok: true, mscs: store.load() ? store.get().mscs.length : 0 }));
 
 // ---------- auth ----------
 
@@ -363,7 +370,7 @@ async function init() {
 
 if (require.main === module) {
   init().then(() => {
-    app.listen(PORT, () => console.log(`Unified Editorial Platform running at http://localhost:${PORT}  (login: Admin / Admin)`));
+    app.listen(PORT, '0.0.0.0', () => console.log(`Unified Editorial Platform running at http://localhost:${PORT}  (login: Admin / Admin)`));
   }).catch(e => { console.error(e); process.exit(1); });
 }
 
