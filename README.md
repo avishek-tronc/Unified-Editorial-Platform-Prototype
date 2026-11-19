@@ -20,7 +20,7 @@ npm start
 
 Open **http://localhost:3000** and log in with **Admin / Admin**. On the login page, choose **Author** or **Editor** to pick the view.
 
-On the first start the app seeds `data/db.json` with 4 editors, 9 reviewers and 12 manuscripts covering every workflow state, so the dashboard and charts have data straight away.
+On the first start the app seeds `data/db.json` with 4 editors, 9 reviewers, 12 current manuscripts covering every workflow state and 15 review-complete manuscripts from the past ~5 months, so the dashboard and charts have data straight away. If you ran an earlier version, run `npm run reset` to pick up the new demo data.
 
 | Command | What it does |
 |---|---|
@@ -93,9 +93,14 @@ To start a demo from a clean slate at any time, use **Manual Deploy → Restart 
 Two or more critical issues cap the score at 5.
 
 ### Editor view: MSC dashboard (`/dashboard`)
-* **Table** with all 17 requested columns: MSC ID, title, brief intro, submitted by, submitted date, integrity check PASSED/FAILED, integrity score, journal fitment index (plus a "better fit" hint), revisions done, assigned editor, assigned reviewer, **reviewer lookup link (modal)**, review status (Open / In Progress / Complete), **time elapsed** colour-coded (green < 8 h, amber 8–24 h, red > 24 h), review start date/time, review progress bar, and a **Review & annotate** link that is only active for Open / In Progress. Final decision is shown as an extra column. Columns are sortable.
+* **Table** with the requested columns: MSC ID (a link to the review page when the review is Open / In Progress), title (the brief intro shows as a tooltip, so the table fits without a horizontal scroll), submitted by, submitted date, integrity check PASSED/FAILED, integrity score, journal fitment index (plus a "better fit" hint), revisions done, assigned editor, assigned reviewer, **reviewer lookup link (modal)**, review status (Open / In Progress / Complete), **time elapsed** colour-coded (green < 8 h, amber 8–24 h, red > 24 h), review start date/time, review progress bar, final decision, and a **Review** button that is only active for Open / In Progress. Columns are sortable.
 * **Filters:** received on (date range), submitted by, pending with (reviewer), assigned/unassigned, time elapsed, journal, review status, feedback incorporation status, final decision, plus free-text search.
-* **KPIs & charts** (Chart.js), recalculated for the active filters: time elapsed, final verdict & decision, journal-specific MSCs, assigned vs unassigned, editor-specific load, average time of fulfillment. KPI tiles show totals, delayed, unassigned, average fulfillment time and average integrity score. Clicking a chart segment applies the matching filter.
+* **KPIs & charts** (Chart.js), recalculated for the active filters:
+  * One compact row of six charts: time elapsed, final verdict & decision, journal-specific MSCs, assigned vs unassigned, editor-specific load, average time of fulfillment. Clicking a chart segment applies the matching filter.
+  * **MSCs received today:** total, a stacked progress bar and a bar chart by Open, In Progress, Completed and Delayed (still active after more than 8 hours).
+  * **MSC processing outcome:** a stacked bar chart of review-complete MSCs by decision outcome (Accept / Reject / Transfer / Revise), switchable between the last 12 weeks and the last 6 months.
+  * KPI tiles show totals, delayed, unassigned, average fulfillment time and average integrity score.
+* **Refresh** reloads the data, redraws every chart and the table, and clears all filters.
 * **Reviewer selection modal:** reviewers are ranked by availability (free capacity vs. active reviews, on-leave status, expertise in the journal's scope, average turnaround). The top available reviewer is marked *Recommended*. Unavailable reviewers can't be selected.
 
 ### MSC review & annotation page (`/review/:id`)

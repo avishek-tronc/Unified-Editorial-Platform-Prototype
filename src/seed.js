@@ -232,6 +232,26 @@ const TOPICS = [
   }
 ];
 
+// Historical, review-complete MSCs (spread over ~5 months) so the
+// week/month processing-outcome chart has a meaningful history.
+const ARCHIVE = [
+  [0, 'Cobalt-Catalyzed Hydrosilylation of Terminal Alkenes with Anti-Markovnikov Selectivity', 9, 'Accept', 'RV-1', 70],
+  [3, 'Brain-Penetrant BTK Inhibitors for Multiple Sclerosis', 12, 'Revise', 'RV-4', 55, 'Major'],
+  [4, 'Ultrathin MXene Films for Electromagnetic Interference Shielding', 16, 'Accept', 'RV-5', 48],
+  [5, 'Operando Raman Spectroscopy of Nickel Oxyhydroxide Oxygen Evolution Catalysts', 20, 'Reject', 'RV-6', 90],
+  [6, 'PFAS Removal from Groundwater by Cationic Cyclodextrin Polymers', 25, 'Accept', 'RV-7', 62],
+  [7, 'Single-Cell Metabolomics by Nanoelectrospray Mass Spectrometry', 31, 'Revise', 'RV-8', 40, 'Minor'],
+  [2, 'Luminescent Europium Frameworks for Ratiometric Temperature Sensing', 38, 'Transfer', 'RV-3', 75, null, 'ANALCHEM'],
+  [1, 'Photoredox Deoxygenative Alkylation of Alcohols', 45, 'Accept', 'RV-2', 36],
+  [8, 'Covalent Organic Framework Membranes for Organic Solvent Nanofiltration', 52, 'Reject', 'RV-9', 110],
+  [11, 'Stapled Peptides Targeting the MDM2–p53 Interaction', 66, 'Accept', 'RV-4', 58],
+  [9, 'Copper Single-Atom Catalysts for Electrochemical CO2 Reduction to Ethanol', 80, 'Revise', 'RV-6', 66, 'Minor'],
+  [10, 'Asymmetric Synthesis of Tetrahydroisoquinoline Alkaloids', 95, 'Accept', 'RV-2', 44],
+  [4, 'Stretchable Graphene Sensors for Wearable Sweat Analysis', 110, 'Transfer', 'RV-5', 80, null, 'ANALCHEM'],
+  [6, 'Atmospheric Oxidation of Biogenic Volatile Organic Compounds', 128, 'Accept', 'RV-7', 72],
+  [7, 'Microfluidic Immunoassay for Point-of-Care Troponin Detection', 140, 'Reject', 'RV-8', 50]
+];
+
 async function buildSeed() {
   const now = Date.now();
   const db = {
@@ -247,10 +267,36 @@ async function buildSeed() {
   };
   store.set(db);
 
+  const reports = [];
   for (let i = 0; i < TOPICS.length; i++) {
     const t = TOPICS[i];
     const buffer = await buildManuscriptDocx(spec(t, i));
-    const report = await analyzeManuscript({ buffer, originalName: `${t.journalId}-seed-${i + 1}.docx`, journalId: t.journalId, corpus: [] });
+    reports[i] = await analyzeManuscript({ buffer, originalName: `${t.journalId}-seed-${i + 1}.docx`, journalId: t.journalId, corpus: [] });
+  }
+
+  // Archive first, so the current MSCs get the most recent IDs.
+  ARCHIVE.forEach(([ti, title, daysAgo, type, reviewer, fulfilHours, revisionType, alt]) => {
+    const base = reports[ti];
+    const report = { ...base, meta: { ...base.meta, title }, html: base.html.replace(TOPICS[ti].title, title) };
+    const submitted = now - daysAgo * 24 * H;
+    const msc = service.createMsc({ report, fileName: `${title.slice(0, 40).replace(/[^A-Za-z0-9]+/g, '_')}.docx`, owner: 'seed', seed: true, submittedAt: new Date(submitted).toISOString() });
+    const decidedAt = new Date(submitted + fulfilHours * H).toISOString();
+    Object.assign(msc, {
+      assignedReviewer: reviewer,
+      assignedAt: new Date(submitted + 1 * H).toISOString(),
+      reviewStatus: 'Complete',
+      reviewStartAt: new Date(submitted + 4 * H).toISOString(),
+      reviewProgress: 100,
+      completedAt: decidedAt,
+      feedbackStatus: type === 'Revise' ? 'In Progress' : null,
+      decision: { type, revisionType: revisionType || null, alternateJournalId: alt || null, summary: `${type} — see reviewer comments.`, decidedAt, decidedBy: reviewer }
+    });
+    msc.decisionHistory.push({ ...msc.decision, version: 1 });
+  });
+
+  for (let i = 0; i < TOPICS.length; i++) {
+    const t = TOPICS[i];
+    const report = reports[i];
     const s = t.state;
     const submitted = now - s.hoursAgo * H;
     const msc = service.createMsc({

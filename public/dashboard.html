@@ -16,18 +16,34 @@
       </div>
       <div class="spacer"></div>
       <span class="muted small" id="updatedAt"></span>
-      <button class="secondary small" id="refreshBtn">↻ Refresh</button>
+      <button class="secondary small" id="refreshBtn" title="Reload data, refresh all charts and the table, and clear all filters">↻ Refresh</button>
     </div>
 
     <div class="kpis" id="kpis"></div>
 
     <div class="charts">
-      <div class="chart-card"><h3>Time elapsed (open &amp; in-progress MSCs)</h3><canvas id="chElapsed"></canvas></div>
+      <div class="chart-card"><h3>Time elapsed (active)</h3><canvas id="chElapsed"></canvas></div>
       <div class="chart-card"><h3>Final verdict &amp; decision</h3><canvas id="chDecision"></canvas></div>
       <div class="chart-card"><h3>Journal-specific MSCs</h3><canvas id="chJournal"></canvas></div>
       <div class="chart-card"><h3>Assigned vs unassigned</h3><canvas id="chAssigned"></canvas></div>
-      <div class="chart-card"><h3>Editor-specific load (active MSCs)</h3><canvas id="chEditor"></canvas></div>
-      <div class="chart-card"><h3>Average time of fulfillment (hours, by journal)</h3><canvas id="chFulfil"></canvas></div>
+      <div class="chart-card"><h3>Editor-specific load</h3><canvas id="chEditor"></canvas></div>
+      <div class="chart-card"><h3>Avg time of fulfillment (h)</h3><canvas id="chFulfil"></canvas></div>
+    </div>
+
+    <div class="charts-2">
+      <div class="chart-card">
+        <div class="row"><h3 style="margin:0">MSCs received today</h3><span class="spacer"></span><span class="muted small" id="todayDate"></span></div>
+        <div class="today-total"><b id="todayTotal">0</b> <span class="muted">received today</span></div>
+        <div class="stackbar" id="todayBar"></div>
+        <div class="stack-legend" id="todayLegend"></div>
+        <canvas id="chToday" class="short"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="row"><h3 style="margin:0">MSC processing outcome (review complete)</h3><span class="spacer"></span>
+          <div class="seg" id="periodSeg"><button class="active" data-period="week">By week</button><button data-period="month">By month</button></div>
+        </div>
+        <canvas id="chPeriod" class="tall"></canvas>
+      </div>
     </div>
 
     <div class="card">
@@ -48,12 +64,11 @@
 
     <div class="card">
       <div class="row" style="margin-bottom:10px"><h2>Manuscripts</h2><span class="muted" id="countLabel"></span></div>
-      <div class="table-wrap">
+      <div class="table-wrap dash-table-wrap">
         <table class="data" id="mscTable">
           <thead><tr>
             <th data-sort="id">MSC ID</th>
             <th data-sort="title">MSC title</th>
-            <th class="nosort">Brief intro</th>
             <th data-sort="authorName">Submitted by</th>
             <th data-sort="submittedAt">Submitted date</th>
             <th data-sort="integrityPassed">Integrity check</th>

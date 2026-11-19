@@ -62,6 +62,12 @@
     return `<span class="pill ${cls}">${m.finalDecision}${extra}</span>${m.feedbackStatus ? `<div class="muted small">Feedback: ${m.feedbackStatus}</div>` : ''}`;
   }
 
+  function fmtDateShort(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return `${d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: '2-digit' })}<br><span class="muted">${d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</span>`;
+  }
+
   function renderTable(rows) {
     const k = sort.key;
     rows.sort((a, b) => {
@@ -73,16 +79,15 @@
     });
     $('countLabel').textContent = `${rows.length} of ${data.mscs.length}`;
     const tb = document.querySelector('#mscTable tbody');
-    if (!rows.length) { tb.innerHTML = '<tr><td colspan="18" class="muted" style="text-align:center;padding:30px">No manuscripts match the filters.</td></tr>'; return; }
+    if (!rows.length) { tb.innerHTML = '<tr><td colspan="17" class="muted" style="text-align:center;padding:30px">No manuscripts match the filters.</td></tr>'; return; }
     tb.innerHTML = rows.map(m => {
       const active = m.reviewStatus === 'Open' || m.reviewStatus === 'In Progress';
       const j = journals.find(x => x.id === m.journalId);
       return `<tr>
-        <td><b>${esc(m.id)}</b></td>
-        <td class="title-cell">${esc(m.title)}</td>
-        <td class="intro-cell">${esc(m.intro)}</td>
+        <td>${active ? `<a class="msc-link" href="/review/${encodeURIComponent(m.id)}" title="Open the MSC review &amp; annotation page">${esc(m.id)}</a>` : `<span class="msc-id" title="Review complete">${esc(m.id)}</span>`}</td>
+        <td class="title-cell" title="${esc(m.intro)}">${esc(m.title)}</td>
         <td>${esc(m.authorName)}</td>
-        <td>${fmtDate(m.submittedAt)}</td>
+        <td>${fmtDateShort(m.submittedAt)}</td>
         <td><span class="pill ${m.integrityPassed ? 'green' : 'red'}">${m.integrityPassed ? 'PASSED' : 'FAILED'}</span></td>
         <td><b>${m.integrityScore}</b> / 10</td>
         <td><b>${m.fitmentIndex ?? '—'}</b> <span class="muted small">${esc(j ? j.shortName : m.journalId)}</span>
@@ -90,13 +95,13 @@
         <td>${m.revisions ? `<span class="pill violet">Yes (${m.revisions})</span>` : '<span class="pill grey">No</span>'}</td>
         <td>${esc(m.assignedEditor || '—')}</td>
         <td>${m.assignedReviewer ? esc(m.assignedReviewer) : '<span class="pill amber">Unassigned</span>'}</td>
-        <td>${active ? `<a href="#" data-lookup="${esc(m.id)}">🔍 ${m.assignedReviewer ? 'Change' : 'Look up'} reviewer</a>` : '<span class="muted">—</span>'}</td>
+        <td>${active ? `<a href="#" data-lookup="${esc(m.id)}">🔍 ${m.assignedReviewer ? 'Change' : 'Look up'}</a>` : '<span class="muted">—</span>'}</td>
         <td>${statusPill(m.reviewStatus)}</td>
         <td><span class="pill ${m.elapsedBand}" title="${m.reviewStatus === 'Complete' ? 'Time from receipt to decision' : 'Time since receipt'}">${fmtElapsed(m.elapsedHours)}</span></td>
-        <td>${fmtDate(m.reviewStartAt)}</td>
+        <td>${fmtDateShort(m.reviewStartAt)}</td>
         <td><div class="progress"><div class="bar"><span style="width:${m.reviewProgress}%;background:${m.reviewProgress >= 100 ? COLORS.green : COLORS.blue}"></span></div><small>${m.reviewProgress}%</small></div></td>
         <td>${decisionCell(m)}</td>
-        <td>${active ? `<a class="btn small" href="/review/${encodeURIComponent(m.id)}">Review &amp; annotate →</a>` : '<span class="btn small disabled" title="Review is complete">Review closed</span>'}</td>
+        <td>${active ? `<a class="btn small" href="/review/${encodeURIComponent(m.id)}">Review →</a>` : '<span class="btn small disabled" title="Review is complete">Closed</span>'}</td>
       </tr>`;
     }).join('');
     tb.querySelectorAll('[data-lookup]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); openModal(a.dataset.lookup); }));
@@ -126,7 +131,7 @@
     if (charts[id]) { charts[id].data = config.data; charts[id].update(); return; }
     charts[id] = new Chart(document.getElementById(id), {
       ...config,
-      options: Object.assign({ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } }, config.options || {})
+      options: Object.assign({ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, font: { size: 10 }, padding: 6 } } } }, config.options || {})
     });
   }
 
@@ -160,7 +165,7 @@
     });
     chart('chEditor', {
       type: 'bar',
-      data: { labels: data.editors.map(e => e.name), datasets: [
+      data: { labels: data.editors.map(e => e.name.replace(/^Dr\.\s*/, '').split(' ').pop()), datasets: [
         { label: 'Open', backgroundColor: COLORS.blue, data: data.editors.map(e => rows.filter(m => m.assignedEditorId === e.id && m.reviewStatus === 'Open').length) },
         { label: 'In Progress', backgroundColor: COLORS.amber, data: data.editors.map(e => rows.filter(m => m.assignedEditorId === e.id && m.reviewStatus === 'In Progress').length) }
       ] },
@@ -175,23 +180,97 @@
     });
   }
 
+  // ----- received today -----
+  const TODAY_CATS = [
+    ['Open', COLORS.blue, m => m.reviewStatus === 'Open' && m.elapsedBand === 'green'],
+    ['In Progress', COLORS.amber, m => m.reviewStatus === 'In Progress' && m.elapsedBand === 'green'],
+    ['Completed', COLORS.green, m => m.reviewStatus === 'Complete'],
+    ['Delayed (> 8 h)', COLORS.red, m => m.reviewStatus !== 'Complete' && m.elapsedBand !== 'green']
+  ];
+  function renderToday(rows) {
+    const today = new Date().toDateString();
+    const list = rows.filter(m => new Date(m.submittedAt).toDateString() === today);
+    const counts = TODAY_CATS.map(([, , fn]) => list.filter(fn).length);
+    $('todayDate').textContent = new Date().toLocaleDateString(undefined, { weekday: 'short', day: '2-digit', month: 'short' });
+    $('todayTotal').textContent = list.length;
+    $('todayBar').innerHTML = list.length
+      ? TODAY_CATS.map(([l, c], i) => counts[i] ? `<span title="${l}: ${counts[i]}" style="width:${(counts[i] / list.length) * 100}%;background:${c}"></span>` : '').join('')
+      : '';
+    $('todayLegend').innerHTML = TODAY_CATS.map(([l, c], i) => `<span><i style="background:${c}"></i>${l} <b>${counts[i]}</b>${list.length ? ` <span class="muted">(${Math.round((counts[i] / list.length) * 100)}%)</span>` : ''}</span>`).join('');
+    chart('chToday', {
+      type: 'bar',
+      data: { labels: TODAY_CATS.map(c => c[0]), datasets: [{ label: 'MSCs', data: counts, backgroundColor: TODAY_CATS.map(c => c[1]) }] },
+      options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0, font: { size: 11 } } }, y: { ticks: { font: { size: 11 } } } } }
+    });
+  }
+
+  // ----- processing outcome by week / month -----
+  let period = 'week';
+  function bucketStart(date) {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    if (period === 'month') { d.setDate(1); return d; }
+    const day = (d.getDay() + 6) % 7; // Monday = 0
+    d.setDate(d.getDate() - day);
+    return d;
+  }
+  function renderPeriod(rows) {
+    const done = rows.filter(m => m.reviewStatus === 'Complete' && m.finalDecision && m.completedAt);
+    const count = period === 'week' ? 12 : 6;
+    const buckets = [];
+    let cur = bucketStart(new Date());
+    for (let i = 0; i < count; i++) {
+      buckets.unshift(new Date(cur));
+      if (period === 'week') cur.setDate(cur.getDate() - 7); else cur.setMonth(cur.getMonth() - 1);
+    }
+    const label = d => period === 'week'
+      ? `Wk of ${d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}`
+      : d.toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
+    const decisions = ['Accept', 'Reject', 'Transfer', 'Revise'];
+    chart('chPeriod', {
+      type: 'bar',
+      data: {
+        labels: buckets.map(label),
+        datasets: decisions.map(dec => ({
+          label: dec,
+          backgroundColor: DECISION_COLORS[dec],
+          data: buckets.map(b => done.filter(m => m.finalDecision === dec && bucketStart(m.completedAt).getTime() === b.getTime()).length)
+        }))
+      },
+      options: { scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: 'MSCs decided' } } } }
+    });
+  }
+  document.querySelectorAll('#periodSeg button').forEach(b => b.addEventListener('click', () => {
+    period = b.dataset.period;
+    document.querySelectorAll('#periodSeg button').forEach(x => x.classList.toggle('active', x === b));
+    renderPeriod(filtered());
+  }));
+
   function render() {
     const rows = filtered();
     renderKpis(rows);
     renderCharts(rows);
+    renderToday(rows);
+    renderPeriod(rows);
     renderTable(rows);
   }
 
-  document.querySelectorAll('#filters input, #filters select').forEach(el => el.addEventListener(el.tagName === 'INPUT' && el.type === 'text' ? 'input' : 'change', render));
-  $('resetFilters').addEventListener('click', () => {
+  function clearFilters() {
     document.querySelectorAll('#filters input, #filters select').forEach(el => { el.value = ''; });
-    render();
-  });
+  }
+
+  document.querySelectorAll('#filters input, #filters select').forEach(el => el.addEventListener(el.tagName === 'INPUT' && el.type === 'text' ? 'input' : 'change', render));
+  $('resetFilters').addEventListener('click', () => { clearFilters(); render(); });
   document.querySelectorAll('#mscTable th[data-sort]').forEach(th => th.addEventListener('click', () => {
     sort = { key: th.dataset.sort, dir: sort.key === th.dataset.sort ? -sort.dir : 1 };
     render();
   }));
-  $('refreshBtn').addEventListener('click', load);
+  $('refreshBtn').addEventListener('click', async () => {
+    clearFilters();
+    sort = { key: 'submittedAt', dir: -1 };
+    await load();
+    toast('Dashboard refreshed and filters cleared');
+  });
 
   // ----- reviewer selection modal -----
   let modalMsc = null; let selected = null;
