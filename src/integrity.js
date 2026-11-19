@@ -829,4 +829,21 @@ async function analyzeManuscript({ buffer, originalName, journalId, corpus }) {
   };
 }
 
-module.exports = { analyzeManuscript, PASS_THRESHOLD, WEIGHTS, CATEGORY_LABELS, SECTION_DEFS, matchSection, validOrcid, computeFitment };
+/**
+ * Parses an uploaded MSC for display only (no scoring): validates the
+ * format and returns the rendered HTML plus the detected title-page data.
+ */
+async function parseForPreview(buffer, originalName) {
+  const { errors } = await validateFormat(buffer, originalName);
+  if (errors.length) return { valid: false, formatErrors: errors };
+  const [{ value: rawText }, { value: html }] = await Promise.all([
+    mammoth.extractRawText({ buffer }),
+    mammoth.convertToHtml({ buffer })
+  ]);
+  const paragraphs = rawText.split(/\n+/).map(p => p.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const structure = parseStructure(paragraphs);
+  const meta = parseMetadata(structure.front, paragraphs.join('\n'));
+  return { valid: true, html, meta };
+}
+
+module.exports = { analyzeManuscript, parseForPreview, PASS_THRESHOLD, WEIGHTS, CATEGORY_LABELS, SECTION_DEFS, matchSection, validOrcid, computeFitment };

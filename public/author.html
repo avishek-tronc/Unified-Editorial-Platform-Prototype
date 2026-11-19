@@ -56,9 +56,21 @@
       </section>
 
       <section>
+        <div class="card hidden" id="previewCard" style="margin-bottom:16px">
+          <div class="row" style="margin-bottom:12px">
+            <div><h2 style="margin:0">Uploaded MSC</h2><div class="muted small" id="previewSub"></div></div>
+            <div class="spacer"></div>
+            <button type="button" id="previewCheckBtn">Run integrity check →</button>
+          </div>
+          <div class="row small" id="previewStats" style="margin-bottom:12px"></div>
+          <div class="preview-layout">
+            <nav class="preview-nav" id="previewNav"></nav>
+            <article class="msc-paper preview-paper" id="previewPaper"></article>
+          </div>
+        </div>
         <div class="card" id="resultEmpty">
           <h2>Evaluation</h2>
-          <p class="muted">Select a journal, upload your MSC and run the integrity check. The evaluation covers:</p>
+          <p class="muted">Choose your MSC file: it is shown here, organized by section, so you can review it first. Then select the journal and run the integrity check. The evaluation covers:</p>
           <ul class="muted">
             <li>Accuracy and completeness of the content</li>
             <li>Typos and language</li>
@@ -71,18 +83,6 @@
         </div>
         <div class="card hidden" id="result"></div>
       </section>
-    </div>
-
-    <div class="card hidden" id="previewCard" style="margin-top:16px">
-      <div class="row" style="margin-bottom:12px">
-        <div><h2 style="margin:0">Uploaded MSC</h2><div class="muted small" id="previewSub"></div></div>
-        <div class="spacer"></div>
-        <div class="row small" id="previewStats"></div>
-      </div>
-      <div class="preview-layout">
-        <nav class="preview-nav" id="previewNav"></nav>
-        <article class="msc-paper preview-paper" id="previewPaper"></article>
-      </div>
     </div>
 
     <div class="card" style="margin-top:16px">

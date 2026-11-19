@@ -15,6 +15,8 @@
   const resultEmpty = document.getElementById('resultEmpty');
   const revisionBanner = document.getElementById('revisionBanner');
   const cancelRevision = document.getElementById('cancelRevision');
+  const previewCard = document.getElementById('previewCard');
+  document.getElementById('previewCheckBtn').addEventListener('click', () => form.requestSubmit());
 
   let journals = [];
   let revisingMsc = null;
@@ -47,6 +49,29 @@
   function showFile() {
     const f = fileInput.files[0];
     fileName.textContent = f ? `${f.name} (${(f.size / 1024).toFixed(0)} KB)` : '';
+    if (f) loadPreview(f);
+  }
+
+  // Show the uploaded MSC, organized by section, before any integrity check.
+  async function loadPreview(f) {
+    uploadErr.classList.add('hidden');
+    result.classList.add('hidden');
+    resultEmpty.classList.remove('hidden');
+    const fd = new FormData();
+    fd.append('msc', f);
+    fileName.textContent = `${f.name} — loading preview…`;
+    try {
+      const res = await api('/api/author/preview', { method: 'POST', body: fd });
+      fileName.textContent = `${f.name} (${(f.size / 1024).toFixed(0)} KB)`;
+      renderPreview(res);
+      resultEmpty.classList.add('hidden');
+      previewCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (ex) {
+      fileName.textContent = `${f.name} (${(f.size / 1024).toFixed(0)} KB)`;
+      previewCard.classList.add('hidden');
+      uploadErr.textContent = ex.message;
+      uploadErr.classList.remove('hidden');
+    }
   }
 
   function setRevision(msc) {
@@ -163,7 +188,7 @@
         <button class="active" data-tab="issues">Feedback (${r.issues.filter(i => i.severity !== 'info').length})</button>
         <button data-tab="scope">Journal fit</button>
         <button data-tab="details">MSC details</button>
-        <button type="button" id="jumpPreview" style="margin-left:auto">View uploaded MSC ↓</button>
+        <button type="button" id="jumpPreview" style="margin-left:auto">↑ View uploaded MSC</button>
       </div>
       <div data-pane="issues">
         ${r.issues.length ? r.issues.map(issueHtml).join('') : '<div class="alert ok">No issues found.</div>'}
@@ -210,13 +235,13 @@
   }
 
   // ----- organized MSC preview -----
-  const previewCard = document.getElementById('previewCard');
+
   function renderPreview(check) {
     const pv = check.preview;
     if (!pv) { previewCard.classList.add('hidden'); return; }
     previewCard.classList.remove('hidden');
     const f = pv.front;
-    document.getElementById('previewSub').textContent = `${check.fileName} · read-only preview, organized by section`;
+    document.getElementById('previewSub').textContent = `${check.fileName} · read-only preview, organized by section${check.report ? '' : ' · integrity check not run yet'}`;
     document.getElementById('previewStats').innerHTML = `
       <span class="pill grey">${pv.sections.length} parts</span>
       <span class="pill grey">${pv.totals.words.toLocaleString()} words</span>

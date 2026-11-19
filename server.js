@@ -14,7 +14,7 @@ const multer = require('multer');
 
 const store = require('./src/store');
 const { buildSeed } = require('./src/seed');
-const { analyzeManuscript } = require('./src/integrity');
+const { analyzeManuscript, parseForPreview } = require('./src/integrity');
 const { buildTemplate } = require('./src/template');
 const { JOURNALS, getJournal } = require('./src/journals');
 const service = require('./src/service');
@@ -160,6 +160,21 @@ app.post('/api/author/check', requireRole('Author'), (req, res, next) => {
       report: service.compactReport(report),
       preview: report.html ? buildOutline(report.html, report) : null
     });
+  } catch (e) { next(e); }
+});
+
+// Organized, read-only preview of an uploaded MSC — shown before the integrity check.
+app.post('/api/author/preview', requireRole('Author'), (req, res, next) => {
+  upload.single('msc')(req, res, err => {
+    if (err) return res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? 'The file is larger than the 15 MB limit.' : err.message });
+    next();
+  });
+}, async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Choose an MSC file (.docx) to upload.' });
+    const parsed = await parseForPreview(req.file.buffer, req.file.originalname);
+    if (!parsed.valid) return res.status(422).json({ error: parsed.formatErrors.map(e => `${e.message} ${e.remediation}`).join(' ') });
+    res.json({ fileName: req.file.originalname, preview: buildOutline(parsed.html, parsed) });
   } catch (e) { next(e); }
 });
 

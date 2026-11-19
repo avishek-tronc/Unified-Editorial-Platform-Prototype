@@ -34,6 +34,7 @@ On the first start the app seeds `data/db.json` with 4 editors, 9 reviewers, 12 
 
 1. **Author:** log in as Admin/Admin with *Author* selected.
    * Choose a journal (e.g. JACS) and click **Download JACS MSC template**.
+   * Choose a file: the manuscript is shown first, organized by section. Then run the integrity check.
    * Upload `samples/sample-msc-fail.docx` (also downloadable from the page). It scores about **4/10: FAIL**, shows feedback for every check, and the submit button is disabled.
    * Upload `samples/sample-msc-pass-JACS.docx`. It scores about **9.9/10: PASS**. Click **Submit MSC for review**.
    * *My submissions* lists your MSCs. A seeded MSC already has a **Revise (Minor)** decision: click **Upload revision** to re-submit it.
@@ -76,7 +77,7 @@ To start a demo from a clean slate at any time, use **Manual Deploy → Restart 
 | Download a template (e.g. JACS) | `GET /api/template/:journalId` generates a .docx with the required structure, grey placeholders and a *Guidelines & specifications* section |
 | Valid format & required details | Rejects non-.docx, legacy .doc, corrupted or renamed files, and documents without a body or under 200 words. Detects title, authors, affiliations, corresponding e-mail, ORCID and required sections |
 | Integrity score 1–10 | Weighted score across 7 checks (below). **Above 6 = PASS**, so the author can submit. **6 or below** = the author must apply the feedback and re-submit (submit is blocked server-side too) |
-| Organized MSC preview | After upload, an *Uploaded MSC* pane shows the manuscript read-only and organized into its parts: a title page (title, authors, affiliations, corresponding author, ORCID), then each recognised section with word, figure, table and reference counts. A section navigator jumps to each part and lists any missing required sections. Figures and tables are shown inline |
+| Organized MSC preview | As soon as a file is chosen, and before any integrity check or score, an *Uploaded MSC* pane at the top of the results column shows the manuscript read-only and organized into its parts: a title page (title, authors, affiliations, corresponding author, ORCID), then each recognised section with word, figure, table and reference counts. A section navigator jumps to each part and lists any missing required sections. Figures and tables are shown inline. The pane has its own **Run integrity check** button, and the score and feedback appear below it |
 | Score + feedback | Score ring, PASS/FAIL verdict, per-category breakdown, issues ranked critical / major / minor, each with **How to fix** guidance, a journal-fit tab and an MSC details tab |
 
 **Evaluation parameters** (`src/integrity.js`):
