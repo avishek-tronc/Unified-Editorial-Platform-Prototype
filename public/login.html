@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login · Unified Editorial Platform</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <div class="login-wrap">
+    <form class="card login-card" id="loginForm" autocomplete="off">
+      <h1>Unified Editorial Platform</h1>
+      <p class="muted">Sign in to submit manuscripts or manage reviews.</p>
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" placeholder="Admin" required autofocus>
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" placeholder="Admin" required>
+      <label>Continue as</label>
+      <div class="role-toggle">
+        <input type="radio" name="role" id="roleAuthor" value="Author" checked>
+        <label for="roleAuthor">Author<small>Upload &amp; check MSC</small></label>
+        <input type="radio" name="role" id="roleEditor" value="Editor">
+        <label for="roleEditor">Editor<small>Dashboard &amp; review</small></label>
+      </div>
+      <div id="err" class="alert error hidden"></div>
+      <button type="submit" style="width:100%;margin-top:16px">Log in</button>
+      <p class="muted small" style="margin-top:14px">Prototype credentials: <b>Admin</b> / <b>Admin</b></p>
+    </form>
+  </div>
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const err = document.getElementById('err');
+      err.classList.add('hidden');
+      const body = {
+        username: document.getElementById('username').value.trim(),
+        password: document.getElementById('password').value,
+        role: document.querySelector('input[name=role]:checked').value
+      };
+      try {
+        const res = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Login failed');
+        location.href = data.redirect;
+      } catch (ex) {
+        err.textContent = ex.message;
+        err.classList.remove('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

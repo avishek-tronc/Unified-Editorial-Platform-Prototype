@@ -1,0 +1,248 @@
+(async () => {
+  const { api, esc, fmtDate, fmtElapsed, toast } = UEP;
+  await UEP.initTopbar('dashboard');
+
+  const COLORS = { green: '#12805c', amber: '#e19a17', red: '#c0392b', blue: '#2f6fde', violet: '#6d3fc0', grey: '#9aa4b8', teal: '#16a085' };
+  const DECISION_COLORS = { Accept: COLORS.green, Reject: COLORS.red, Transfer: COLORS.violet, Revise: COLORS.amber, Pending: COLORS.grey };
+  let data = { mscs: [], editors: [], reviewers: [] };
+  let journals = [];
+  let sort = { key: 'submittedAt', dir: -1 };
+  const charts = {};
+  const $ = id => document.getElementById(id);
+
+  journals = await api('/api/journals');
+  $('fJournal').innerHTML = '<option value="">All journals</option>' + journals.map(j => `<option value="${j.id}">${esc(j.shortName)}</option>`).join('');
+
+  async function load() {
+    data = await api('/api/editor/mscs');
+    const authors = [...new Set(data.mscs.map(m => m.authorName))].sort();
+    const keepA = $('fAuthor').value; const keepR = $('fReviewer').value;
+    $('fAuthor').innerHTML = '<option value="">All authors</option>' + authors.map(a => `<option>${esc(a)}</option>`).join('');
+    $('fReviewer').innerHTML = '<option value="">All reviewers</option>' + data.reviewers.map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('');
+    $('fAuthor').value = keepA; $('fReviewer').value = keepR;
+    $('updatedAt').textContent = `Updated ${new Date().toLocaleTimeString()}`;
+    render();
+  }
+
+  function filtered() {
+    const f = {
+      from: $('fFrom').value, to: $('fTo').value, author: $('fAuthor').value, reviewer: $('fReviewer').value,
+      assigned: $('fAssigned').value, elapsed: $('fElapsed').value, journal: $('fJournal').value,
+      status: $('fStatus').value, feedback: $('fFeedback').value, decision: $('fDecision').value,
+      q: $('fSearch').value.trim().toLowerCase()
+    };
+    return data.mscs.filter(m => {
+      const day = m.submittedAt.slice(0, 10);
+      const localDay = new Date(m.submittedAt).toLocaleDateString('en-CA');
+      if (f.from && localDay < f.from && day < f.from) return false;
+      if (f.to && localDay > f.to && day > f.to) return false;
+      if (f.author && m.authorName !== f.author) return false;
+      if (f.reviewer && !(m.assignedReviewerId === f.reviewer && m.reviewStatus !== 'Complete')) return false;
+      if (f.assigned === 'Assigned' && !m.assignedReviewerId) return false;
+      if (f.assigned === 'Unassigned' && m.assignedReviewerId) return false;
+      if (f.elapsed && m.elapsedBand !== f.elapsed) return false;
+      if (f.journal && m.journalId !== f.journal) return false;
+      if (f.status && m.reviewStatus !== f.status) return false;
+      if (f.feedback && m.feedbackStatus !== f.feedback) return false;
+      if (f.decision === 'none' && m.finalDecision) return false;
+      if (f.decision && f.decision !== 'none' && m.finalDecision !== f.decision) return false;
+      if (f.q && !(`${m.id} ${m.title} ${m.authorName}`.toLowerCase().includes(f.q))) return false;
+      return true;
+    });
+  }
+
+  function statusPill(s) {
+    return `<span class="pill ${s === 'Open' ? 'blue' : s === 'In Progress' ? 'amber' : 'green'}">${s}</span>`;
+  }
+
+  function decisionCell(m) {
+    if (!m.finalDecision) return '<span class="muted">Pending</span>';
+    const cls = { Accept: 'green', Reject: 'red', Transfer: 'violet', Revise: 'amber' }[m.finalDecision];
+    const extra = m.finalDecision === 'Revise' ? ` (${m.revisionType})` : m.finalDecision === 'Transfer' ? ` → ${m.transferredTo}` : '';
+    return `<span class="pill ${cls}">${m.finalDecision}${extra}</span>${m.feedbackStatus ? `<div class="muted small">Feedback: ${m.feedbackStatus}</div>` : ''}`;
+  }
+
+  function renderTable(rows) {
+    const k = sort.key;
+    rows.sort((a, b) => {
+      const va = a[k] == null ? '' : a[k]; const vb = b[k] == null ? '' : b[k];
+      return (va > vb ? 1 : va < vb ? -1 : 0) * sort.dir;
+    });
+    document.querySelectorAll('#mscTable th[data-sort]').forEach(th => {
+      th.textContent = th.textContent.replace(/ [▲▼]$/, '') + (th.dataset.sort === k ? (sort.dir > 0 ? ' ▲' : ' ▼') : '');
+    });
+    $('countLabel').textContent = `${rows.length} of ${data.mscs.length}`;
+    const tb = document.querySelector('#mscTable tbody');
+    if (!rows.length) { tb.innerHTML = '<tr><td colspan="18" class="muted" style="text-align:center;padding:30px">No manuscripts match the filters.</td></tr>'; return; }
+    tb.innerHTML = rows.map(m => {
+      const active = m.reviewStatus === 'Open' || m.reviewStatus === 'In Progress';
+      const j = journals.find(x => x.id === m.journalId);
+      return `<tr>
+        <td><b>${esc(m.id)}</b></td>
+        <td class="title-cell">${esc(m.title)}</td>
+        <td class="intro-cell">${esc(m.intro)}</td>
+        <td>${esc(m.authorName)}</td>
+        <td>${fmtDate(m.submittedAt)}</td>
+        <td><span class="pill ${m.integrityPassed ? 'green' : 'red'}">${m.integrityPassed ? 'PASSED' : 'FAILED'}</span></td>
+        <td><b>${m.integrityScore}</b> / 10</td>
+        <td><b>${m.fitmentIndex ?? '—'}</b> <span class="muted small">${esc(j ? j.shortName : m.journalId)}</span>
+          ${m.recommendedJournal && m.recommendedJournal.journalId !== m.journalId && m.recommendedJournal.fitmentIndex >= m.fitmentIndex + 15 ? `<div class="small" style="color:var(--violet)">Better fit: ${esc(m.recommendedJournal.journalId)} (${m.recommendedJournal.fitmentIndex})</div>` : ''}</td>
+        <td>${m.revisions ? `<span class="pill violet">Yes (${m.revisions})</span>` : '<span class="pill grey">No</span>'}</td>
+        <td>${esc(m.assignedEditor || '—')}</td>
+        <td>${m.assignedReviewer ? esc(m.assignedReviewer) : '<span class="pill amber">Unassigned</span>'}</td>
+        <td>${active ? `<a href="#" data-lookup="${esc(m.id)}">🔍 ${m.assignedReviewer ? 'Change' : 'Look up'} reviewer</a>` : '<span class="muted">—</span>'}</td>
+        <td>${statusPill(m.reviewStatus)}</td>
+        <td><span class="pill ${m.elapsedBand}" title="${m.reviewStatus === 'Complete' ? 'Time from receipt to decision' : 'Time since receipt'}">${fmtElapsed(m.elapsedHours)}</span></td>
+        <td>${fmtDate(m.reviewStartAt)}</td>
+        <td><div class="progress"><div class="bar"><span style="width:${m.reviewProgress}%;background:${m.reviewProgress >= 100 ? COLORS.green : COLORS.blue}"></span></div><small>${m.reviewProgress}%</small></div></td>
+        <td>${decisionCell(m)}</td>
+        <td>${active ? `<a class="btn small" href="/review/${encodeURIComponent(m.id)}">Review &amp; annotate →</a>` : '<span class="btn small disabled" title="Review is complete">Review closed</span>'}</td>
+      </tr>`;
+    }).join('');
+    tb.querySelectorAll('[data-lookup]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); openModal(a.dataset.lookup); }));
+  }
+
+  function renderKpis(rows) {
+    const active = rows.filter(m => m.reviewStatus !== 'Complete');
+    const done = rows.filter(m => m.reviewStatus === 'Complete');
+    const avgFul = done.length ? done.reduce((s, m) => s + m.elapsedHours, 0) / done.length : null;
+    const avgScore = rows.length ? rows.reduce((s, m) => s + m.integrityScore, 0) / rows.length : null;
+    const overdue = active.filter(m => m.elapsedBand === 'red').length;
+    const unassigned = active.filter(m => !m.assignedReviewerId).length;
+    const tiles = [
+      ['Total MSCs', rows.length, `${journals.length} journals in portfolio`],
+      ['Open', rows.filter(m => m.reviewStatus === 'Open').length, 'awaiting review start'],
+      ['In progress', rows.filter(m => m.reviewStatus === 'In Progress').length, 'being reviewed'],
+      ['Complete', done.length, 'decision made'],
+      ['Delayed > 24 h', overdue, 'active MSCs in red', overdue ? 'var(--red)' : null],
+      ['Unassigned', unassigned, 'active MSCs without reviewer', unassigned ? 'var(--amber)' : null],
+      ['Avg time of fulfillment', avgFul == null ? '—' : fmtElapsed(avgFul), 'receipt → decision'],
+      ['Avg integrity score', avgScore == null ? '—' : avgScore.toFixed(1), 'out of 10']
+    ];
+    $('kpis').innerHTML = tiles.map(([l, v, s, c]) => `<div class="kpi"><div class="label">${l}</div><div class="value" ${c ? `style="color:${c}"` : ''}>${v}</div><div class="sub">${s}</div></div>`).join('');
+  }
+
+  function chart(id, config) {
+    if (charts[id]) { charts[id].data = config.data; charts[id].update(); return; }
+    charts[id] = new Chart(document.getElementById(id), {
+      ...config,
+      options: Object.assign({ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } }, config.options || {})
+    });
+  }
+
+  function renderCharts(rows) {
+    const active = rows.filter(m => m.reviewStatus !== 'Complete');
+    const bands = ['green', 'amber', 'red'];
+    chart('chElapsed', {
+      type: 'doughnut',
+      data: { labels: ['< 8 h', '8–24 h', '> 24 h'], datasets: [{ data: bands.map(b => active.filter(m => m.elapsedBand === b).length), backgroundColor: [COLORS.green, COLORS.amber, COLORS.red] }] },
+      options: { onClick: (e, els) => { if (els.length) { $('fElapsed').value = bands[els[0].index]; render(); } } }
+    });
+    const decisions = ['Accept', 'Reject', 'Transfer', 'Revise', 'Pending'];
+    chart('chDecision', {
+      type: 'bar',
+      data: { labels: decisions, datasets: [{ label: 'MSCs', data: decisions.map(d => rows.filter(m => (m.finalDecision || 'Pending') === d).length), backgroundColor: decisions.map(d => DECISION_COLORS[d]) }] },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+        onClick: (e, els) => { if (els.length) { const d = decisions[els[0].index]; $('fDecision').value = d === 'Pending' ? 'none' : d; render(); } } }
+    });
+    const jIds = journals.map(j => j.id).filter(id => rows.some(m => m.journalId === id));
+    const statuses = [['Open', COLORS.blue], ['In Progress', COLORS.amber], ['Complete', COLORS.green]];
+    chart('chJournal', {
+      type: 'bar',
+      data: { labels: jIds.map(id => journals.find(j => j.id === id).shortName), datasets: statuses.map(([s, c]) => ({ label: s, backgroundColor: c, data: jIds.map(id => rows.filter(m => m.journalId === id && m.reviewStatus === s).length) })) },
+      options: { scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } },
+        onClick: (e, els) => { if (els.length) { $('fJournal').value = jIds[els[0].index]; render(); } } }
+    });
+    chart('chAssigned', {
+      type: 'doughnut',
+      data: { labels: ['Assigned', 'Unassigned'], datasets: [{ data: [rows.filter(m => m.assignedReviewerId).length, rows.filter(m => !m.assignedReviewerId).length], backgroundColor: [COLORS.blue, COLORS.amber] }] },
+      options: { onClick: (e, els) => { if (els.length) { $('fAssigned').value = els[0].index ? 'Unassigned' : 'Assigned'; render(); } } }
+    });
+    chart('chEditor', {
+      type: 'bar',
+      data: { labels: data.editors.map(e => e.name), datasets: [
+        { label: 'Open', backgroundColor: COLORS.blue, data: data.editors.map(e => rows.filter(m => m.assignedEditorId === e.id && m.reviewStatus === 'Open').length) },
+        { label: 'In Progress', backgroundColor: COLORS.amber, data: data.editors.map(e => rows.filter(m => m.assignedEditorId === e.id && m.reviewStatus === 'In Progress').length) }
+      ] },
+      options: { indexAxis: 'y', scales: { x: { stacked: true, beginAtZero: true, ticks: { precision: 0 } }, y: { stacked: true } } }
+    });
+    const done = rows.filter(m => m.reviewStatus === 'Complete');
+    const fj = journals.filter(j => done.some(m => m.journalId === j.id));
+    chart('chFulfil', {
+      type: 'bar',
+      data: { labels: fj.map(j => j.shortName), datasets: [{ label: 'Avg hours to decision', backgroundColor: COLORS.teal, data: fj.map(j => { const d = done.filter(m => m.journalId === j.id); return Math.round(d.reduce((s, m) => s + m.elapsedHours, 0) / d.length); }) }] },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+  }
+
+  function render() {
+    const rows = filtered();
+    renderKpis(rows);
+    renderCharts(rows);
+    renderTable(rows);
+  }
+
+  document.querySelectorAll('#filters input, #filters select').forEach(el => el.addEventListener(el.tagName === 'INPUT' && el.type === 'text' ? 'input' : 'change', render));
+  $('resetFilters').addEventListener('click', () => {
+    document.querySelectorAll('#filters input, #filters select').forEach(el => { el.value = ''; });
+    render();
+  });
+  document.querySelectorAll('#mscTable th[data-sort]').forEach(th => th.addEventListener('click', () => {
+    sort = { key: th.dataset.sort, dir: sort.key === th.dataset.sort ? -sort.dir : 1 };
+    render();
+  }));
+  $('refreshBtn').addEventListener('click', load);
+
+  // ----- reviewer selection modal -----
+  let modalMsc = null; let selected = null;
+  async function openModal(id) {
+    modalMsc = id; selected = null;
+    $('mErr').classList.add('hidden');
+    $('mAssign').disabled = true;
+    $('mList').innerHTML = '<p class="muted">Loading reviewers…</p>';
+    $('modal').classList.remove('hidden');
+    const res = await api(`/api/editor/mscs/${encodeURIComponent(id)}/reviewers`);
+    $('mTitle').textContent = `Assign reviewer · ${res.msc.id}`;
+    $('mSub').textContent = `${res.msc.title} — ${res.msc.journalName}`;
+    $('mList').innerHTML = res.reviewers.map(r => `
+      <div class="reviewer ${r.available || r.current ? '' : 'disabled'} ${r.current ? 'selected' : ''}" data-id="${r.id}" data-ok="${r.available || r.current}">
+        <input type="radio" name="rv" value="${r.id}" ${r.available || r.current ? '' : 'disabled'} ${r.current ? 'checked' : ''}>
+        <div>
+          <div><b>${esc(r.name)}</b> <span class="muted small">${esc(r.affiliation)}</span>
+            ${r.recommended ? '<span class="pill green">Recommended</span>' : ''} ${r.current ? '<span class="pill blue">Currently assigned</span>' : ''}</div>
+          <div class="small muted">${esc(r.expertise.join(' · '))}</div>
+          <div class="small">${esc(r.reason)}</div>
+        </div>
+        <div style="text-align:right">
+          ${r.onLeave ? '<span class="pill red">On leave</span>' : r.available ? '<span class="pill green">Available</span>' : '<span class="pill amber">Full</span>'}
+          <div class="small muted">${r.activeReviews}/${r.capacity} active</div>
+        </div>
+      </div>`).join('');
+    $('mList').querySelectorAll('.reviewer').forEach(el => el.addEventListener('click', () => {
+      if (el.dataset.ok !== 'true') return;
+      $('mList').querySelectorAll('.reviewer').forEach(x => x.classList.toggle('selected', x === el));
+      el.querySelector('input').checked = true;
+      selected = el.dataset.id;
+      $('mAssign').disabled = false;
+    }));
+  }
+  function closeModal() { $('modal').classList.add('hidden'); }
+  $('mClose').addEventListener('click', closeModal);
+  $('mCancel').addEventListener('click', closeModal);
+  $('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  $('mAssign').addEventListener('click', async () => {
+    try {
+      const res = await api(`/api/editor/mscs/${encodeURIComponent(modalMsc)}/assign`, { method: 'POST', body: { reviewerId: selected } });
+      closeModal();
+      toast(`${res.row.assignedReviewer} assigned to ${res.row.id}`);
+      load();
+    } catch (ex) {
+      $('mErr').textContent = ex.message;
+      $('mErr').classList.remove('hidden');
+    }
+  });
+
+  await load();
+  setInterval(load, 60000);
+})();

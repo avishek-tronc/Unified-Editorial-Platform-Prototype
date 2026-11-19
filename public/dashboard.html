@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MSC Dashboard · Unified Editorial Platform</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <header class="topbar"></header>
+  <main>
+    <div class="row" style="margin-bottom:16px">
+      <div>
+        <h1>MSC Dashboard</h1>
+        <div class="muted">Manuscripts sent for review and in progress. Charts and KPIs follow the active filters.</div>
+      </div>
+      <div class="spacer"></div>
+      <span class="muted small" id="updatedAt"></span>
+      <button class="secondary small" id="refreshBtn">↻ Refresh</button>
+    </div>
+
+    <div class="kpis" id="kpis"></div>
+
+    <div class="charts">
+      <div class="chart-card"><h3>Time elapsed (open &amp; in-progress MSCs)</h3><canvas id="chElapsed"></canvas></div>
+      <div class="chart-card"><h3>Final verdict &amp; decision</h3><canvas id="chDecision"></canvas></div>
+      <div class="chart-card"><h3>Journal-specific MSCs</h3><canvas id="chJournal"></canvas></div>
+      <div class="chart-card"><h3>Assigned vs unassigned</h3><canvas id="chAssigned"></canvas></div>
+      <div class="chart-card"><h3>Editor-specific load (active MSCs)</h3><canvas id="chEditor"></canvas></div>
+      <div class="chart-card"><h3>Average time of fulfillment (hours, by journal)</h3><canvas id="chFulfil"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="margin-bottom:10px"><h2>Filters</h2><div class="spacer"></div><button class="ghost small" id="resetFilters">Reset filters</button></div>
+      <div class="filters" id="filters">
+        <div style="grid-column: span 2"><label>Received on (from – to)</label><div class="daterange"><input type="date" id="fFrom"><input type="date" id="fTo"></div></div>
+        <div><label for="fAuthor">Submitted by (author)</label><select id="fAuthor"></select></div>
+        <div><label for="fReviewer">Pending with (reviewer)</label><select id="fReviewer"></select></div>
+        <div><label for="fAssigned">Assigned / unassigned</label><select id="fAssigned"><option value="">All</option><option>Assigned</option><option>Unassigned</option></select></div>
+        <div><label for="fElapsed">Time elapsed</label><select id="fElapsed"><option value="">All</option><option value="green">Under 8 h (on track)</option><option value="amber">8–24 h (attention)</option><option value="red">Over 24 h (delayed)</option></select></div>
+        <div><label for="fJournal">Journal</label><select id="fJournal"></select></div>
+        <div><label for="fStatus">Review status</label><select id="fStatus"><option value="">All</option><option>Open</option><option>In Progress</option><option>Complete</option></select></div>
+        <div><label for="fFeedback">Feedback incorporation</label><select id="fFeedback"><option value="">All</option><option>In Progress</option><option>Complete</option></select></div>
+        <div><label for="fDecision">Final decision</label><select id="fDecision"><option value="">All</option><option>Accept</option><option>Reject</option><option>Transfer</option><option>Revise</option><option value="none">Pending</option></select></div>
+        <div><label for="fSearch">Search</label><input type="text" id="fSearch" placeholder="MSC ID, title…"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="margin-bottom:10px"><h2>Manuscripts</h2><span class="muted" id="countLabel"></span></div>
+      <div class="table-wrap">
+        <table class="data" id="mscTable">
+          <thead><tr>
+            <th data-sort="id">MSC ID</th>
+            <th data-sort="title">MSC title</th>
+            <th class="nosort">Brief intro</th>
+            <th data-sort="authorName">Submitted by</th>
+            <th data-sort="submittedAt">Submitted date</th>
+            <th data-sort="integrityPassed">Integrity check</th>
+            <th data-sort="integrityScore">Integrity score</th>
+            <th data-sort="fitmentIndex">Journal fitment index</th>
+            <th data-sort="revisions">Revisions done?</th>
+            <th data-sort="assignedEditor">Assigned editor</th>
+            <th data-sort="assignedReviewer">Assigned reviewer</th>
+            <th class="nosort">Reviewer lookup</th>
+            <th data-sort="reviewStatus">Review status</th>
+            <th data-sort="elapsedHours">Time elapsed</th>
+            <th data-sort="reviewStartAt">Review start</th>
+            <th data-sort="reviewProgress">Review progress</th>
+            <th data-sort="finalDecision">Final decision</th>
+            <th class="nosort">Review &amp; annotate</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <div class="modal-back hidden" id="modal">
+    <div class="modal" role="dialog" aria-modal="true">
+      <header>
+        <div style="flex:1"><h2 id="mTitle">Assign reviewer</h2><div class="muted small" id="mSub"></div></div>
+        <button class="ghost" id="mClose" aria-label="Close">✕</button>
+      </header>
+      <div class="body">
+        <div class="alert info small">Reviewers are proposed by availability: free capacity, leave status, expertise in the journal's scope and average turnaround.</div>
+        <div id="mList"></div>
+        <div id="mErr" class="alert error hidden"></div>
+      </div>
+      <footer>
+        <button class="secondary" id="mCancel">Cancel</button>
+        <button id="mAssign" disabled>Assign reviewer</button>
+      </footer>
+    </div>
+  </div>
+
+  <script src="/vendor/chart.js/chart.umd.min.js"></script>
+  <script src="/js/common.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

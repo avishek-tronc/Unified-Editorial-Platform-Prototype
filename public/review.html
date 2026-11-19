@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MSC Review &amp; Annotation · Unified Editorial Platform</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <header class="topbar"></header>
+  <main>
+    <div class="row" style="margin-bottom:12px">
+      <a href="/dashboard">← Back to dashboard</a>
+    </div>
+    <div class="card" id="head" style="margin-bottom:16px"><p class="muted">Loading MSC…</p></div>
+
+    <div class="review-layout">
+      <aside class="card side" id="side">
+        <div class="tabs">
+          <button class="active" data-tab="feedback">Feedback</button>
+          <button data-tab="decision">Decision</button>
+          <button data-tab="integrity">Integrity report</button>
+        </div>
+
+        <div data-pane="feedback">
+          <div id="readonlyNote" class="alert info hidden"></div>
+          <div class="muted small" id="howto">Select text in the manuscript to <b>highlight</b>, <b>underline</b> or <b>comment</b> on it. The MSC itself cannot be edited.</div>
+          <div class="section-title">General feedback</div>
+          <textarea id="general" placeholder="Overall assessment for the author and editor…"></textarea>
+          <div class="row small" style="justify-content:space-between"><span class="muted" id="saveState"></span><button class="small secondary" id="saveGeneral">Save feedback</button></div>
+          <div class="section-title">Annotations &amp; comments <span id="annCount"></span></div>
+          <div class="row small" style="margin-bottom:8px">
+            <select id="annFilter" style="width:auto"><option value="">All</option><option value="comment">Comments</option><option value="highlight">Highlights</option><option value="underline">Underlines</option></select>
+          </div>
+          <div id="annList"></div>
+        </div>
+
+        <div data-pane="decision" class="hidden" id="decisionPane"></div>
+        <div data-pane="integrity" class="hidden" id="integrityPane"></div>
+      </aside>
+
+      <section>
+        <div class="immutable-bar" id="immutableBar"></div>
+        <article class="msc-paper" id="paper"></article>
+      </section>
+    </div>
+  </main>
+
+  <div class="sel-toolbar hidden" id="selToolbar">
+    <button data-act="highlight">🖍 Highlight</button>
+    <button data-act="underline">U̲ Underline</button>
+    <button data-act="comment">💬 Comment</button>
+  </div>
+  <div class="card hidden" id="commentBox" style="position:absolute;z-index:45;width:320px;padding:12px">
+    <div class="small muted" id="commentQuote" style="margin-bottom:6px;font-style:italic"></div>
+    <textarea id="commentText" placeholder="Your comment for the author…" style="min-height:70px"></textarea>
+    <div class="row" style="justify-content:flex-end;margin-top:8px">
+      <button class="secondary small" id="commentCancel">Cancel</button>
+      <button class="small" id="commentSave">Add comment</button>
+    </div>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/review.js"></script>
+</body>
+</html>
