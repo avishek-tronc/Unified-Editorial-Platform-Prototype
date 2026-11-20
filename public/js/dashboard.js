@@ -290,11 +290,9 @@
     page = 1;
     renderTable(filtered());
   });
-  // Collapsible charts panel: remember state; resize charts when reopened.
+  // KPIs & Metrics panel: collapsed by default; resize charts when expanded.
   const panel = $('chartsPanel');
-  if (localStorage.getItem('uep.chartsOpen') === '0') panel.open = false;
   panel.addEventListener('toggle', () => {
-    localStorage.setItem('uep.chartsOpen', panel.open ? '1' : '0');
     if (panel.open) Object.values(charts).forEach(c => c.resize());
   });
   $('resetFilters').addEventListener('click', () => { clearFilters(); page = 1; render(); });
