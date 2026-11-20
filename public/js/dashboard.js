@@ -5,6 +5,7 @@
   const COLORS = { green: '#12805c', amber: '#e19a17', red: '#c0392b', blue: '#2f6fde', violet: '#6d3fc0', grey: '#9aa4b8', teal: '#16a085' };
   const DECISION_COLORS = { Accept: COLORS.green, Reject: COLORS.red, Transfer: COLORS.violet, Revise: COLORS.amber, 'Assign to PE': '#0e6a7d', Pending: COLORS.grey };
   let page = 1;
+  let tab = 'active'; // 'active' = Open & In Progress, 'complete' = Complete
   let pageSize = Number(localStorage.getItem('uep.pageSize')) || 20;
   let data = { mscs: [], editors: [], reviewers: [] };
   let journals = [];
@@ -42,7 +43,8 @@
       if (f.reviewer && !(m.assignedReviewerId === f.reviewer && m.reviewStatus !== 'Complete')) return false;
       if (f.assigned === 'Assigned' && !m.assignedReviewerId) return false;
       if (f.assigned === 'Unassigned' && m.assignedReviewerId) return false;
-      if (f.elapsed && m.elapsedBand !== f.elapsed) return false;
+      // Time-elapsed bands apply to Open / In Progress MSCs only.
+      if (f.elapsed && (m.reviewStatus === 'Complete' || m.elapsedBand !== f.elapsed)) return false;
       if (f.journal && m.journalId !== f.journal) return false;
       if (f.status && m.reviewStatus !== f.status) return false;
       if (f.feedback && m.feedbackStatus !== f.feedback) return false;
@@ -70,7 +72,12 @@
     return `${d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: '2-digit' })}<br><span class="muted">${d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</span>`;
   }
 
-  function renderTable(rows) {
+  function renderTable(allRows) {
+    const activeRows = allRows.filter(m => m.reviewStatus !== 'Complete');
+    const completeRows = allRows.filter(m => m.reviewStatus === 'Complete');
+    $('tabActiveCount').textContent = activeRows.length;
+    $('tabCompleteCount').textContent = completeRows.length;
+    const rows = tab === 'active' ? activeRows : completeRows;
     const k = sort.key;
     rows.sort((a, b) => {
       const va = a[k] == null ? '' : a[k]; const vb = b[k] == null ? '' : b[k];
@@ -84,11 +91,11 @@
     const from = (page - 1) * pageSize;
     const pageRows = rows.slice(from, from + pageSize);
     $('countLabel').textContent = rows.length
-      ? `Showing ${from + 1}–${from + pageRows.length} of ${rows.length}${rows.length !== data.mscs.length ? ` (filtered from ${data.mscs.length})` : ''}`
-      : `0 of ${data.mscs.length}`;
+      ? `Showing ${from + 1}–${from + pageRows.length} of ${rows.length} ${tab === 'active' ? 'open & in-progress' : 'complete'} MSCs`
+      : `No ${tab === 'active' ? 'open or in-progress' : 'complete'} MSCs match the filters`;
     renderPager(pages);
     const tb = document.querySelector('#mscTable tbody');
-    if (!rows.length) { tb.innerHTML = '<tr><td colspan="17" class="muted" style="text-align:center;padding:30px">No manuscripts match the filters.</td></tr>'; return; }
+    if (!rows.length) { tb.innerHTML = '<tr><td colspan="17" class="muted" style="text-align:center;padding:30px">No manuscripts in this tab match the filters.</td></tr>'; return; }
     tb.innerHTML = pageRows.map(m => {
       const active = m.reviewStatus === 'Open' || m.reviewStatus === 'In Progress';
       const blockedTip = active ? 'Assign a reviewer first (Look up) to enable review' : 'Review is complete';
@@ -283,6 +290,12 @@
   }
 
   document.querySelectorAll('#filters input, #filters select').forEach(el => el.addEventListener(el.tagName === 'INPUT' && el.type === 'text' ? 'input' : 'change', () => { page = 1; render(); }));
+  document.querySelectorAll('#mscTabs button').forEach(b => b.addEventListener('click', () => {
+    tab = b.dataset.tab;
+    document.querySelectorAll('#mscTabs button').forEach(x => x.classList.toggle('active', x === b));
+    page = 1;
+    renderTable(filtered());
+  }));
   $('pageSize').value = String(pageSize);
   $('pageSize').addEventListener('change', () => {
     pageSize = Number($('pageSize').value);

@@ -24,7 +24,7 @@
     <details class="card collapsible" id="chartsPanel">
       <summary><span class="chev">▸</span> KPIs &amp; Metrics <span class="muted small">— click to expand or collapse</span></summary>
       <div class="charts">
-        <div class="chart-card"><h3>Time elapsed (active)</h3><canvas id="chElapsed"></canvas></div>
+        <div class="chart-card"><h3 title="Open and In Progress MSCs only; Complete MSCs are excluded">Time elapsed (Open &amp; In Progress)</h3><canvas id="chElapsed"></canvas></div>
         <div class="chart-card"><h3>Final verdict &amp; decision</h3><canvas id="chDecision"></canvas></div>
         <div class="chart-card"><h3>Journal-specific MSCs</h3><canvas id="chJournal"></canvas></div>
         <div class="chart-card"><h3>Assigned vs unassigned</h3><canvas id="chAssigned"></canvas></div>
@@ -56,7 +56,7 @@
         <div><label for="fAuthor">Submitted by (author)</label><select id="fAuthor"></select></div>
         <div><label for="fReviewer">Pending with (reviewer)</label><select id="fReviewer"></select></div>
         <div><label for="fAssigned">Assigned / unassigned</label><select id="fAssigned"><option value="">All</option><option>Assigned</option><option>Unassigned</option></select></div>
-        <div><label for="fElapsed">Time elapsed</label><select id="fElapsed"><option value="">All</option><option value="green">Under 8 h (on track)</option><option value="amber">8–24 h (attention)</option><option value="red">Over 24 h (delayed)</option></select></div>
+        <div><label for="fElapsed">Time elapsed</label><select id="fElapsed"><option value="">All</option><option value="green">Under 8 h (on track, active only)</option><option value="amber">8–24 h (attention)</option><option value="red">Over 24 h (delayed)</option></select></div>
         <div><label for="fJournal">Journal</label><select id="fJournal"></select></div>
         <div><label for="fStatus">Review status</label><select id="fStatus"><option value="">All</option><option>Open</option><option>In Progress</option><option>Complete</option></select></div>
         <div><label for="fFeedback">Feedback incorporation</label><select id="fFeedback"><option value="">All</option><option>In Progress</option><option>Complete</option></select></div>
@@ -66,7 +66,12 @@
     </div>
 
     <div class="card">
-      <div class="row" style="margin-bottom:10px"><h2>Manuscripts</h2><span class="muted" id="countLabel"></span><div class="spacer"></div>
+      <div class="row" style="margin-bottom:6px"><h2>Manuscripts</h2></div>
+      <div class="tabs msc-tabs" id="mscTabs">
+        <button type="button" class="active" data-tab="active">Open &amp; In Progress <span class="pill blue" id="tabActiveCount">0</span></button>
+        <button type="button" data-tab="complete">Complete <span class="pill green" id="tabCompleteCount">0</span></button>
+      </div>
+      <div class="row" style="margin-bottom:10px"><span class="muted" id="countLabel"></span><div class="spacer"></div>
         <label for="pageSize" class="small" style="margin:0;font-weight:600">Records per page</label>
         <select id="pageSize" style="width:auto"><option>20</option><option>50</option><option>100</option></select></div>
       <div class="table-wrap dash-table-wrap">

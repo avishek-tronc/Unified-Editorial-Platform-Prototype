@@ -249,3 +249,7 @@ details.collapsible .charts-2 { margin-bottom: 0; }
 .decision-opts label.pe { grid-column: span 2; }
 .decision-opts input:checked + label.pe { background: #e6f4f7; color: #0e6a7d; border-color: #0e6a7d; }
 .pill.teal { background: #e6f4f7; color: #0e6a7d; }
+
+.msc-tabs { margin-bottom: 10px; }
+.msc-tabs button { font-size: 14px; padding: 8px 14px; }
+.msc-tabs button .pill { margin-left: 6px; }
