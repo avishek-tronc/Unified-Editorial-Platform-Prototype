@@ -32,6 +32,20 @@ function canReview(m) {
   return ACTIVE(m.reviewStatus) && !!m.assignedReviewer;
 }
 
+/**
+ * Manuscript bodies (rendered HTML + text) are stored once per file in
+ * data/contents/, keyed by the SHA-256 of the uploaded .docx, so identical
+ * files (e.g. seeded demo MSCs) are not duplicated in the database.
+ */
+function putContent(report) {
+  store.putContent(report.contentHash, { html: report.html || '', text: report.text || '' });
+}
+
+function getContent(m) {
+  if (m.html !== undefined) return { html: m.html, text: m.text || '' }; // legacy records
+  return store.getContent(m.contentHash) || { html: '', text: '' };
+}
+
 /** Strips the bulky html/text fields from an integrity report. */
 function compactReport(report) {
   const { html, text, ...rest } = report;
@@ -52,7 +66,7 @@ function corpusFor(excludeMscId) {
     .map(m => ({
       id: m.id,
       source: `Prior submission ${m.id}: "${m.title}"`,
-      text: m.seed ? `${m.title}. ${m.abstract || ''}` : (m.text || '')
+      text: m.seed ? `${m.title}. ${m.abstract || ''}` : getContent(m).text
     }));
 }
 
@@ -120,8 +134,6 @@ function createMsc({ report, fileName, owner, seed, submittedAt }) {
     fileName,
     submittedAt: now,
     contentHash: report.contentHash,
-    html: report.html,
-    text: report.text,
     integrity: compactReport(report),
     versions: [{ version: 1, submittedAt: now, fileName, score: report.score, contentHash: report.contentHash }],
     revisions: 0,
@@ -138,6 +150,7 @@ function createMsc({ report, fileName, owner, seed, submittedAt }) {
     feedbackStatus: null,
     completedAt: null
   };
+  putContent(report);
   db.mscs.push(msc);
   return msc;
 }
@@ -150,8 +163,7 @@ function reviseMsc(msc, { report, fileName }) {
   msc.title = report.meta.title || msc.title;
   msc.abstract = report.meta.abstract;
   msc.intro = briefIntro(report);
-  msc.html = report.html;
-  msc.text = report.text;
+  putContent(report);
   msc.contentHash = report.contentHash;
   msc.fileName = fileName;
   msc.integrity = compactReport(report);
@@ -220,7 +232,7 @@ function reviewPayload(m) {
     abstract: m.abstract,
     authors: m.authors,
     authorEmail: m.authorEmail,
-    html: m.html,
+    html: getContent(m).html,
     contentHash: m.contentHash,
     fileName: m.fileName,
     versions: m.versions,

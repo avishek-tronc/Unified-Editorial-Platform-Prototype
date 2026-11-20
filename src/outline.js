@@ -5,7 +5,7 @@
  * front matter, recognised sections, figures, tables and references —
  * for the author's preview pane. Read-only: nothing here alters the MSC.
  */
-const { SECTION_DEFS, matchSection } = require('./integrity');
+const { SECTION_DEFS, matchSection, COMMUNICATION_EXEMPT } = require('./integrity');
 
 const BLOCK_RE = /<(p|h[1-6]|table|ul|ol|blockquote)\b[^>]*>[\s\S]*?<\/\1>/gi;
 
@@ -40,6 +40,15 @@ function buildOutline(html, report) {
     current.blocks.push(b);
   });
 
+  // Communication: abstract followed directly by the main text (no IMRaD headings).
+  const abs = sections.find(x => x.key === 'abstract');
+  const isComm = abs && !sections.some(x => x.key === 'introduction' || x.key === 'results') && abs.blocks.length >= 4;
+  if (isComm) {
+    const body = { key: 'body', label: 'Main text (communication)', heading: 'Main text', blocks: abs.blocks.slice(1) };
+    abs.blocks = abs.blocks.slice(0, 1);
+    sections.splice(sections.indexOf(abs) + 1, 0, body);
+  }
+
   const out = sections
     .filter(s => s.key !== 'front' || s.blocks.length)
     .map((s, i) => {
@@ -62,7 +71,7 @@ function buildOutline(html, report) {
     });
 
   const present = new Set(out.map(s => s.key));
-  const missing = SECTION_DEFS.filter(d => d.required && !present.has(d.key) && !(d.key === 'discussion'))
+  const missing = SECTION_DEFS.filter(d => d.required && !present.has(d.key) && !(isComm && COMMUNICATION_EXEMPT.has(d.key)))
     .map(d => d.label);
 
   const meta = (report && report.meta) || {};
@@ -75,6 +84,7 @@ function buildOutline(html, report) {
       correspondingEmail: meta.correspondingEmail || '',
       orcids: meta.orcids || []
     },
+    articleType: isComm ? 'Communication' : 'Article',
     sections: out,
     missing,
     totals: {

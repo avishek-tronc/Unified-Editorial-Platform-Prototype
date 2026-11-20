@@ -212,6 +212,20 @@ function parseStructure(paragraphs) {
   return { sections, order, front };
 }
 
+// Communications/letters (e.g. JACS Communications) have no IMRaD headings:
+// the abstract is followed directly by the main text. Detect that and split it.
+const COMMUNICATION_EXEMPT = new Set(['introduction', 'methods', 'results', 'conclusion']);
+function detectCommunication(structure) {
+  const abs = structure.sections.abstract;
+  if (!abs || structure.sections.introduction || structure.sections.results) return structure;
+  if (abs.paragraphs.length < 4) return structure;
+  structure.sections.body = { label: 'Main text (communication)', paragraphs: abs.paragraphs.slice(1) };
+  abs.paragraphs = abs.paragraphs.slice(0, 1);
+  structure.order.splice(structure.order.indexOf('abstract') + 1, 0, 'body');
+  structure.articleType = 'Communication';
+  return structure;
+}
+
 function parseMetadata(front, fullText) {
   const meta = { title: '', authors: [], affiliations: [], emails: [], correspondingEmail: '', orcids: [] };
   const remaining = [...front];
@@ -252,6 +266,16 @@ function parseMetadata(front, fullText) {
     if (nameMatch) meta.correspondingAuthor = nameMatch[1].trim();
   }
   if (!meta.correspondingEmail && meta.emails.length) meta.correspondingEmail = meta.emails[0];
+  if (!meta.correspondingAuthor && meta.correspondingEmail && meta.authors.length) {
+    const local = meta.correspondingEmail.split('@')[0].toLowerCase().replace(/[^a-z]/g, '');
+    const norm = x => x.toLowerCase().replace(/[^a-z]/g, '');
+    const byEmail = meta.authors.find(a => a.includes(' ') && norm(a).length > 4 && local.includes(norm(a))) ||
+      meta.authors.filter(a => a.includes(' ')).find(a => {
+        const last = norm(a.split(' ').pop());
+        return last.length > 2 && local.includes(last);
+      });
+    if (byEmail) meta.correspondingAuthor = byEmail;
+  }
   if (!meta.correspondingAuthor && meta.authors.length) meta.correspondingAuthor = meta.authors[0];
 
   meta.orcids = Array.from(new Set(fullText.match(/\b\d{4}-\d{4}-\d{4}-\d{3}[\dX]\b/g) || []));
@@ -271,7 +295,7 @@ function checkCompleteness(ctx) {
     issues.push(issue('minor', `Title is ${meta.title.length} characters; ${journal.shortName} recommends at most ${lim.titleChars}.`, 'Shorten the title so it states the key finding concisely.'));
   }
 
-  SECTION_DEFS.filter(d => d.required).forEach(def => {
+  SECTION_DEFS.filter(d => d.required && !(structure.articleType === 'Communication' && COMMUNICATION_EXEMPT.has(d.key))).forEach(def => {
     if (!structure.sections[def.key]) {
       issues.push(issue(def.required, `Required section missing: ${def.label}.`, `Add a "${def.label}" heading and content as laid out in the ${journal.shortName} MSC template.`));
     } else if (!structure.sections[def.key].merged && structure.sections[def.key].paragraphs.join(' ').trim().length === 0) {
@@ -438,7 +462,7 @@ function checkFigures(ctx) {
   const images = (docXml.match(/<w:drawing\b/g) || []).length + (docXml.match(/<v:imagedata\b/g) || []).length;
   const equations = (docXml.match(/<m:oMath\b(?!Para)/g) || []).length;
 
-  const captionRe = /^(figure|fig\.?|scheme)\s*(\d+)\s*[.:|—–-]/i;
+  const captionRe = /^(figure|fig\.?|scheme)\s*(\d+)\s*[.:|—–\-．：]/i;
   const captions = paragraphs.map(p => p.match(captionRe)).filter(Boolean).map(m => ({ type: /scheme/i.test(m[1]) ? 'Scheme' : 'Figure', n: +m[2] }));
   const figCaptions = captions.filter(c => c.type === 'Figure');
   const bodyText = paragraphs.filter(p => !captionRe.test(p)).join(' ');
@@ -498,7 +522,7 @@ function checkTables(ctx) {
   const issues = [];
   const tblCount = (docXml.match(/<w:tbl>/g) || []).length;
   const tables = parseHtmlTables(html);
-  const captionRe = /^table\s*(\d+)\s*[.:|—–-]/i;
+  const captionRe = /^table\s*(\d+)\s*[.:|—–\-．：]/i;
   const captions = paragraphs.map(p => p.match(captionRe)).filter(Boolean).map(m => +m[1]);
   const bodyText = paragraphs.filter(p => !captionRe.test(p)).join(' ');
   const referenced = new Set((bodyText.match(/\btables?\s*(\d+)/gi) || []).map(s => +s.match(/(\d+)/)[1]));
@@ -741,7 +765,7 @@ async function analyzeManuscript({ buffer, originalName, journalId, corpus }) {
     };
   }
 
-  const structure = parseStructure(paragraphs);
+  const structure = detectCommunication(parseStructure(paragraphs));
   const meta = parseMetadata(structure.front, text);
   const ctx = { buffer, journal, docXml, coreXml, hasComments, rawText, html, text, paragraphs, structure, meta, corpus };
 
@@ -812,6 +836,7 @@ async function analyzeManuscript({ buffer, originalName, journalId, corpus }) {
       orcids: meta.orcids,
       abstract: structure.sections.abstract ? structure.sections.abstract.paragraphs.join(' ') : '',
       keywords: completeness.stats.keywords,
+      articleType: structure.articleType || 'Article',
       sections: structure.order.map(k => structure.sections[k].label)
     },
     stats: {
@@ -841,9 +866,9 @@ async function parseForPreview(buffer, originalName) {
     mammoth.convertToHtml({ buffer })
   ]);
   const paragraphs = rawText.split(/\n+/).map(p => p.replace(/\s+/g, ' ').trim()).filter(Boolean);
-  const structure = parseStructure(paragraphs);
+  const structure = detectCommunication(parseStructure(paragraphs));
   const meta = parseMetadata(structure.front, paragraphs.join('\n'));
   return { valid: true, html, meta };
 }
 
-module.exports = { analyzeManuscript, parseForPreview, PASS_THRESHOLD, WEIGHTS, CATEGORY_LABELS, SECTION_DEFS, matchSection, validOrcid, computeFitment };
+module.exports = { COMMUNICATION_EXEMPT, analyzeManuscript, parseForPreview, PASS_THRESHOLD, WEIGHTS, CATEGORY_LABELS, SECTION_DEFS, matchSection, validOrcid, computeFitment };

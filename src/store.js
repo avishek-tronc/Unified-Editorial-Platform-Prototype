@@ -47,4 +47,31 @@ function nextId(prefix) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
-module.exports = { load, set, save, get, nextMscId, nextId, DB_FILE };
+// Large manuscript bodies live in data/contents/<sha256>.json (one file per
+// distinct uploaded .docx) so db.json stays small and fast to rewrite.
+const CONTENT_DIR = path.join(DATA_DIR, 'contents');
+const contentCache = new Map();
+
+function putContent(hash, content) {
+  if (contentCache.has(hash)) return;
+  fs.mkdirSync(CONTENT_DIR, { recursive: true });
+  const file = path.join(CONTENT_DIR, `${hash}.json`);
+  if (!fs.existsSync(file)) fs.writeFileSync(file, JSON.stringify(content));
+  contentCache.set(hash, content);
+}
+
+function getContent(hash) {
+  if (contentCache.has(hash)) return contentCache.get(hash);
+  const file = path.join(CONTENT_DIR, `${hash}.json`);
+  if (!/^[a-f0-9]{64}$/.test(hash || '') || !fs.existsSync(file)) return null;
+  const c = JSON.parse(fs.readFileSync(file, 'utf8'));
+  contentCache.set(hash, c);
+  return c;
+}
+
+function clearContents() {
+  contentCache.clear();
+  fs.rmSync(CONTENT_DIR, { recursive: true, force: true });
+}
+
+module.exports = { load, set, save, get, nextMscId, nextId, putContent, getContent, clearContents, DB_FILE };

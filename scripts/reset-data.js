@@ -6,6 +6,7 @@ const { buildSeed } = require('../src/seed');
 
 (async () => {
   if (fs.existsSync(store.DB_FILE)) fs.unlinkSync(store.DB_FILE);
+  store.clearContents();
   const db = await buildSeed();
   console.log(`Seeded ${db.mscs.length} MSCs, ${db.editors.length} editors and ${db.reviewers.length} reviewers into ${store.DB_FILE}`);
 })().catch(e => { console.error(e); process.exit(1); });

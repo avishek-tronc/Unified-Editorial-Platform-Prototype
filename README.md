@@ -20,7 +20,7 @@ npm start
 
 Open **http://localhost:3000** and log in with **Admin / Admin**. On the login page, choose **Author** or **Editor** to pick the view.
 
-On the first start the app seeds `data/db.json` with 4 editors, 9 reviewers, 12 current manuscripts covering every workflow state and 15 review-complete manuscripts from the past ~5 months, so the dashboard and charts have data straight away. If you ran an earlier version, run `npm run reset` to pick up the new demo data.
+On the first start the app seeds the demo database: 4 editors, 15 reviewers, 3 Publishing Editors and about 75 manuscripts. About **50 are Open / In Progress**, with a mix of on-track, attention and delayed times, assigned and unassigned. The other ~25 are review-complete over the past ~5 months. The manuscript content comes from the three sample MSCs in `samples/seed/` (`ja6c20962.docx`, `ja6c19336.docx`, `ja6c20174.docx`). Each one is run through the integrity engine for its target journals, so scores, fitment and the review pages are real, and the records reuse that content with different dates and states. Manuscript bodies are stored once per file in `data/contents/`. If you ran an earlier version, run `npm run reset` to pick up the new demo data.
 
 | Command | What it does |
 |---|---|
@@ -75,6 +75,7 @@ To start a demo from a clean slate at any time, use **Manual Deploy → Restart 
 | Upload MSC in Word format | Drag & drop / file picker. `.docx` up to 15 MB |
 | Journal dropdown | 8-journal portfolio (`src/journals.js`) with scope, genre and limits |
 | Download a template (e.g. JACS) | `GET /api/template/:journalId` generates a .docx with the required structure, grey placeholders and a *Guidelines & specifications* section |
+| Article types | Full articles are checked for the IMRaD sections. Communications (abstract followed directly by the main text, e.g. JACS Communications) are recognised, so Introduction / Methods / Results / Conclusions headings are not required for them |
 | Valid format & required details | Rejects non-.docx, legacy .doc, corrupted or renamed files, and documents without a body or under 200 words. Detects title, authors, affiliations, corresponding e-mail, ORCID and required sections |
 | Integrity score 1–10 | Weighted score across 7 checks (below). **Above 6 = PASS**, so the author can submit. **6 or below** = the author must apply the feedback and re-submit (submit is blocked server-side too) |
 | Organized MSC preview | As soon as a file is chosen, and before any integrity check or score, an *Uploaded MSC* pane at the top of the results column shows the manuscript read-only and organized into its parts: a title page (title, authors, affiliations, corresponding author, ORCID), then each recognised section with word, figure, table and reference counts. A section navigator jumps to each part and lists any missing required sections. Figures and tables are shown inline. The pane has its own **Run integrity check** button, and the score and feedback appear below it |
@@ -130,7 +131,7 @@ src/
   png.js              Tiny PNG chart renderer for figures in generated documents
   store.js            JSON-file persistence (data/db.json)
 public/               Login, author, dashboard and review pages (vanilla JS + Chart.js)
-samples/              Demo MSCs (pass / fail) and the JACS template
+samples/              Demo MSCs (pass / fail), the JACS template, and seed/ (sample MSCs behind the demo data)
 scripts/              reset-data, make-samples, smoke-test
 docs/screenshots/     Screenshots of the prototype
 ```
