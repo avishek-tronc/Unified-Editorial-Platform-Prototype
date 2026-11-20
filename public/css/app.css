@@ -52,7 +52,7 @@ main { padding: 24px; max-width: 1600px; margin: 0 auto; }
 
 /* forms */
 label { display: block; font-weight: 600; margin: 12px 0 6px; font-size: 13px; }
-input[type=text], input[type=password], input[type=date], select, textarea {
+input[type=text], input[type=password], input[type=date], input[type=search], select, textarea {
   width: 100%; padding: 9px 11px; border: 1px solid #cfd6e4; border-radius: 8px; font: inherit; background: #fff; color: var(--ink);
 }
 textarea { min-height: 90px; resize: vertical; }
@@ -253,3 +253,28 @@ details.collapsible .charts-2 { margin-bottom: 0; }
 .msc-tabs { margin-bottom: 10px; }
 .msc-tabs button { font-size: 14px; padding: 8px 14px; }
 .msc-tabs button .pill { margin-left: 6px; }
+
+/* reviewer invitation */
+.rv-cell { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rv-cell .rv-mail { color: var(--muted); font-size: 11px; overflow-wrap: break-word; line-height: 1.25; }
+.rv-cell .pill { font-size: 10.5px; }
+.reviewer .rv-email { font-size: 12.5px; color: var(--brand); margin-left: 4px; }
+.email-preview { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin-top: 8px; }
+.email-preview .email-head { background: #f6f8fc; padding: 10px 14px; font-size: 13px; display: grid; gap: 3px; border-bottom: 1px solid var(--line); }
+.email-preview .email-head .lbl { display: inline-block; width: 60px; color: var(--muted); }
+.email-preview .email-body { white-space: pre-wrap; font-family: inherit; font-size: 13px; padding: 12px 14px; margin: 0; max-height: 300px; overflow: auto; overflow-wrap: anywhere; }
+.email-preview .row { padding: 0 14px; display: flex; gap: 8px; align-items: center; }
+.email-preview > p { padding: 0 14px 10px; }
+.invite-card { width: 620px; max-width: calc(100vw - 32px); }
+.invite-card h1 { color: var(--brand); }
+.invite-card .kv { margin: 12px 0; }
+.topbar .metrics-link { color: #dbe6ff; font-size: 13px; padding: 5px 10px; border-radius: 6px; background: rgba(255,255,255,.08); white-space: nowrap; }
+.topbar .metrics-link:hover, .topbar .metrics-link.active { color: #fff; background: rgba(255,255,255,.22); text-decoration: none; }
+
+/* usage metrics */
+.charts-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 1100px) { .charts-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.charts-4 .chart-card canvas { height: 170px !important; }
+.sub-row td { background: #f9fbff; }
+.page-trail { margin: 0; padding-left: 20px; font-size: 13px; display: grid; gap: 4px; }
+#sessTable code { font-size: 12px; background: #eef2fa; padding: 1px 6px; border-radius: 4px; }

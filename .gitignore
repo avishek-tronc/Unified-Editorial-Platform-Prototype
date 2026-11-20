@@ -3,3 +3,6 @@ data/db.json
 .DS_Store
 *.log
 data/contents/
+data/usage-sessions.json
+data/audit-log.jsonl
+data/*.tmp

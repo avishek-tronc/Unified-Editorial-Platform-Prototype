@@ -40,8 +40,9 @@ On the first start the app seeds the demo database: 4 editors, 15 reviewers, 3 P
    * *My submissions* lists your MSCs. A seeded MSC already has a **Revise (Minor)** decision: click **Upload revision** to re-submit it.
 2. **Editor:** log out, then log in as Admin/Admin with *Editor* selected.
    * The dashboard shows the new MSC as *Open* with a green time-elapsed badge.
-   * Click **Look up reviewer** to open the modal, pick the recommended reviewer and assign them.
-   * Click **Review** (or the MSC ID). It is only enabled once a reviewer is assigned. Select text in the manuscript and use **Highlight**, **Underline** or **Comment**. Write general feedback in the left pane. The reading progress is tracked as you scroll.
+   * Click **Look up reviewer** to open the modal. Each reviewer is listed with their e-mail address. Select one and click **✉ Send invitation e-mail**. The modal shows the e-mail that was sent.
+   * Click **Open invitation link (as the reviewer)** and **Accept** the invitation on the page that opens (no login needed; the link is the credential). The dashboard then shows the reviewer as *✓ Accepted*.
+   * Click **Review** (or the MSC ID). It is only enabled once the assigned reviewer has accepted the invitation. Select text in the manuscript and use **Highlight**, **Underline** or **Comment**. Write general feedback in the left pane. The reading progress is tracked as you scroll.
    * Open the **Decision** tab and choose Accept / Reject / Transfer / Revise. The alternate journal dropdown is only enabled for **Transfer**, and it is pre-filled with the system-proposed journal. **Revise** asks for Minor or Major and sends the MSC back to the author.
 
 > Note: uploading the same manuscript again as a *new* submission is flagged by the plagiarism check, because it matches the earlier submission (duplicate-submission detection). Revisions of the same MSC are excluded from that comparison.
@@ -60,7 +61,7 @@ Every push to `master` redeploys automatically.
 
 What the Blueprint configures: Node 22, `npm ci` / `npm start`, `NODE_ENV=production` (secure session cookies), a generated `SESSION_SECRET`, and the `/healthz` health check. The app listens on Render's `PORT` variable.
 
-**Data on Render.** Data is stored in `data/db.json` on the instance's local disk. On Render that disk is temporary: every redeploy or restart wipes it, and the free plan also restarts after about 15 minutes idle (the first request then takes about a minute to wake the service). When that happens the app re-seeds the 12 demo manuscripts, and uploads, assignments, annotations and decisions are lost. Logged-in sessions are also held in memory, so users have to log in again. This is fine for demos. To keep data, use a paid instance with a [persistent disk](https://render.com/docs/disks) mounted at e.g. `/var/data` and set `UEP_DATA_DIR=/var/data` (commented out in `render.yaml`), or move `src/store.js` to a database such as Render PostgreSQL.
+**Data on Render.** Data is stored in `data/db.json` on the instance's local disk. On Render that disk is temporary: every redeploy or restart wipes it, and the free plan also restarts after about 15 minutes idle (the first request then takes about a minute to wake the service). When that happens the app re-seeds the demo manuscripts, and uploads, usage metrics, the audit trail, assignments, annotations and decisions are lost. Logged-in sessions are also held in memory, so users have to log in again. This is fine for demos. To keep data, use a paid instance with a [persistent disk](https://render.com/docs/disks) mounted at e.g. `/var/data` and set `UEP_DATA_DIR=/var/data` (commented out in `render.yaml`), or move `src/store.js` to a database such as Render PostgreSQL.
 
 To start a demo from a clean slate at any time, use **Manual Deploy → Restart service**.
 
@@ -105,7 +106,10 @@ Two or more critical issues cap the score at 5.
   * **MSCs received today:** total, a stacked progress bar and a bar chart by Open, In Progress, Completed and Delayed (still active after more than 8 hours).
   * **MSC processing outcome:** a stacked bar chart of review-complete MSCs by decision outcome (Accept / Reject / Transfer / Revise), switchable between the last 12 weeks and the last 6 months.
 * **Refresh** reloads the data, redraws every chart and the table, and clears all filters.
-* **Reviewer selection modal:** reviewers are ranked by availability (free capacity vs. active reviews, on-leave status, expertise in the journal's scope, average turnaround). The top available reviewer is marked *Recommended*. Unavailable reviewers can't be selected.
+* **Reviewer selection modal:** each reviewer is shown with their **e-mail address** beside the name. Reviewers are ranked by availability (free capacity vs. active reviews, on-leave status, expertise in the journal's scope, average turnaround). The top available reviewer is marked *Recommended*. Unavailable reviewers can't be selected.
+* **Reviewer invitation:** the editor selects a reviewer and clicks **✉ Send invitation e-mail**. The invitation e-mail (with a secret accept/decline link) is recorded in the platform outbox and shown in the modal. *Prototype: no real e-mail is delivered;* use **Open invitation link (as the reviewer)** to play the reviewer. The **Assigned reviewer** column shows the reviewer's e-mail and an *✉ Invited* (pending) or *✓ Accepted* badge, with **View invite** to re-open the e-mail.
+  * **Review & annotate stays locked until the reviewer accepts** (dashboard, MSC ID link, review page and API).
+  * **Decline** frees the MSC for another reviewer. Re-sending or choosing another reviewer replaces the old link, which then stops working.
 
 ### MSC review & annotation page (`/review/:id`)
 * All MSC details are shown: header metadata, integrity report, version and decision history.
@@ -115,6 +119,16 @@ Two or more critical issues cap the score at 5.
   * *Transfer:* the page shows the MSC's applicability (fitment index) for the current journal and proposes an alternate journal from the backend journal mapping (genre, context and subject terms plus related-journal mapping). The alternate journal can only be selected, and is only accepted by the API, when the decision is Transfer.
   * *Revise:* the MSC goes back to the author with the reviewer's comments. Feedback incorporation is *In Progress* until the author re-submits. Then it becomes *Complete*, "Revisions done?" increments, and the MSC returns to *Open*.
 * Review progress is tracked from reading progress (up to 90%), and a decision completes it (100%). Opening the page moves an Open MSC to In Progress and records the review start time.
+
+### Usage Metrics (`/metrics`, link beside **Log out**)
+Tracks how the application is used and keeps an audit trail. Available to both views.
+* **User footprint:** a pseudonymous device fingerprint (hash of IP, browser, time zone and screen size) per session.
+* **Location:** from the hosting edge's country header when present (e.g. Cloudflare `cf-ipcountry`), otherwise the browser's time zone (e.g. *Kolkata, Asia*). Private / local IPs are labelled. No third-party geo-IP service is called.
+* **IP** address (behind Render's proxy, the real client IP via `X-Forwarded-For`), **OS**, browser and device type.
+* **Duration of stay:** from login to the last activity (a heartbeat every 20 s while the tab is visible; a session idle for 2 min counts as ended).
+* **Pages visited:** every page view with the time spent on it; expand a session to see its page trail. A *Pages visited* tab aggregates views and average time per page.
+* KPIs and charts (sessions per day, OS, location, top pages), a period selector and **CSV export** of sessions and the audit trail.
+* **Audit trail:** an append-only log (`data/audit-log.jsonl`) of logins, failed logins, logouts, page views, integrity checks, submissions, invitations sent / viewed / accepted / declined, review starts, annotations, decisions and exports, each with time, user, IP and OS. Filter by event or search (IP, MSC ID, reviewer…). Sessions are kept in `data/usage-sessions.json`.
 
 ## Project structure
 
@@ -126,10 +140,11 @@ src/
   corpus.js           Reference corpus that stands in for a plagiarism database
   template.js         Journal-specific MSC template (.docx) generator
   service.js          Workflow logic: MSC creation and revision, reviewer proposals, dashboard rows
-  seed.js             Demo editors, reviewers and 12 manuscripts in every workflow state
+  seed.js             Demo editors, reviewers and ~75 manuscripts (50 active) with reviewer invitations
   msc-builder.js      Builds .docx manuscripts (used for seeds and samples)
   png.js              Tiny PNG chart renderer for figures in generated documents
   store.js            JSON-file persistence (data/db.json)
+  usage.js            Usage sessions (footprint, IP, OS, location, pages, duration) and the audit trail
 public/               Login, author, dashboard and review pages (vanilla JS + Chart.js)
 samples/              Demo MSCs (pass / fail), the JACS template, and seed/ (sample MSCs behind the demo data)
 scripts/              reset-data, make-samples, smoke-test
@@ -145,7 +160,11 @@ docs/screenshots/     Screenshots of the prototype
 | `POST /api/author/submit` `{checkId}` | Author | Submit a passed MSC (or revision) |
 | `GET /api/author/submissions` | Author | Own MSCs with decisions and reviewer feedback |
 | `GET /api/editor/mscs` | Editor | Dashboard data |
-| `GET /api/editor/mscs/:id/reviewers`, `POST …/assign` | Editor | Reviewer proposals and assignment |
+| `GET /api/editor/mscs/:id/reviewers`, `POST …/assign` `{reviewerId}` | Editor | Reviewer proposals (with e-mail); send (or re-send) the invitation e-mail |
+| `GET /api/editor/mscs/:id/invitation` | Editor | Latest invitation e-mail and its status |
+| `GET /api/invitations/:token`, `POST …/respond` `{accept}` | public (token) | Reviewer views and accepts / declines the invitation |
+| `POST /api/track/page`, `…/heartbeat`, `…/leave` | any | Usage tracking from the pages |
+| `GET /api/metrics?days=30`, `GET /api/metrics/audit`, `GET /api/metrics/export/{sessions,audit}` | any | Usage metrics, audit trail, CSV export |
 | `GET /api/mscs/:id`, `POST …/start`, `POST …/progress` | Editor | Review page data, start review, reading progress |
 | `POST/PUT/DELETE /api/mscs/:id/annotations[/:aid]`, `PUT …/feedback` | Editor | Annotations and general feedback |
 | `POST /api/mscs/:id/decision` | Editor | Final decision |
@@ -155,7 +174,8 @@ docs/screenshots/     Screenshots of the prototype
 * The integrity checks are deterministic heuristics so the prototype runs offline. Each check is isolated in `src/integrity.js` so it can be replaced with a production service: a spell/grammar API, Crossref Similarity Check (iThenticate), the ORCID public API, or an ML scope classifier.
 * Data is stored in a JSON file. Swap `src/store.js` for a database (e.g. PostgreSQL) for multi-user use.
 * Only MSCs that pass the integrity check reach the editorial dashboard (as the spec requires). The Integrity Check column still supports both PASSED and FAILED.
-* No e-mail notifications. Authors see decisions and reviewer comments on their *My submissions* list.
+* E-mail is simulated: invitation e-mails go to an in-app outbox and are shown to the editor, with the reviewer's accept link. Next step: send through an SMTP / transactional e-mail service. Authors see decisions on their *My submissions* list.
+* Location is approximate (edge country header or browser time zone). A geo-IP database (e.g. MaxMind GeoLite2) can be plugged into `locationFor()` in `src/usage.js` for city-level location.
 
 ## Screenshots
 | Login | Author upload & score |
@@ -163,3 +183,5 @@ docs/screenshots/     Screenshots of the prototype
 | ![Login](docs/screenshots/login.png) | ![Author](docs/screenshots/author-upload.png) |
 | **Reviewer selection modal** | **Review & annotate** |
 | ![Modal](docs/screenshots/reviewer-modal.png) | ![Review](docs/screenshots/review-annotate.png) |
+| **Reviewer invitation (accept link)** | **Usage Metrics** |
+| ![Invitation](docs/screenshots/reviewer-invitation.png) | ![Usage Metrics](docs/screenshots/usage-metrics.png) |

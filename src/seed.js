@@ -97,11 +97,13 @@ async function buildSeed() {
     editors: EDITORS,
     reviewers: REVIEWERS.map(({ unavailableInDays, ...r }) => ({
       ...r,
+      email: service.reviewerEmail(r),
       unavailableUntil: unavailableInDays ? new Date(now + unavailableInDays * 24 * H).toISOString() : null
     })),
     publishingEditors: service.PUBLISHING_EDITORS,
     mscs: [],
-    checks: []
+    checks: [],
+    outbox: []
   };
   store.set(db);
 
@@ -211,9 +213,16 @@ async function buildSeed() {
     const wantsReviewer = !(i % 5 === 2) && !(hoursAgo < 3 && i % 2 === 0);
     const reviewer = wantsReviewer ? freeReviewer(report.journalId) : null;
     if (!reviewer) return; // stays Open & unassigned
-    msc.assignedReviewer = reviewer;
+    // Every assignment goes through an invitation e-mail (link is made absolute when served).
+    const email = service.inviteReviewer(msc, db.reviewers.find(r => r.id === reviewer), { baseUrl: '', invitedBy: 'Editorial Office' });
     msc.assignedAt = new Date(submitted + Math.min(hoursAgo * 0.2, 2) * H).toISOString();
+    msc.invitation.sentAt = email.sentAt = msc.assignedAt;
     const started = hoursAgo > 2 && rand() < 0.62;
+    // Started reviews were accepted; of the rest, about half still await the reviewer's response.
+    if (started || rand() < 0.45) {
+      msc.invitation.status = 'Accepted';
+      msc.invitation.respondedAt = new Date(submitted + Math.min(hoursAgo * 0.3, 6) * H).toISOString();
+    }
     if (started) {
       msc.reviewStatus = 'In Progress';
       msc.reviewStartAt = new Date(submitted + Math.min(hoursAgo * 0.35, 8) * H).toISOString();

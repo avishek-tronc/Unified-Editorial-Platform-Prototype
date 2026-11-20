@@ -27,9 +27,105 @@ function peName(id) {
   return pe ? pe.name : null;
 }
 
-/** Review & annotate is allowed only for open/in-progress MSCs with an assigned reviewer. */
+/** Reviewer e-mail (seeded reviewers carry one; otherwise derived for the prototype). */
+function reviewerEmail(r) {
+  if (!r) return '';
+  if (r.email) return r.email;
+  const parts = r.name.replace(/^(prof|dr)\.?\s+/i, '').toLowerCase().normalize('NFD').replace(/[^a-z\s]/g, '').trim().split(/\s+/);
+  return `${parts[0]}.${parts[parts.length - 1]}@reviewers.example`;
+}
+
+/**
+ * Reviewer invitation state for an MSC: null (no reviewer), Pending, Accepted
+ * or Declined. Records assigned before invitations existed count as Accepted.
+ */
+function invitationStatus(m) {
+  if (!m.assignedReviewer) return null;
+  return m.invitation ? m.invitation.status : 'Accepted';
+}
+
+/** Review & annotate is allowed only for open/in-progress MSCs whose reviewer accepted the invitation. */
 function canReview(m) {
-  return ACTIVE(m.reviewStatus) && !!m.assignedReviewer;
+  return ACTIVE(m.reviewStatus) && !!m.assignedReviewer && invitationStatus(m) === 'Accepted';
+}
+
+/**
+ * Invites a reviewer: records a pending invitation with a secret token and
+ * puts the invitation e-mail in the outbox (simulated delivery). The review
+ * stays locked until the reviewer accepts through the link in the e-mail.
+ */
+function inviteReviewer(msc, reviewer, { baseUrl, invitedBy }) {
+  const db = store.get();
+  const crypto = require('crypto');
+  const now = new Date().toISOString();
+  if (msc.invitation && msc.invitation.status === 'Pending') msc.invitation.status = 'Withdrawn';
+  if (msc.invitation) msc.invitationHistory = (msc.invitationHistory || []).concat(msc.invitation);
+  const token = crypto.randomBytes(18).toString('hex');
+  const journal = getJournal(msc.journalId);
+  const link = `${baseUrl}/invite/${token}`;
+  const email = {
+    id: store.nextId('EM'),
+    to: `${reviewer.name} <${reviewerEmail(reviewer)}>`,
+    from: 'Unified Editorial Platform <editorial-office@uep.example>',
+    subject: `Invitation to review ${msc.id}: ${msc.title}`,
+    sentAt: now,
+    mscId: msc.id,
+    delivery: 'Simulated (prototype outbox — no real e-mail is sent)',
+    link,
+    body: [
+      `Dear ${reviewer.name},`,
+      '',
+      `On behalf of ${journal ? journal.name : msc.journalId}, you are invited to review the manuscript:`,
+      '',
+      `  ${msc.id} — ${msc.title}`,
+      `  Authors: ${(msc.authors || []).join(', ')}`,
+      '',
+      `Abstract: ${(msc.abstract || '').slice(0, 600)}${(msc.abstract || '').length > 600 ? '…' : ''}`,
+      '',
+      'Please accept or decline the invitation using this link:',
+      link,
+      '',
+      'The manuscript becomes available for review and annotation once you accept.',
+      '',
+      `Kind regards,`,
+      `${invitedBy || 'Editorial Office'}`
+    ].join('\n')
+  };
+  msc.assignedReviewer = reviewer.id;
+  msc.assignedAt = now;
+  msc.invitation = { id: store.nextId('INV'), token, reviewerId: reviewer.id, status: 'Pending', sentAt: now, respondedAt: null, emailId: email.id, sentCount: 1 };
+  db.outbox = (db.outbox || []).concat(email).slice(-300);
+  return email;
+}
+
+function findInvitation(token) {
+  if (!/^[a-f0-9]{36}$/.test(token || '')) return null;
+  const msc = store.get().mscs.find(m => m.invitation && m.invitation.token === token);
+  return msc ? { msc, invitation: msc.invitation } : null;
+}
+
+/** Reviewer accepts or declines. Declining frees the MSC for another reviewer. */
+function respondInvitation(token, accept) {
+  const found = findInvitation(token);
+  if (!found) return { error: 'This invitation link is not valid or has been replaced by a newer invitation.', status: 404 };
+  const { msc, invitation } = found;
+  if (invitation.status !== 'Pending') return { error: `This invitation was already ${invitation.status.toLowerCase()}.`, status: 409, msc, invitation };
+  if (!ACTIVE(msc.reviewStatus)) return { error: 'The review of this MSC is already complete.', status: 409, msc, invitation };
+  invitation.status = accept ? 'Accepted' : 'Declined';
+  invitation.respondedAt = new Date().toISOString();
+  if (!accept) {
+    msc.invitationHistory = (msc.invitationHistory || []).concat({ ...invitation });
+    msc.invitation = null;
+    msc.assignedReviewer = null;
+    msc.assignedAt = null;
+  }
+  return { msc, invitation };
+}
+
+function latestInvitationEmail(msc) {
+  const db = store.get();
+  const id = msc.invitation && msc.invitation.emailId;
+  return id ? (db.outbox || []).find(e => e.id === id) || null : null;
 }
 
 /**
@@ -75,6 +171,7 @@ function editorLoad(editorId) {
 }
 
 function reviewerLoad(reviewerId) {
+  // Pending invitations count towards a reviewer's load.
   return store.get().mscs.filter(m => m.assignedReviewer === reviewerId && ACTIVE(m.reviewStatus)).length;
 }
 
@@ -108,10 +205,11 @@ function suggestReviewers(msc) {
     else if (!free) reason = `At capacity (${load}/${r.capacity} active reviews)`;
     else reason = `${free} free slot(s)${expertiseMatch ? ` · expert in ${journal ? journal.shortName : msc.journalId} scope` : ''} · avg turnaround ${r.avgTurnaroundDays} d`;
     return {
-      id: r.id, name: r.name, affiliation: r.affiliation, expertise: r.expertise,
+      id: r.id, name: r.name, email: reviewerEmail(r), affiliation: r.affiliation, expertise: r.expertise,
       capacity: r.capacity, activeReviews: load, freeSlots: free, onLeave: !!onLeave,
       available, expertiseMatch, avgTurnaroundDays: r.avgTurnaroundDays, score, reason,
-      current: msc.assignedReviewer === r.id
+      current: msc.assignedReviewer === r.id,
+      invitationStatus: msc.assignedReviewer === r.id ? invitationStatus(msc) : null
     };
   }).sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
     .map((r, i) => ({ ...r, recommended: i === 0 && r.available }));
@@ -207,6 +305,9 @@ function dashboardRow(m) {
     assignedEditor: editor ? editor.name : null,
     assignedReviewerId: m.assignedReviewer,
     assignedReviewer: reviewer ? reviewer.name : null,
+    assignedReviewerEmail: reviewer ? reviewerEmail(reviewer) : null,
+    invitationStatus: invitationStatus(m),
+    invitationSentAt: m.invitation ? m.invitation.sentAt : null,
     reviewStatus: m.reviewStatus,
     elapsedHours: Math.round(elapsedHours * 10) / 10,
     elapsedBand: elapsedHours < 8 ? 'green' : elapsedHours <= 24 ? 'amber' : 'red',
@@ -272,6 +373,7 @@ function authorView(m) {
 }
 
 module.exports = {
+  reviewerEmail, invitationStatus, inviteReviewer, findInvitation, respondInvitation, latestInvitationEmail,
   DECISIONS, PUBLISHING_EDITORS, publishingEditors, peName, canReview,
   compactReport, corpusFor, pickEditor, suggestReviewers, createMsc, reviseMsc,
   dashboardRow, reviewPayload, authorView, reviewerLoad, editorLoad, JOURNALS

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Usage Metrics · Unified Editorial Platform</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <header class="topbar"></header>
+  <main>
+    <div class="row" style="margin-bottom:16px">
+      <div>
+        <h1>Usage Metrics</h1>
+        <div class="muted">Who used the application, from where, on which device, for how long and which pages they visited. Every event is kept in an append-only audit trail.</div>
+      </div>
+      <div class="spacer"></div>
+      <label class="small muted" for="days" style="margin:0">Period</label>
+      <select id="days" style="width:auto">
+        <option value="1">Last 24 hours</option>
+        <option value="7">Last 7 days</option>
+        <option value="30" selected>Last 30 days</option>
+        <option value="90">Last 90 days</option>
+      </select>
+      <span class="muted small" id="updatedAt"></span>
+      <button class="secondary small" id="refreshBtn">↻ Refresh</button>
+    </div>
+
+    <div class="kpis" id="kpis"></div>
+
+    <div class="charts-4">
+      <div class="chart-card"><h3>Sessions per day</h3><canvas id="chDay"></canvas></div>
+      <div class="chart-card"><h3>Operating system</h3><canvas id="chOs"></canvas></div>
+      <div class="chart-card"><h3>Location</h3><canvas id="chLoc"></canvas></div>
+      <div class="chart-card"><h3>Pages visited (views)</h3><canvas id="chPages"></canvas></div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="tabs" id="mTabs">
+        <button data-tab="sessions" class="active">User sessions</button>
+        <button data-tab="pages">Pages visited</button>
+        <button data-tab="audit">Audit trail</button>
+      </div>
+
+      <section id="tab-sessions">
+        <div class="row small muted" style="margin-bottom:8px">
+          <span>One row per login. <b>Footprint</b> is a pseudonymous fingerprint (hash of IP, browser, time zone and screen). Location comes from the hosting edge country header when present, otherwise the browser time zone. A session with no activity for <span id="idleMin">2</span> min counts as ended.</span>
+          <span class="spacer"></span>
+          <a class="btn small secondary" href="/api/metrics/export/sessions">⬇ Export CSV</a>
+        </div>
+        <div class="table-wrap"><table class="data" id="sessTable">
+          <thead><tr>
+            <th class="nosort">Started</th><th class="nosort">User</th><th class="nosort">Footprint</th><th class="nosort">IP</th>
+            <th class="nosort">Location</th><th class="nosort">OS · browser</th><th class="nosort">Duration of stay</th>
+            <th class="nosort">Pages visited</th><th class="nosort">Status</th>
+          </tr></thead><tbody></tbody>
+        </table></div>
+      </section>
+
+      <section id="tab-pages" class="hidden">
+        <div class="table-wrap"><table class="data" id="pageTable">
+          <thead><tr><th class="nosort">Page</th><th class="nosort">Title</th><th class="nosort">Views</th><th class="nosort">Total time</th><th class="nosort">Avg time per view</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </section>
+
+      <section id="tab-audit" class="hidden">
+        <div class="row" style="margin-bottom:8px;gap:8px">
+          <select id="aEvent" style="width:auto"><option value="">All events</option></select>
+          <input id="aSearch" type="search" placeholder="Search IP, MSC ID, reviewer…" style="width:260px">
+          <span class="muted small" id="aCount"></span>
+          <span class="spacer"></span>
+          <a class="btn small secondary" href="/api/metrics/export/audit">⬇ Export CSV</a>
+        </div>
+        <div class="table-wrap"><table class="data" id="auditTable">
+          <thead><tr><th class="nosort">Time</th><th class="nosort">Event</th><th class="nosort">User</th><th class="nosort">IP</th><th class="nosort">OS</th><th class="nosort">Details</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </section>
+    </div>
+  </main>
+
+  <script src="/vendor/chart.js/chart.umd.min.js"></script>
+  <script src="/js/common.js"></script>
+  <script src="/js/metrics.js"></script>
+</body>
+</html>

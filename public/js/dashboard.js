@@ -98,7 +98,9 @@
     if (!rows.length) { tb.innerHTML = '<tr><td colspan="17" class="muted" style="text-align:center;padding:30px">No manuscripts in this tab match the filters.</td></tr>'; return; }
     tb.innerHTML = pageRows.map(m => {
       const active = m.reviewStatus === 'Open' || m.reviewStatus === 'In Progress';
-      const blockedTip = active ? 'Assign a reviewer first (Look up) to enable review' : 'Review is complete';
+      const blockedTip = !active ? 'Review is complete'
+        : !m.assignedReviewerId ? 'Assign a reviewer first (Look up) to enable review'
+        : m.invitationStatus === 'Pending' ? 'Waiting for the reviewer to accept the invitation' : 'Review not available';
       const j = journals.find(x => x.id === m.journalId);
       return `<tr>
         <td>${m.canReview ? `<a class="msc-link" href="/review/${encodeURIComponent(m.id)}" title="Open the MSC review &amp; annotation page">${esc(m.id)}</a>` : `<span class="msc-id" title="${blockedTip}">${esc(m.id)}</span>`}</td>
@@ -111,7 +113,7 @@
           ${m.recommendedJournal && m.recommendedJournal.journalId !== m.journalId && m.recommendedJournal.fitmentIndex >= m.fitmentIndex + 15 ? `<div class="small" style="color:var(--violet)">Better fit: ${esc(m.recommendedJournal.journalId)} (${m.recommendedJournal.fitmentIndex})</div>` : ''}</td>
         <td>${m.revisions ? `<span class="pill violet">Yes (${m.revisions})</span>` : '<span class="pill grey">No</span>'}</td>
         <td>${esc(m.assignedEditor || '—')}</td>
-        <td>${m.assignedReviewer ? esc(m.assignedReviewer) : '<span class="pill amber">Unassigned</span>'}</td>
+        <td>${reviewerCell(m)}</td>
         <td>${active ? `<a href="#" data-lookup="${esc(m.id)}">🔍 ${m.assignedReviewer ? 'Change' : 'Look up'}</a>` : '<span class="muted">—</span>'}</td>
         <td>${statusPill(m.reviewStatus)}</td>
         <td><span class="pill ${m.elapsedBand}" title="${m.reviewStatus === 'Complete' ? 'Time from receipt to decision' : 'Time since receipt'}">${fmtElapsed(m.elapsedHours)}</span></td>
@@ -122,6 +124,17 @@
       </tr>`;
     }).join('');
     tb.querySelectorAll('[data-lookup]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); openModal(a.dataset.lookup); }));
+    tb.querySelectorAll('[data-invite]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); openInvitation(a.dataset.invite); }));
+  }
+
+  function reviewerCell(m) {
+    if (!m.assignedReviewer) return '<span class="pill amber">Unassigned</span>';
+    const pill = m.invitationStatus === 'Pending'
+      ? `<span class="pill amber" title="Invitation sent ${esc(UEP.fmtDate(m.invitationSentAt))}">✉ Invited</span>`
+      : '<span class="pill green" title="Reviewer accepted the invitation">✓ Accepted</span>';
+    return `<div class="rv-cell"><b>${esc(m.assignedReviewer)}</b>
+      <a class="rv-mail small" href="mailto:${esc(m.assignedReviewerEmail)}" title="${esc(m.assignedReviewerEmail)}">${esc(m.assignedReviewerEmail).replace('@', '<wbr>@')}</a>
+      <div>${pill}${m.invitationSentAt ? ` <a href="#" class="small" data-invite="${esc(m.id)}" title="View the invitation e-mail">View invite</a>` : ''}</div></div>`;
   }
 
   function renderPager(pages) {
@@ -321,24 +334,43 @@
     toast('Dashboard refreshed and filters cleared');
   });
 
-  // ----- reviewer selection modal -----
-  let modalMsc = null; let selected = null;
+  // ----- reviewer selection & invitation modal -----
+  let modalMsc = null; let selected = null; let modalRow = null; let reviewerList = [];
+  function setFooter(mode) {
+    $('mAssign').classList.toggle('hidden', mode !== 'select');
+    $('mCancel').textContent = mode === 'select' ? 'Cancel' : 'Close';
+  }
+  function updateSendButton() {
+    const r = reviewerList.find(x => x.id === selected);
+    $('mAssign').disabled = !r || r.invitationStatus === 'Accepted';
+    $('mAssign').textContent = r && r.current && r.invitationStatus === 'Pending' ? '✉ Re-send invitation e-mail' : '✉ Send invitation e-mail';
+  }
   async function openModal(id) {
     modalMsc = id; selected = null;
     $('mErr').classList.add('hidden');
+    setFooter('select');
     $('mAssign').disabled = true;
+    $('mIntro').classList.remove('hidden');
     $('mList').innerHTML = '<p class="muted">Loading reviewers…</p>';
     $('modal').classList.remove('hidden');
     const res = await api(`/api/editor/mscs/${encodeURIComponent(id)}/reviewers`);
-    $('mTitle').textContent = `Assign reviewer · ${res.msc.id}`;
+    modalRow = res.msc; reviewerList = res.reviewers;
+    $('mTitle').textContent = `Select reviewer · ${res.msc.id}`;
     $('mSub').textContent = `${res.msc.title} — ${res.msc.journalName}`;
-    $('mList').innerHTML = res.reviewers.map(r => `
+    const cur = reviewerList.find(r => r.current);
+    const banner = cur ? `<div class="alert ${cur.invitationStatus === 'Pending' ? 'warn' : 'ok'} small">
+        ${cur.invitationStatus === 'Pending'
+          ? `Invitation sent to <b>${esc(cur.name)}</b> &lt;${esc(cur.email)}&gt; on ${esc(UEP.fmtDate(res.msc.invitationSentAt))} is <b>awaiting acceptance</b>. Re-send it, or pick another reviewer to withdraw it. <a href="#" id="mViewInvite">View invitation e-mail</a>`
+          : `<b>${esc(cur.name)}</b> accepted the invitation. Choosing another reviewer sends them a new invitation and locks the review until they accept.`}
+      </div>` : '';
+    $('mList').innerHTML = banner + reviewerList.map(r => `
       <div class="reviewer ${r.available || r.current ? '' : 'disabled'} ${r.current ? 'selected' : ''}" data-id="${r.id}" data-ok="${r.available || r.current}">
-        <input type="radio" name="rv" value="${r.id}" ${r.available || r.current ? '' : 'disabled'} ${r.current ? 'checked' : ''}>
+        <input type="radio" name="rv" value="${r.id}" ${r.available || r.current ? '' : 'disabled'} ${r.current ? 'checked' : ''} aria-label="Select ${esc(r.name)}">
         <div>
-          <div><b>${esc(r.name)}</b> <span class="muted small">${esc(r.affiliation)}</span>
-            ${r.recommended ? '<span class="pill green">Recommended</span>' : ''} ${r.current ? '<span class="pill blue">Currently assigned</span>' : ''}</div>
-          <div class="small muted">${esc(r.expertise.join(' · '))}</div>
+          <div><b>${esc(r.name)}</b> <a class="rv-email" href="mailto:${esc(r.email)}" onclick="event.stopPropagation()">&lt;${esc(r.email)}&gt;</a>
+            ${r.recommended ? '<span class="pill green">Recommended</span>' : ''}
+            ${r.current ? (r.invitationStatus === 'Pending' ? '<span class="pill amber">✉ Invited · pending</span>' : '<span class="pill blue">✓ Accepted · assigned</span>') : ''}</div>
+          <div class="small muted">${esc(r.affiliation)} · ${esc(r.expertise.join(' · '))}</div>
           <div class="small">${esc(r.reason)}</div>
         </div>
         <div style="text-align:right">
@@ -346,14 +378,55 @@
           <div class="small muted">${r.activeReviews}/${r.capacity} active</div>
         </div>
       </div>`).join('');
+    if ($('mViewInvite')) $('mViewInvite').addEventListener('click', e => { e.preventDefault(); openInvitation(id); });
+    if (cur) { selected = cur.id; updateSendButton(); }
     $('mList').querySelectorAll('.reviewer').forEach(el => el.addEventListener('click', () => {
       if (el.dataset.ok !== 'true') return;
       $('mList').querySelectorAll('.reviewer').forEach(x => x.classList.toggle('selected', x === el));
       el.querySelector('input').checked = true;
       selected = el.dataset.id;
-      $('mAssign').disabled = false;
+      updateSendButton();
     }));
   }
+
+  function emailHtml(email, status) {
+    const statusPill = status === 'Accepted' ? '<span class="pill green">✓ Accepted by reviewer</span>'
+      : status === 'Pending' ? '<span class="pill amber">Awaiting reviewer acceptance</span>'
+      : status ? `<span class="pill grey">${esc(status)}</span>` : '';
+    return `<div class="email-preview">
+      <div class="email-head">
+        <div><span class="lbl">From</span> ${esc(email.from)}</div>
+        <div><span class="lbl">To</span> <b>${esc(email.to)}</b></div>
+        <div><span class="lbl">Subject</span> ${esc(email.subject)}</div>
+        <div><span class="lbl">Sent</span> ${esc(UEP.fmtDate(email.sentAt))} · <span class="muted small">${esc(email.delivery)}</span> ${statusPill}</div>
+      </div>
+      <pre class="email-body">${esc(email.body).replace(esc(email.link), `<a href="${esc(email.link)}" target="_blank" rel="noopener">${esc(email.link)}</a>`)}</pre>
+      ${status === 'Pending' ? `<div class="row"><a class="btn small" href="${esc(email.link)}" target="_blank" rel="noopener">Open invitation link (as the reviewer) ↗</a>
+        <button class="secondary small" id="mCopyLink">Copy link</button></div>
+        <p class="small muted">This prototype does not deliver real e-mail: the message is kept in the platform outbox. Open the link to accept or decline as the reviewer; the dashboard unlocks <b>Review</b> once it is accepted.</p>` : ''}
+    </div>`;
+  }
+  function wireCopy(email) {
+    const b = $('mCopyLink');
+    if (b) b.addEventListener('click', async () => { try { await navigator.clipboard.writeText(email.link); toast('Invitation link copied'); } catch { toast(email.link, 6000); } });
+  }
+
+  async function openInvitation(id) {
+    modalMsc = id;
+    $('mErr').classList.add('hidden');
+    $('mIntro').classList.add('hidden');
+    setFooter('view');
+    $('modal').classList.remove('hidden');
+    $('mList').innerHTML = '<p class="muted">Loading invitation…</p>';
+    try {
+      const res = await api(`/api/editor/mscs/${encodeURIComponent(id)}/invitation`);
+      $('mTitle').textContent = `Reviewer invitation · ${id}`;
+      $('mSub').textContent = res.email.subject;
+      $('mList').innerHTML = emailHtml(res.email, res.status);
+      wireCopy(res.email);
+    } catch (ex) { $('mList').innerHTML = `<div class="alert error">${esc(ex.message)}</div>`; }
+  }
+
   function closeModal() { $('modal').classList.add('hidden'); }
   $('mClose').addEventListener('click', closeModal);
   $('mCancel').addEventListener('click', closeModal);
@@ -361,11 +434,17 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
   $('mAssign').addEventListener('click', async () => {
     try {
+      $('mAssign').disabled = true;
       const res = await api(`/api/editor/mscs/${encodeURIComponent(modalMsc)}/assign`, { method: 'POST', body: { reviewerId: selected } });
-      closeModal();
-      toast(`${res.row.assignedReviewer} assigned to ${res.row.id}`);
+      toast(`Invitation e-mail sent to ${res.row.assignedReviewer}`);
+      $('mIntro').classList.add('hidden');
+      setFooter('sent');
+      $('mTitle').textContent = `Invitation sent · ${res.row.id}`;
+      $('mList').innerHTML = `<div class="alert ok small">✉ Invitation e-mail sent to <b>${esc(res.row.assignedReviewer)}</b> &lt;${esc(res.row.assignedReviewerEmail)}&gt;. Review &amp; annotation unlock once the reviewer accepts.</div>` + emailHtml(res.email, 'Pending');
+      wireCopy(res.email);
       load();
     } catch (ex) {
+      $('mAssign').disabled = false;
       $('mErr').textContent = ex.message;
       $('mErr').classList.remove('hidden');
     }

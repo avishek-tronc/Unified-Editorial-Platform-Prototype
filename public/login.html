@@ -35,7 +35,13 @@
       const body = {
         username: document.getElementById('username').value.trim(),
         password: document.getElementById('password').value,
-        role: document.querySelector('input[name=role]:checked').value
+        role: document.querySelector('input[name=role]:checked').value,
+        // client context for the usage-metrics audit trail
+        client: {
+          tz: (Intl.DateTimeFormat().resolvedOptions() || {}).timeZone || '',
+          lang: navigator.language || '',
+          screen: `${screen.width}x${screen.height}`
+        }
       };
       try {
         const res = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });

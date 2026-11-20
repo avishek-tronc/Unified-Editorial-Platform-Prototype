@@ -9,6 +9,11 @@
 
   try {
     msc = await api(`/api/mscs/${encodeURIComponent(mscId)}`);
+    if (msc.reviewStatus !== 'Complete' && msc.assignedReviewerId && msc.invitationStatus === 'Pending') {
+      $('head').innerHTML = `<div class="alert warn"><b>${esc(msc.id)} cannot be reviewed yet.</b> The invitation e-mail sent to <b>${esc(msc.assignedReviewer)}</b> &lt;${esc(msc.assignedReviewerEmail)}&gt; on ${esc(UEP.fmtDate(msc.invitationSentAt))} has not been accepted. The review starts once the reviewer accepts the invitation.</div><a class="btn" href="/dashboard">← Back to dashboard</a>`;
+      document.querySelector('.review-layout').classList.add('hidden');
+      return;
+    }
     if (msc.reviewStatus !== 'Complete' && !msc.assignedReviewerId) {
       $('head').innerHTML = `<div class="alert warn"><b>${esc(msc.id)} cannot be reviewed yet.</b> No reviewer has been assigned. Use <b>Look up reviewer</b> on the dashboard to assign one, then open Review &amp; annotate.</div><a class="btn" href="/dashboard">← Back to dashboard</a>`;
       document.querySelector('.review-layout').classList.add('hidden');
@@ -34,7 +39,7 @@
         <dl class="kv" style="grid-template-columns:auto auto;min-width:420px">
           <dt>Submitted</dt><dd>${fmtDate(msc.submittedAt)} <span class="pill ${msc.elapsedBand}">${fmtElapsed(msc.elapsedHours)}</span></dd>
           <dt>Integrity</dt><dd><span class="pill ${msc.integrityPassed ? 'green' : 'red'}">${msc.integrityPassed ? 'PASSED' : 'FAILED'}</span> <b style="color:${scoreColor(msc.integrityScore)}">${msc.integrityScore}</b>/10 · fitment ${msc.fitmentIndex}/100</dd>
-          <dt>Editor / reviewer</dt><dd>${esc(msc.assignedEditor || '—')} / ${msc.assignedReviewer ? esc(msc.assignedReviewer) : '<span class="pill amber">Unassigned</span>'}</dd>
+          <dt>Editor / reviewer</dt><dd>${esc(msc.assignedEditor || '—')} / ${msc.assignedReviewer ? `${esc(msc.assignedReviewer)} <span class="muted small">&lt;${esc(msc.assignedReviewerEmail)}&gt;</span>` : '<span class="pill amber">Unassigned</span>'}</dd>
           <dt>Review</dt><dd><span class="pill ${msc.reviewStatus === 'Complete' ? 'green' : msc.reviewStatus === 'In Progress' ? 'amber' : 'blue'}">${msc.reviewStatus}</span> started ${fmtDate(msc.reviewStartAt)} · <b id="progressLabel">${msc.reviewProgress}%</b></dd>
           <dt>Revisions</dt><dd>${msc.revisions ? `Yes (${msc.revisions}) — version ${msc.versions.length}` : 'No'}</dd>
         </dl>

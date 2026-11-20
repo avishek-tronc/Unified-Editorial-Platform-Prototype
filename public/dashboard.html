@@ -105,17 +105,17 @@
   <div class="modal-back hidden" id="modal">
     <div class="modal" role="dialog" aria-modal="true">
       <header>
-        <div style="flex:1"><h2 id="mTitle">Assign reviewer</h2><div class="muted small" id="mSub"></div></div>
+        <div style="flex:1"><h2 id="mTitle">Select reviewer</h2><div class="muted small" id="mSub"></div></div>
         <button class="ghost" id="mClose" aria-label="Close">✕</button>
       </header>
       <div class="body">
-        <div class="alert info small">Reviewers are proposed by availability: free capacity, leave status, expertise in the journal's scope and average turnaround.</div>
+        <div class="alert info small" id="mIntro">Select a reviewer and send them an invitation e-mail. The review can start only after the reviewer accepts the invitation. Reviewers are proposed by availability: free capacity, leave status, expertise in the journal's scope and average turnaround.</div>
         <div id="mList"></div>
         <div id="mErr" class="alert error hidden"></div>
       </div>
       <footer>
         <button class="secondary" id="mCancel">Cancel</button>
-        <button id="mAssign" disabled>Assign reviewer</button>
+        <button id="mAssign" disabled>✉ Send invitation e-mail</button>
       </footer>
     </div>
   </div>

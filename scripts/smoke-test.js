@@ -93,10 +93,41 @@ const samples = path.join(__dirname, '..', 'samples');
     const revs = await call('GET', `/api/editor/mscs/${mscId}/reviewers`);
     const pick = revs.body.reviewers.find(r => r.recommended);
     assert.ok(pick);
-    assert.strictEqual((await call('POST', `/api/editor/mscs/${mscId}/assign`, { reviewerId: pick.id })).status, 200);
+    assert.ok(revs.body.reviewers.every(r => /@/.test(r.email)), 'every reviewer has an e-mail address');
+    const inv = await call('POST', `/api/editor/mscs/${mscId}/assign`, { reviewerId: pick.id });
+    assert.strictEqual(inv.status, 200);
+    assert.ok(inv.body.email.to.includes(pick.email) && inv.body.email.link.includes('/invite/'));
+    assert.strictEqual(inv.body.row.invitationStatus, 'Pending');
+    assert.strictEqual(inv.body.row.canReview, false);
     const unavailable = revs.body.reviewers.find(r => !r.available);
     if (unavailable) assert.strictEqual((await call('POST', `/api/editor/mscs/${mscId}/assign`, { reviewerId: unavailable.id })).status, 409);
-    step(`Reviewer proposed by availability and assigned (${pick.name})`);
+    step(`Reviewer selected with e-mail (${pick.name} <${pick.email}>) and invitation e-mail sent`);
+
+    assert.strictEqual((await call('POST', `/api/mscs/${mscId}/start`)).status, 409, 'review must wait for the reviewer to accept');
+    const token = inv.body.email.link.split('/invite/')[1];
+    const saved = cookie; cookie = ''; // the reviewer opens the link without logging in
+    const view = await call('GET', `/api/invitations/${token}`);
+    assert.strictEqual(view.body.status, 'Pending');
+    assert.strictEqual(view.body.msc.id, mscId);
+    assert.strictEqual((await call('GET', '/api/invitations/' + 'f'.repeat(36))).status, 404);
+    const acc = await call('POST', `/api/invitations/${token}/respond`, { accept: true });
+    assert.strictEqual(acc.body.status, 'Accepted');
+    assert.strictEqual((await call('POST', `/api/invitations/${token}/respond`, { accept: false })).status, 409);
+    cookie = saved;
+    assert.strictEqual((await call('GET', `/api/editor/mscs/${mscId}/invitation`)).body.status, 'Accepted');
+    step('Review blocked until the reviewer accepts the invitation link (no login needed)');
+
+    const other = dash.body.mscs.find(m => m.reviewStatus === 'Open' && !m.assignedReviewerId && m.id !== mscId);
+    const orevs = await call('GET', `/api/editor/mscs/${other.id}/reviewers`);
+    const inv2 = await call('POST', `/api/editor/mscs/${other.id}/assign`, { reviewerId: orevs.body.reviewers.find(r => r.available).id });
+    const resend = await call('POST', `/api/editor/mscs/${other.id}/assign`, { reviewerId: inv2.body.row.assignedReviewerId });
+    assert.strictEqual(resend.status, 200);
+    assert.strictEqual((await call('GET', `/api/invitations/${inv2.body.email.link.split('/invite/')[1]}`)).status, 404, 'a re-sent invitation replaces the old link');
+    const dec2 = await call('POST', `/api/invitations/${resend.body.email.link.split('/invite/')[1]}/respond`, { accept: false });
+    assert.strictEqual(dec2.body.status, 'Declined');
+    const otherRow = (await call('GET', '/api/editor/mscs')).body.mscs.find(m => m.id === other.id);
+    assert.strictEqual(otherRow.assignedReviewerId, null);
+    step('Re-sent invitation replaces the old link; declining frees the MSC for another reviewer');
 
     const started = await call('POST', `/api/mscs/${mscId}/start`);
     assert.strictEqual(started.body.reviewStatus, 'In Progress');
@@ -142,6 +173,24 @@ const samples = path.join(__dirname, '..', 'samples');
     assert.strictEqual(pe.body.finalDecision, 'Assign to PE');
     assert.strictEqual(pe.body.publishingEditor, 'Margaret Ellis');
     step('Assign to PE decision requires and records a Publishing Editor');
+
+    // usage metrics & audit trail
+    assert.strictEqual((await call('POST', '/api/track/page', { path: '/dashboard', title: 'MSC Dashboard' })).body.ok, true);
+    assert.strictEqual((await call('POST', '/api/track/heartbeat')).body.ok, true);
+    await call('POST', '/api/track/page', { path: `/review/${mscId}`, title: 'Review' });
+    const met = await call('GET', '/api/metrics');
+    assert.ok(met.body.kpis.sessions >= 4 && met.body.kpis.pageViews >= 2);
+    const me = met.body.sessions.find(x => x.id === met.body.currentSessionId);
+    assert.ok(me && me.active && me.ip && me.os && me.footprint && me.location && me.pages.length === 2);
+    assert.ok(met.body.pages.find(p => p.path === '/review/:id'));
+    const aud = await call('GET', '/api/metrics/audit');
+    for (const ev of ['login', 'login.failed', 'logout', 'page.view', 'invitation.sent', 'invitation.accepted', 'invitation.declined', 'review.started', 'review.decision', 'msc.submitted']) {
+      assert.ok(aud.body.events.includes(ev), `audit trail records ${ev}`);
+    }
+    const csv = await call('GET', '/api/metrics/export/audit');
+    assert.strictEqual(csv.status, 200);
+    assert.ok(Buffer.from(csv.body).toString().startsWith('at,event,user'));
+    step(`Usage metrics: sessions, IP, OS, footprint, pages and ${aud.body.total} audit events recorded`);
 
     console.log('\nAll smoke tests passed.');
   } catch (e) {

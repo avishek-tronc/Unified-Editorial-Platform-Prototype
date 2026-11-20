@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Review invitation · Unified Editorial Platform</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="card invite-card" id="card">
+      <h1>📚 Invitation to review</h1>
+      <p class="muted">Loading invitation…</p>
+    </div>
+  </div>
+  <script>
+    (async () => {
+      const token = location.pathname.split('/').pop();
+      const card = document.getElementById('card');
+      const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const fmt = iso => iso ? new Date(iso).toLocaleString(undefined, { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+      async function call(method, body) {
+        const res = await fetch(`/api/invitations/${encodeURIComponent(token)}${body ? '/respond' : ''}`, {
+          method, headers: body ? { 'Content-Type': 'application/json' } : undefined, body: body ? JSON.stringify(body) : undefined
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+        return data;
+      }
+      function render(inv, note) {
+        const status = inv.status === 'Pending'
+          ? '<span class="pill amber">Awaiting your response</span>'
+          : inv.status === 'Accepted' ? '<span class="pill green">✓ Accepted</span>' : `<span class="pill grey">${esc(inv.status)}</span>`;
+        card.innerHTML = `
+          <h1>📚 Invitation to review</h1>
+          <p class="muted">${esc(inv.msc.journal)}</p>
+          ${note || ''}
+          <p>Dear <b>${esc(inv.reviewer ? inv.reviewer.name : 'Reviewer')}</b>${inv.reviewer ? ` <span class="muted small">&lt;${esc(inv.reviewer.email)}&gt;</span>` : ''},<br>you have been invited to review the manuscript below.</p>
+          <dl class="kv">
+            <dt>MSC ID</dt><dd><b>${esc(inv.msc.id)}</b></dd>
+            <dt>Title</dt><dd>${esc(inv.msc.title)}</dd>
+            <dt>Authors</dt><dd>${esc((inv.msc.authors || []).join(', '))}</dd>
+            <dt>Invited</dt><dd>${esc(fmt(inv.sentAt))}</dd>
+            <dt>Status</dt><dd>${status}${inv.respondedAt ? ` <span class="muted small">${esc(fmt(inv.respondedAt))}</span>` : ''}</dd>
+          </dl>
+          <details><summary>Abstract</summary><p class="small">${esc(inv.msc.abstract)}</p></details>
+          ${inv.status === 'Pending' ? `
+            <div class="row" style="margin-top:16px;gap:8px;display:flex">
+              <button id="accept">✓ Accept invitation</button>
+              <button class="secondary" id="decline">Decline</button>
+            </div>` : ''}
+          <p class="small muted" style="margin-top:16px">Prototype: this page stands in for the reviewer's e-mail link. No login is needed; the link itself is the credential.</p>`;
+        const respond = accept => async () => {
+          card.querySelectorAll('button').forEach(b => { b.disabled = true; });
+          try {
+            const out = await call('POST', { accept });
+            render(out, accept
+              ? '<div class="alert ok">Thank you — you have accepted the invitation. The manuscript is now open for review &amp; annotation on the editorial dashboard.</div>'
+              : '<div class="alert warn">You have declined the invitation. The editor will invite another reviewer.</div>');
+          } catch (ex) { render(inv, `<div class="alert error">${esc(ex.message)}</div>`); }
+        };
+        if (inv.status === 'Pending') {
+          document.getElementById('accept').onclick = respond(true);
+          document.getElementById('decline').onclick = respond(false);
+        }
+      }
+      try { render(await call('GET')); } catch (ex) {
+        card.innerHTML = `<h1>📚 Invitation to review</h1><div class="alert error">${esc(ex.message)}</div>`;
+      }
+    })();
+  </script>
+</body>
+</html>

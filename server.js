@@ -19,6 +19,7 @@ const { buildTemplate } = require('./src/template');
 const { JOURNALS, getJournal } = require('./src/journals');
 const service = require('./src/service');
 const { buildOutline } = require('./src/outline');
+const usage = require('./src/usage');
 
 const PORT = Number(process.env.PORT) || 3000;
 const POC_USER = 'Admin';
@@ -56,18 +57,26 @@ function requireRole(...roles) {
 }
 
 app.post('/api/login', (req, res) => {
-  const { username, password, role } = req.body || {};
+  const { username, password, role, client } = req.body || {};
   if (username !== POC_USER || password !== POC_PASS) {
+    usage.audit(req, 'login.failed', { attemptedUser: String(username || '').slice(0, 60) });
     return res.status(401).json({ error: 'Invalid username or password.' });
   }
   if (!['Author', 'Editor'].includes(role)) {
     return res.status(400).json({ error: 'Choose the Author or Editor view.' });
   }
-  req.session.user = { username, role, displayName: role === 'Editor' ? 'Admin (Editor)' : 'Admin (Author)' };
-  res.json({ ok: true, redirect: role === 'Editor' ? '/dashboard' : '/author' });
+  req.session.regenerate(err => {
+    if (err) return res.status(500).json({ error: 'Could not start a session.' });
+    req.session.user = { username, role, displayName: role === 'Editor' ? 'Admin (Editor)' : 'Admin (Author)' };
+    const s = usage.startSession(req, client || {});
+    usage.audit(req, 'login', { footprint: s.footprint, location: s.location.label, browser: s.browser, device: s.device });
+    res.json({ ok: true, redirect: role === 'Editor' ? '/dashboard' : '/author' });
+  });
 });
 
 app.post('/api/logout', (req, res) => {
+  const s = usage.endSession(req, 'Logged out');
+  if (req.session.user) usage.audit(req, 'logout', s ? { durationSeconds: Math.round((new Date(s.endedAt) - new Date(s.startedAt)) / 1000), pageViews: s.pages.length } : {});
   req.session.destroy(() => res.json({ ok: true }));
 });
 
@@ -84,6 +93,9 @@ app.get('/login', page('login'));
 app.get('/author', requireRole('Author'), page('author'));
 app.get('/dashboard', requireRole('Editor'), page('dashboard'));
 app.get('/review/:id', requireRole('Editor'), page('review'));
+app.get('/metrics', requireRole(), page('metrics'));
+// Reviewer-facing invitation page: reached from the invitation e-mail, no login needed.
+app.get('/invite/:token', page('invite'));
 
 app.use('/vendor/chart.js', express.static(path.join(__dirname, 'node_modules', 'chart.js', 'dist')));
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
@@ -104,6 +116,78 @@ app.get('/api/template/:journalId', requireRole(), async (req, res, next) => {
     res.setHeader('Content-Disposition', `attachment; filename="${j.id}-MSC-Template.docx"`);
     res.send(buf);
   } catch (e) { next(e); }
+});
+
+// ---------- usage tracking & metrics ----------
+
+app.post('/api/track/page', requireRole(), (req, res) => {
+  const { path: p, title } = req.body || {};
+  const s = usage.trackPage(req, { path: p, title });
+  if (s) usage.audit(req, 'page.view', { path: String(p || '').slice(0, 160) });
+  res.json({ ok: !!s });
+});
+
+app.post('/api/track/heartbeat', requireRole(), (req, res) => {
+  res.json({ ok: !!usage.heartbeat(req) });
+});
+
+// sendBeacon on page hide/unload (text/plain or JSON body; either is fine)
+app.post('/api/track/leave', express.text({ type: '*/*', limit: '2kb' }), (req, res) => {
+  if (req.session.user) usage.heartbeat(req, { leaving: true });
+  res.status(204).end();
+});
+
+app.get('/api/metrics', requireRole(), (req, res) => {
+  const days = Math.min(365, Math.max(1, Number(req.query.days) || 30));
+  res.json({ ...usage.metrics({ days }), currentSessionId: req.session.usageId || null });
+});
+
+app.get('/api/metrics/audit', requireRole(), (req, res) => {
+  const { event, user, q } = req.query;
+  res.json(usage.readAudit({ limit: Math.min(5000, Number(req.query.limit) || 500), event, user, q }));
+});
+
+app.get('/api/metrics/export/:kind', requireRole(), (req, res) => {
+  let csv;
+  if (req.params.kind === 'audit') csv = usage.auditCsv(usage.readAudit({ limit: 1e6 }).entries);
+  else if (req.params.kind === 'sessions') csv = usage.sessionsCsv(usage.metrics({ days: 365 }).sessions);
+  else return res.status(404).json({ error: 'Unknown export' });
+  usage.audit(req, 'metrics.export', { kind: req.params.kind });
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="uep-${req.params.kind}-${new Date().toISOString().slice(0, 10)}.csv"`);
+  res.send(csv);
+});
+
+// ---------- reviewer invitation (public, token-protected) ----------
+
+function invitationView(found) {
+  const { msc, invitation } = found;
+  const db = store.get();
+  const reviewer = db.reviewers.find(r => r.id === invitation.reviewerId);
+  const journal = getJournal(msc.journalId);
+  return {
+    status: invitation.status,
+    sentAt: invitation.sentAt,
+    respondedAt: invitation.respondedAt,
+    reviewer: reviewer ? { name: reviewer.name, email: service.reviewerEmail(reviewer), affiliation: reviewer.affiliation } : null,
+    msc: { id: msc.id, title: msc.title, authors: msc.authors, abstract: msc.abstract, journal: journal ? journal.name : msc.journalId, reviewStatus: msc.reviewStatus }
+  };
+}
+
+app.get('/api/invitations/:token', (req, res) => {
+  const found = service.findInvitation(req.params.token);
+  if (!found) return res.status(404).json({ error: 'This invitation link is not valid or has been replaced by a newer invitation.' });
+  usage.audit(req, 'invitation.viewed', { mscId: found.msc.id, reviewerId: found.invitation.reviewerId, status: found.invitation.status });
+  res.json(invitationView(found));
+});
+
+app.post('/api/invitations/:token/respond', (req, res) => {
+  const accept = !!(req.body || {}).accept;
+  const out = service.respondInvitation(req.params.token, accept);
+  if (out.error) return res.status(out.status).json({ error: out.error });
+  store.save();
+  usage.audit(req, accept ? 'invitation.accepted' : 'invitation.declined', { mscId: out.msc.id, reviewerId: out.invitation.reviewerId });
+  res.json(invitationView(out));
 });
 
 // ---------- author ----------
@@ -152,6 +236,7 @@ app.post('/api/author/check', requireRole('Author'), (req, res, next) => {
     // keep only the latest 50 checks to bound file size
     if (db.checks.length > 50) db.checks.splice(0, db.checks.length - 50);
     store.save();
+    usage.audit(req, 'msc.integrity-check', { checkId: check.id, file: check.fileName, journalId, score: report.score, passed: report.passed, revising: check.revisingMscId });
     res.json({
       checkId: check.id,
       attempt: check.attempt,
@@ -197,6 +282,7 @@ app.post('/api/author/submit', requireRole('Author'), (req, res) => {
   delete check.report.html;
   delete check.report.text;
   store.save();
+  usage.audit(req, check.revisingMscId ? 'msc.resubmitted' : 'msc.submitted', { mscId: msc.id, journalId: msc.journalId, score: check.report.score });
   res.json({ ok: true, mscId: msc.id, revision: !!check.revisingMscId });
 });
 
@@ -233,10 +319,31 @@ app.post('/api/editor/mscs/:id/assign', requireRole('Editor'), (req, res) => {
   const option = service.suggestReviewers(msc).find(r => r.id === (req.body || {}).reviewerId);
   if (!option) return res.status(404).json({ error: 'Reviewer not found' });
   if (!option.available && !option.current) return res.status(409).json({ error: `${option.name} is not available: ${option.reason}.` });
-  msc.assignedReviewer = option.id;
-  msc.assignedAt = new Date().toISOString();
+  if (option.current && service.invitationStatus(msc) === 'Accepted') return res.status(409).json({ error: `${option.name} has already accepted this review.` });
+  if (msc.reviewStatus === 'In Progress' && msc.assignedReviewer && msc.assignedReviewer !== option.id && service.invitationStatus(msc) === 'Accepted') {
+    return res.status(409).json({ error: 'The review is in progress with the current reviewer; it can no longer be reassigned.' });
+  }
+  const reviewer = db.reviewers.find(r => r.id === option.id);
+  const previous = msc.assignedReviewer;
+  const email = service.inviteReviewer(msc, reviewer, { baseUrl: `${req.protocol}://${req.get('host')}`, invitedBy: req.session.user.displayName });
   store.save();
-  res.json({ ok: true, row: service.dashboardRow(msc) });
+  usage.audit(req, option.current ? 'invitation.resent' : 'invitation.sent', { mscId: msc.id, reviewerId: reviewer.id, to: email.to, replacedReviewer: previous && previous !== reviewer.id ? previous : undefined });
+  res.json({ ok: true, row: service.dashboardRow(msc), email });
+});
+
+// Seeded invitation e-mails store a relative link; serve it against this host.
+function absoluteLinks(email, req) {
+  if (!email.link.startsWith('/')) return email;
+  const link = `${req.protocol}://${req.get('host')}${email.link}`;
+  return { ...email, link, body: email.body.split(email.link).join(link) };
+}
+
+app.get('/api/editor/mscs/:id/invitation', requireRole('Editor'), (req, res) => {
+  const msc = store.get().mscs.find(m => m.id === req.params.id);
+  if (!msc) return res.status(404).json({ error: 'MSC not found' });
+  const email = service.latestInvitationEmail(msc);
+  if (!email) return res.status(404).json({ error: 'No invitation e-mail has been sent for this MSC.' });
+  res.json({ email: absoluteLinks(email, req), status: service.invitationStatus(msc), respondedAt: msc.invitation.respondedAt, history: msc.invitationHistory || [] });
 });
 
 // ---------- review & annotation ----------
@@ -254,6 +361,10 @@ function requireReviewable(msc, res) {
   }
   if (!msc.assignedReviewer) {
     res.status(409).json({ error: 'Assign a reviewer to this MSC (Look up reviewer on the dashboard) before it can be reviewed and annotated.' });
+    return false;
+  }
+  if (service.invitationStatus(msc) !== 'Accepted') {
+    res.status(409).json({ error: 'The reviewer has not accepted the invitation yet. The review starts once the invitation is accepted.' });
     return false;
   }
   return true;
@@ -277,6 +388,7 @@ app.post('/api/mscs/:id/start', requireRole('Editor'), (req, res) => {
     msc.reviewStartAt = msc.reviewStartAt || new Date().toISOString();
     msc.reviewProgress = Math.max(msc.reviewProgress, 5);
     store.save();
+    usage.audit(req, 'review.started', { mscId: msc.id, reviewerId: msc.assignedReviewer });
   }
   res.json(service.reviewPayload(msc));
 });
@@ -311,6 +423,7 @@ app.post('/api/mscs/:id/annotations', requireRole('Editor'), (req, res) => {
     createdAt: new Date().toISOString()
   };
   msc.annotations.push(a);
+  usage.audit(req, 'review.annotation', { mscId: msc.id, type, annotationId: a.id });
   if (msc.reviewStatus === 'Open') {
     msc.reviewStatus = 'In Progress';
     msc.reviewStartAt = msc.reviewStartAt || a.createdAt;
@@ -383,6 +496,7 @@ app.post('/api/mscs/:id/decision', requireRole('Editor'), (req, res) => {
   msc.feedbackStatus = type === 'Revise' ? 'In Progress' : msc.feedbackStatus;
   if (type === 'Transfer') msc.transferredFrom = msc.journalId;
   store.save();
+  usage.audit(req, 'review.decision', { mscId: msc.id, decision: type, revisionType: msc.decision.revisionType, alternateJournalId: msc.decision.alternateJournalId, publishingEditorId: msc.decision.publishingEditorId });
   res.json(service.reviewPayload(msc));
 });
 

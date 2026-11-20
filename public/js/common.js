@@ -56,13 +56,36 @@ const UEP = (() => {
       <nav>${nav}</nav>
       <div class="spacer"></div>
       <div class="user">Signed in as <b>${esc(me.displayName)}</b></div>
+      <a href="/metrics" class="metrics-link ${active === 'metrics' ? 'active' : ''}" title="Usage analytics &amp; audit trail">📈 Usage Metrics</a>
       <button class="small" id="logoutBtn">Log out</button>`;
     document.getElementById('logoutBtn').onclick = async () => {
+      stopTracking();
       await api('/api/logout', { method: 'POST' });
       location.href = '/login';
     };
+    startTracking();
     return me;
   }
+
+  // ----- usage tracking: page view, heartbeat while visible, beacon on leave -----
+  let hbTimer = null; let tracking = false;
+  function post(url, body) {
+    return fetch(url, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }).catch(() => {});
+  }
+  function beat() { if (document.visibilityState === 'visible') post('/api/track/heartbeat'); }
+  function startTracking() {
+    if (tracking) return;
+    tracking = true;
+    post('/api/track/page', { path: location.pathname + location.search, title: document.title });
+    hbTimer = setInterval(beat, 20000);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') beat(); });
+    window.addEventListener('pagehide', () => {
+      if (!tracking) return;
+      if (navigator.sendBeacon) navigator.sendBeacon('/api/track/leave', new Blob(['{}'], { type: 'text/plain' }));
+      else post('/api/track/leave');
+    });
+  }
+  function stopTracking() { tracking = false; clearInterval(hbTimer); }
 
   return { api, esc, fmtDate, fmtElapsed, scoreColor, toast, initTopbar };
 })();
