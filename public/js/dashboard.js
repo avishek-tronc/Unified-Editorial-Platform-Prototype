@@ -3,7 +3,9 @@
   await UEP.initTopbar('dashboard');
 
   const COLORS = { green: '#12805c', amber: '#e19a17', red: '#c0392b', blue: '#2f6fde', violet: '#6d3fc0', grey: '#9aa4b8', teal: '#16a085' };
-  const DECISION_COLORS = { Accept: COLORS.green, Reject: COLORS.red, Transfer: COLORS.violet, Revise: COLORS.amber, Pending: COLORS.grey };
+  const DECISION_COLORS = { Accept: COLORS.green, Reject: COLORS.red, Transfer: COLORS.violet, Revise: COLORS.amber, 'Assign to PE': '#0e6a7d', Pending: COLORS.grey };
+  let page = 1;
+  let pageSize = Number(localStorage.getItem('uep.pageSize')) || 20;
   let data = { mscs: [], editors: [], reviewers: [] };
   let journals = [];
   let sort = { key: 'submittedAt', dir: -1 };
@@ -57,8 +59,8 @@
 
   function decisionCell(m) {
     if (!m.finalDecision) return '<span class="muted">Pending</span>';
-    const cls = { Accept: 'green', Reject: 'red', Transfer: 'violet', Revise: 'amber' }[m.finalDecision];
-    const extra = m.finalDecision === 'Revise' ? ` (${m.revisionType})` : m.finalDecision === 'Transfer' ? ` → ${m.transferredTo}` : '';
+    const cls = { Accept: 'green', Reject: 'red', Transfer: 'violet', Revise: 'amber', 'Assign to PE': 'teal' }[m.finalDecision];
+    const extra = m.finalDecision === 'Revise' ? ` (${m.revisionType})` : m.finalDecision === 'Transfer' ? ` → ${m.transferredTo}` : m.finalDecision === 'Assign to PE' && m.publishingEditor ? ` → ${m.publishingEditor}` : '';
     return `<span class="pill ${cls}">${m.finalDecision}${extra}</span>${m.feedbackStatus ? `<div class="muted small">Feedback: ${m.feedbackStatus}</div>` : ''}`;
   }
 
@@ -77,14 +79,22 @@
     document.querySelectorAll('#mscTable th[data-sort]').forEach(th => {
       th.textContent = th.textContent.replace(/ [▲▼]$/, '') + (th.dataset.sort === k ? (sort.dir > 0 ? ' ▲' : ' ▼') : '');
     });
-    $('countLabel').textContent = `${rows.length} of ${data.mscs.length}`;
+    const pages = Math.max(1, Math.ceil(rows.length / pageSize));
+    page = Math.min(Math.max(1, page), pages);
+    const from = (page - 1) * pageSize;
+    const pageRows = rows.slice(from, from + pageSize);
+    $('countLabel').textContent = rows.length
+      ? `Showing ${from + 1}–${from + pageRows.length} of ${rows.length}${rows.length !== data.mscs.length ? ` (filtered from ${data.mscs.length})` : ''}`
+      : `0 of ${data.mscs.length}`;
+    renderPager(pages);
     const tb = document.querySelector('#mscTable tbody');
     if (!rows.length) { tb.innerHTML = '<tr><td colspan="17" class="muted" style="text-align:center;padding:30px">No manuscripts match the filters.</td></tr>'; return; }
-    tb.innerHTML = rows.map(m => {
+    tb.innerHTML = pageRows.map(m => {
       const active = m.reviewStatus === 'Open' || m.reviewStatus === 'In Progress';
+      const blockedTip = active ? 'Assign a reviewer first (Look up) to enable review' : 'Review is complete';
       const j = journals.find(x => x.id === m.journalId);
       return `<tr>
-        <td>${active ? `<a class="msc-link" href="/review/${encodeURIComponent(m.id)}" title="Open the MSC review &amp; annotation page">${esc(m.id)}</a>` : `<span class="msc-id" title="Review complete">${esc(m.id)}</span>`}</td>
+        <td>${m.canReview ? `<a class="msc-link" href="/review/${encodeURIComponent(m.id)}" title="Open the MSC review &amp; annotation page">${esc(m.id)}</a>` : `<span class="msc-id" title="${blockedTip}">${esc(m.id)}</span>`}</td>
         <td class="title-cell" title="${esc(m.intro)}">${esc(m.title)}</td>
         <td>${esc(m.authorName)}</td>
         <td>${fmtDateShort(m.submittedAt)}</td>
@@ -101,10 +111,23 @@
         <td>${fmtDateShort(m.reviewStartAt)}</td>
         <td><div class="progress"><div class="bar"><span style="width:${m.reviewProgress}%;background:${m.reviewProgress >= 100 ? COLORS.green : COLORS.blue}"></span></div><small>${m.reviewProgress}%</small></div></td>
         <td>${decisionCell(m)}</td>
-        <td>${active ? `<a class="btn small" href="/review/${encodeURIComponent(m.id)}">Review →</a>` : '<span class="btn small disabled" title="Review is complete">Closed</span>'}</td>
+        <td>${m.canReview ? `<a class="btn small" href="/review/${encodeURIComponent(m.id)}">Review →</a>` : active ? `<span class="btn small disabled" title="${blockedTip}">🔒 Review</span>` : '<span class="btn small disabled" title="Review is complete">Closed</span>'}</td>
       </tr>`;
     }).join('');
     tb.querySelectorAll('[data-lookup]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); openModal(a.dataset.lookup); }));
+  }
+
+  function renderPager(pages) {
+    const btn = (label, p, opts = {}) => `<button type="button" data-page="${p}" ${opts.disabled ? 'disabled' : ''} class="${opts.current ? 'current' : ''}">${label}</button>`;
+    let html = btn('‹ Prev', page - 1, { disabled: page <= 1 });
+    for (let p = 1; p <= pages; p++) html += btn(p, p, { current: p === page });
+    html += btn('Next ›', page + 1, { disabled: page >= pages });
+    $('pager').innerHTML = pages > 1 ? html : '';
+    $('pager').querySelectorAll('button[data-page]').forEach(b => b.addEventListener('click', () => {
+      page = Number(b.dataset.page);
+      renderTable(filtered());
+      document.getElementById('mscTable').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }));
   }
 
   function renderKpis(rows) {
@@ -143,7 +166,7 @@
       data: { labels: ['< 8 h', '8–24 h', '> 24 h'], datasets: [{ data: bands.map(b => active.filter(m => m.elapsedBand === b).length), backgroundColor: [COLORS.green, COLORS.amber, COLORS.red] }] },
       options: { onClick: (e, els) => { if (els.length) { $('fElapsed').value = bands[els[0].index]; render(); } } }
     });
-    const decisions = ['Accept', 'Reject', 'Transfer', 'Revise', 'Pending'];
+    const decisions = ['Accept', 'Reject', 'Transfer', 'Revise', 'Assign to PE', 'Pending'];
     chart('chDecision', {
       type: 'bar',
       data: { labels: decisions, datasets: [{ label: 'MSCs', data: decisions.map(d => rows.filter(m => (m.finalDecision || 'Pending') === d).length), backgroundColor: decisions.map(d => DECISION_COLORS[d]) }] },
@@ -226,7 +249,7 @@
     const label = d => period === 'week'
       ? `Wk of ${d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}`
       : d.toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
-    const decisions = ['Accept', 'Reject', 'Transfer', 'Revise'];
+    const decisions = ['Accept', 'Reject', 'Transfer', 'Revise', 'Assign to PE'];
     chart('chPeriod', {
       type: 'bar',
       data: {
@@ -259,14 +282,29 @@
     document.querySelectorAll('#filters input, #filters select').forEach(el => { el.value = ''; });
   }
 
-  document.querySelectorAll('#filters input, #filters select').forEach(el => el.addEventListener(el.tagName === 'INPUT' && el.type === 'text' ? 'input' : 'change', render));
-  $('resetFilters').addEventListener('click', () => { clearFilters(); render(); });
+  document.querySelectorAll('#filters input, #filters select').forEach(el => el.addEventListener(el.tagName === 'INPUT' && el.type === 'text' ? 'input' : 'change', () => { page = 1; render(); }));
+  $('pageSize').value = String(pageSize);
+  $('pageSize').addEventListener('change', () => {
+    pageSize = Number($('pageSize').value);
+    localStorage.setItem('uep.pageSize', pageSize);
+    page = 1;
+    renderTable(filtered());
+  });
+  // Collapsible charts panel: remember state; resize charts when reopened.
+  const panel = $('chartsPanel');
+  if (localStorage.getItem('uep.chartsOpen') === '0') panel.open = false;
+  panel.addEventListener('toggle', () => {
+    localStorage.setItem('uep.chartsOpen', panel.open ? '1' : '0');
+    if (panel.open) Object.values(charts).forEach(c => c.resize());
+  });
+  $('resetFilters').addEventListener('click', () => { clearFilters(); page = 1; render(); });
   document.querySelectorAll('#mscTable th[data-sort]').forEach(th => th.addEventListener('click', () => {
     sort = { key: th.dataset.sort, dir: sort.key === th.dataset.sort ? -sort.dir : 1 };
     render();
   }));
   $('refreshBtn').addEventListener('click', async () => {
     clearFilters();
+    page = 1;
     sort = { key: 'submittedAt', dir: -1 };
     await load();
     toast('Dashboard refreshed and filters cleared');

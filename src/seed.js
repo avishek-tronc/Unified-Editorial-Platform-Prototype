@@ -249,7 +249,10 @@ const ARCHIVE = [
   [10, 'Asymmetric Synthesis of Tetrahydroisoquinoline Alkaloids', 95, 'Accept', 'RV-2', 44],
   [4, 'Stretchable Graphene Sensors for Wearable Sweat Analysis', 110, 'Transfer', 'RV-5', 80, null, 'ANALCHEM'],
   [6, 'Atmospheric Oxidation of Biogenic Volatile Organic Compounds', 128, 'Accept', 'RV-7', 72],
-  [7, 'Microfluidic Immunoassay for Point-of-Care Troponin Detection', 140, 'Reject', 'RV-8', 50]
+  [7, 'Microfluidic Immunoassay for Point-of-Care Troponin Detection', 140, 'Reject', 'RV-8', 50],
+  [0, 'Iron-Catalyzed Cross-Coupling of Alkyl Halides with Aryl Grignard Reagents', 6, 'Assign to PE', 'RV-1', 52, null, 'PE-1'],
+  [5, 'Proton-Coupled Electron Transfer at Gold Electrode Interfaces', 18, 'Assign to PE', 'RV-6', 64, null, 'PE-2'],
+  [8, 'Self-Healing Hydrogels Crosslinked by Dynamic Boronate Esters', 58, 'Assign to PE', 'RV-9', 70, null, 'PE-2']
 ];
 
 async function buildSeed() {
@@ -262,6 +265,7 @@ async function buildSeed() {
       ...r,
       unavailableUntil: unavailableInDays ? new Date(now + unavailableInDays * 24 * H).toISOString() : null
     })),
+    publishingEditors: service.PUBLISHING_EDITORS,
     mscs: [],
     checks: []
   };
@@ -289,7 +293,7 @@ async function buildSeed() {
       reviewProgress: 100,
       completedAt: decidedAt,
       feedbackStatus: type === 'Revise' ? 'In Progress' : null,
-      decision: { type, revisionType: revisionType || null, alternateJournalId: alt || null, summary: `${type} — see reviewer comments.`, decidedAt, decidedBy: reviewer }
+      decision: { type, revisionType: revisionType || null, alternateJournalId: type === 'Transfer' ? alt : null, publishingEditorId: type === 'Assign to PE' ? alt : null, summary: `${type} — see reviewer comments.`, decidedAt, decidedBy: reviewer }
     });
     msc.decisionHistory.push({ ...msc.decision, version: 1 });
   });

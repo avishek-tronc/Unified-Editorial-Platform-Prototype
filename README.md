@@ -3,7 +3,7 @@
 A working prototype of the Unified Editorial Platform, built with **Node.js + Express**. It covers the full manuscript (MSC) flow:
 
 * **Author view:** log in, choose a journal, download the journal's MSC template, upload an MSC (.docx), get an integrity score from 1 to 10 with actionable feedback, submit it (only above 6), and re-submit after a *Revise* decision.
-* **Editor view:** log in, use the MSC dashboard (17-column table, filters, KPIs and charts), look up and assign reviewers in a modal, then review and annotate the immutable MSC and record the final decision (Accept / Reject / Transfer / Revise).
+* **Editor view:** log in, use the MSC dashboard (17-column table, filters, KPIs and charts), look up and assign reviewers in a modal, then review and annotate the immutable MSC and record the final decision (Accept / Reject / Transfer / Revise / Assign to PE).
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
@@ -41,7 +41,7 @@ On the first start the app seeds `data/db.json` with 4 editors, 9 reviewers, 12 
 2. **Editor:** log out, then log in as Admin/Admin with *Editor* selected.
    * The dashboard shows the new MSC as *Open* with a green time-elapsed badge.
    * Click **Look up reviewer** to open the modal, pick the recommended reviewer and assign them.
-   * Click **Review & annotate**. Select text in the manuscript and use **Highlight**, **Underline** or **Comment**. Write general feedback in the left pane. The reading progress is tracked as you scroll.
+   * Click **Review** (or the MSC ID). It is only enabled once a reviewer is assigned. Select text in the manuscript and use **Highlight**, **Underline** or **Comment**. Write general feedback in the left pane. The reading progress is tracked as you scroll.
    * Open the **Decision** tab and choose Accept / Reject / Transfer / Revise. The alternate journal dropdown is only enabled for **Transfer**, and it is pre-filled with the system-proposed journal. **Revise** asks for Minor or Major and sends the MSC back to the author.
 
 > Note: uploading the same manuscript again as a *new* submission is flagged by the plagiarism check, because it matches the earlier submission (duplicate-submission detection). Revisions of the same MSC are excluded from that comparison.
@@ -95,13 +95,13 @@ To start a demo from a clean slate at any time, use **Manual Deploy → Restart 
 Two or more critical issues cap the score at 5.
 
 ### Editor view: MSC dashboard (`/dashboard`)
-* **Table** with the requested columns: MSC ID (a link to the review page when the review is Open / In Progress), title (the brief intro shows as a tooltip, so the table fits without a horizontal scroll), submitted by, submitted date, integrity check PASSED/FAILED, integrity score, journal fitment index (plus a "better fit" hint), revisions done, assigned editor, assigned reviewer, **reviewer lookup link (modal)**, review status (Open / In Progress / Complete), **time elapsed** colour-coded (green < 8 h, amber 8–24 h, red > 24 h), review start date/time, review progress bar, final decision, and a **Review** button that is only active for Open / In Progress. Columns are sortable.
+* **Table** with the requested columns: MSC ID (a link to the review page when the review is Open / In Progress), title (the brief intro shows as a tooltip, so the table fits without a horizontal scroll), submitted by, submitted date, integrity check PASSED/FAILED, integrity score, journal fitment index (plus a "better fit" hint), revisions done, assigned editor, assigned reviewer, **reviewer lookup link (modal)**, review status (Open / In Progress / Complete), **time elapsed** colour-coded (green < 8 h, amber 8–24 h, red > 24 h), review start date/time, review progress bar, final decision, and a **Review** button. The Review button and the MSC ID link are only active when the review is Open / In Progress **and a reviewer is assigned** (otherwise shown as 🔒; the server also refuses review actions until a reviewer is assigned). The table shows **20 records per page** by default, with a 20 / 50 / 100 selector and page navigation. Columns are sortable.
 * **Filters:** received on (date range), submitted by, pending with (reviewer), assigned/unassigned, time elapsed, journal, review status, feedback incorporation status, final decision, plus free-text search.
-* **KPIs & charts** (Chart.js), recalculated for the active filters:
+* **KPI tiles** (MSC count, Open, In Progress, Complete, delayed, unassigned, average fulfillment, average integrity score) stay visible at the top.
+* **Charts** (Chart.js) sit in a collapsible *Charts & graphs* panel (the open/closed state is remembered) and are recalculated for the active filters:
   * One compact row of six charts: time elapsed, final verdict & decision, journal-specific MSCs, assigned vs unassigned, editor-specific load, average time of fulfillment. Clicking a chart segment applies the matching filter.
   * **MSCs received today:** total, a stacked progress bar and a bar chart by Open, In Progress, Completed and Delayed (still active after more than 8 hours).
   * **MSC processing outcome:** a stacked bar chart of review-complete MSCs by decision outcome (Accept / Reject / Transfer / Revise), switchable between the last 12 weeks and the last 6 months.
-  * KPI tiles show totals, delayed, unassigned, average fulfillment time and average integrity score.
 * **Refresh** reloads the data, redraws every chart and the table, and clears all filters.
 * **Reviewer selection modal:** reviewers are ranked by availability (free capacity vs. active reviews, on-leave status, expertise in the journal's scope, average turnaround). The top available reviewer is marked *Recommended*. Unavailable reviewers can't be selected.
 
@@ -109,7 +109,7 @@ Two or more critical issues cap the score at 5.
 * All MSC details are shown: header metadata, integrity report, version and decision history.
 * The **MSC is immutable.** It is rendered read-only from the uploaded .docx and identified by its SHA-256 fingerprint. Annotations are stored separately and anchored by text offset and quote.
 * Scroll and read the MSC. Select text to **highlight**, **underline** or **comment**. The **left pane** holds general feedback (auto-saved) and the list of annotations (click to jump, edit, delete).
-* **Decision:** ACCEPT / REJECT / TRANSFER / REVISE (Minor or Major).
+* **Decision:** ACCEPT / REJECT / TRANSFER / REVISE (Minor or Major) / **ASSIGN TO PE**. *Assign to PE* hands the MSC to a selected Publishing Editor for production.
   * *Transfer:* the page shows the MSC's applicability (fitment index) for the current journal and proposes an alternate journal from the backend journal mapping (genre, context and subject terms plus related-journal mapping). The alternate journal can only be selected, and is only accepted by the API, when the decision is Transfer.
   * *Revise:* the MSC goes back to the author with the reviewer's comments. Feedback incorporation is *In Progress* until the author re-submits. Then it becomes *Complete*, "Revisions done?" increments, and the MSC returns to *Open*.
 * Review progress is tracked from reading progress (up to 90%), and a decision completes it (100%). Opening the page moves an Open MSC to In Progress and records the review start time.

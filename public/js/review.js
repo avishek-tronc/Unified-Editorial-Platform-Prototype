@@ -9,6 +9,11 @@
 
   try {
     msc = await api(`/api/mscs/${encodeURIComponent(mscId)}`);
+    if (msc.reviewStatus !== 'Complete' && !msc.assignedReviewerId) {
+      $('head').innerHTML = `<div class="alert warn"><b>${esc(msc.id)} cannot be reviewed yet.</b> No reviewer has been assigned. Use <b>Look up reviewer</b> on the dashboard to assign one, then open Review &amp; annotate.</div><a class="btn" href="/dashboard">← Back to dashboard</a>`;
+      document.querySelector('.review-layout').classList.add('hidden');
+      return;
+    }
     if (msc.reviewStatus !== 'Complete') msc = await api(`/api/mscs/${encodeURIComponent(mscId)}/start`, { method: 'POST' });
   } catch (ex) {
     $('head').innerHTML = `<div class="alert error">${esc(ex.message)}</div>`;
@@ -227,8 +232,9 @@
     const pane = $('decisionPane');
     if (msc.decision) {
       const d = msc.decision;
-      const cls = { Accept: 'ok', Reject: 'error', Transfer: 'info', Revise: 'warn' }[d.type];
-      pane.innerHTML = `<div class="alert ${cls}"><b>Final decision: ${d.type.toUpperCase()}${d.type === 'Revise' ? ` (${d.revisionType} revision)` : ''}${d.type === 'Transfer' ? ` → ${esc(jName(d.alternateJournalId))}` : ''}</b><br>${esc(d.summary)}<div class="small" style="margin-top:4px">Decided ${fmtDate(d.decidedAt)}</div></div>
+      const cls = { Accept: 'ok', Reject: 'error', Transfer: 'info', Revise: 'warn', 'Assign to PE': 'info' }[d.type];
+      const pe = (msc.publishingEditors || []).find(p => p.id === d.publishingEditorId);
+      pane.innerHTML = `<div class="alert ${cls}"><b>Final decision: ${d.type.toUpperCase()}${d.type === 'Revise' ? ` (${d.revisionType} revision)` : ''}${d.type === 'Transfer' ? ` → ${esc(jName(d.alternateJournalId))}` : ''}${d.type === 'Assign to PE' && pe ? ` → ${esc(pe.name)} (Publishing Editor)` : ''}</b><br>${esc(d.summary)}<div class="small" style="margin-top:4px">Decided ${fmtDate(d.decidedAt)}</div></div>
         ${d.type === 'Revise' ? `<p class="muted small">The MSC has been sent back to the author for revision. Feedback incorporation: <b>${esc(msc.feedbackStatus)}</b>.</p>` : ''}
         <a class="btn secondary" href="/dashboard">Back to dashboard</a>`;
       return;
@@ -242,6 +248,15 @@
         <input type="radio" name="dec" id="dR" value="Reject"><label for="dR" class="reject">REJECT</label>
         <input type="radio" name="dec" id="dT" value="Transfer"><label for="dT" class="transfer">TRANSFER</label>
         <input type="radio" name="dec" id="dV" value="Revise"><label for="dV" class="revise">REVISE</label>
+        <input type="radio" name="dec" id="dP" value="Assign to PE"><label for="dP" class="pe">ASSIGN TO PE (PUBLISHING EDITOR)</label>
+      </div>
+
+      <div id="peOpts" class="hidden">
+        <label for="peSelect">Publishing Editor</label>
+        <select id="peSelect">
+          ${(msc.publishingEditors || []).map(p => `<option value="${p.id}">${esc(p.name)} — ${esc(p.team)}</option>`).join('')}
+        </select>
+        <p class="muted small">The MSC is handed over to the selected Publishing Editor for production.</p>
       </div>
 
       <div id="reviseOpts" class="hidden">
@@ -275,6 +290,7 @@
     pane.querySelectorAll('input[name=dec]').forEach(r => r.addEventListener('change', () => {
       const v = pane.querySelector('input[name=dec]:checked').value;
       $('reviseOpts').classList.toggle('hidden', v !== 'Revise');
+      $('peOpts').classList.toggle('hidden', v !== 'Assign to PE');
       alt.disabled = v !== 'Transfer';
       $('submitDecision').disabled = false;
       $('submitDecision').textContent = `Submit decision: ${v.toUpperCase()}`;
@@ -284,6 +300,7 @@
       const body = { type, summary: $('summary').value };
       if (type === 'Revise') body.revisionType = pane.querySelector('input[name=revType]:checked').value;
       if (type === 'Transfer') body.alternateJournalId = alt.value;
+      if (type === 'Assign to PE') body.publishingEditorId = $('peSelect').value;
       try {
         await saveGeneral();
         const updated = await api(`/api/mscs/${encodeURIComponent(msc.id)}/decision`, { method: 'POST', body });

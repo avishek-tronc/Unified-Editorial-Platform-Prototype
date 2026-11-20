@@ -86,6 +86,10 @@ const samples = path.join(__dirname, '..', 'samples');
     assert.ok(row && row.reviewStatus === 'Open' && row.elapsedBand === 'green');
     step(`Dashboard lists ${dash.body.mscs.length} MSCs including the new one`);
 
+    assert.strictEqual((await call('POST', `/api/mscs/${mscId}/start`)).status, 409, 'review must be blocked until a reviewer is assigned');
+    assert.strictEqual(row.canReview, false);
+    step('Review & annotate blocked until a reviewer is assigned');
+
     const revs = await call('GET', `/api/editor/mscs/${mscId}/reviewers`);
     const pick = revs.body.reviewers.find(r => r.recommended);
     assert.ok(pick);
@@ -131,6 +135,13 @@ const samples = path.join(__dirname, '..', 'samples');
     assert.strictEqual(tr.body.finalDecision, 'Transfer');
     assert.strictEqual(tr.body.transferredTo, 'ORGLETT');
     step('Transfer decision with alternate journal');
+
+    const inProg = dash.body.mscs.find(m => m.reviewStatus === 'In Progress' && m.assignedReviewerId);
+    assert.strictEqual((await call('POST', `/api/mscs/${inProg.id}/decision`, { type: 'Assign to PE', summary: 'Ready for production.' })).status, 400);
+    const pe = await call('POST', `/api/mscs/${inProg.id}/decision`, { type: 'Assign to PE', publishingEditorId: 'PE-1', summary: 'Ready for production.' });
+    assert.strictEqual(pe.body.finalDecision, 'Assign to PE');
+    assert.strictEqual(pe.body.publishingEditor, 'Margaret Ellis');
+    step('Assign to PE decision requires and records a Publishing Editor');
 
     console.log('\nAll smoke tests passed.');
   } catch (e) {

@@ -233,3 +233,19 @@ mark.ann.flash { outline: 2px solid var(--brand-2); }
 .title-page .kv { grid-template-columns: 130px 1fr; }
 .preview-paper .refs p { font-size: 13px; line-height: 1.5; margin: 0 0 6px; }
 .msc-paper td p, .msc-paper th p { margin: 0; }
+
+/* collapsible charts panel */
+details.collapsible { padding: 12px 16px; margin-bottom: 16px; }
+details.collapsible > summary { cursor: pointer; font-weight: 700; font-size: 15px; list-style: none; user-select: none; display: flex; align-items: center; gap: 8px; }
+details.collapsible > summary::-webkit-details-marker { display: none; }
+details.collapsible > summary .chev { display: inline-block; transition: transform .15s; color: var(--brand-2); }
+details.collapsible[open] > summary .chev { transform: rotate(90deg); }
+details.collapsible[open] > summary { margin-bottom: 12px; }
+details.collapsible .charts-2 { margin-bottom: 0; }
+.pager { justify-content: flex-end; margin-top: 10px; font-size: 13px; }
+.pager button { padding: 5px 10px; font-size: 12px; }
+.pager button.current { background: var(--brand); }
+.pager button:not(.current):not(:disabled) { background: #fff; color: var(--brand); border-color: #cfd6e4; }
+.decision-opts label.pe { grid-column: span 2; }
+.decision-opts input:checked + label.pe { background: #e6f4f7; color: #0e6a7d; border-color: #0e6a7d; }
+.pill.teal { background: #e6f4f7; color: #0e6a7d; }

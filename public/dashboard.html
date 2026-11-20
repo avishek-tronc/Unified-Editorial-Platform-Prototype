@@ -21,30 +21,33 @@
 
     <div class="kpis" id="kpis"></div>
 
-    <div class="charts">
-      <div class="chart-card"><h3>Time elapsed (active)</h3><canvas id="chElapsed"></canvas></div>
-      <div class="chart-card"><h3>Final verdict &amp; decision</h3><canvas id="chDecision"></canvas></div>
-      <div class="chart-card"><h3>Journal-specific MSCs</h3><canvas id="chJournal"></canvas></div>
-      <div class="chart-card"><h3>Assigned vs unassigned</h3><canvas id="chAssigned"></canvas></div>
-      <div class="chart-card"><h3>Editor-specific load</h3><canvas id="chEditor"></canvas></div>
-      <div class="chart-card"><h3>Avg time of fulfillment (h)</h3><canvas id="chFulfil"></canvas></div>
-    </div>
+    <details class="card collapsible" id="chartsPanel" open>
+      <summary><span class="chev">▸</span> Charts &amp; graphs <span class="muted small">— click to collapse or expand</span></summary>
+      <div class="charts">
+        <div class="chart-card"><h3>Time elapsed (active)</h3><canvas id="chElapsed"></canvas></div>
+        <div class="chart-card"><h3>Final verdict &amp; decision</h3><canvas id="chDecision"></canvas></div>
+        <div class="chart-card"><h3>Journal-specific MSCs</h3><canvas id="chJournal"></canvas></div>
+        <div class="chart-card"><h3>Assigned vs unassigned</h3><canvas id="chAssigned"></canvas></div>
+        <div class="chart-card"><h3>Editor-specific load</h3><canvas id="chEditor"></canvas></div>
+        <div class="chart-card"><h3>Avg time of fulfillment (h)</h3><canvas id="chFulfil"></canvas></div>
+      </div>
 
-    <div class="charts-2">
-      <div class="chart-card">
-        <div class="row"><h3 style="margin:0">MSCs received today</h3><span class="spacer"></span><span class="muted small" id="todayDate"></span></div>
-        <div class="today-total"><b id="todayTotal">0</b> <span class="muted">received today</span></div>
-        <div class="stackbar" id="todayBar"></div>
-        <div class="stack-legend" id="todayLegend"></div>
-        <canvas id="chToday" class="short"></canvas>
-      </div>
-      <div class="chart-card">
-        <div class="row"><h3 style="margin:0">MSC processing outcome (review complete)</h3><span class="spacer"></span>
-          <div class="seg" id="periodSeg"><button class="active" data-period="week">By week</button><button data-period="month">By month</button></div>
+      <div class="charts-2">
+        <div class="chart-card">
+          <div class="row"><h3 style="margin:0">MSCs received today</h3><span class="spacer"></span><span class="muted small" id="todayDate"></span></div>
+          <div class="today-total"><b id="todayTotal">0</b> <span class="muted">received today</span></div>
+          <div class="stackbar" id="todayBar"></div>
+          <div class="stack-legend" id="todayLegend"></div>
+          <canvas id="chToday" class="short"></canvas>
         </div>
-        <canvas id="chPeriod" class="tall"></canvas>
+        <div class="chart-card">
+          <div class="row"><h3 style="margin:0">MSC processing outcome (review complete)</h3><span class="spacer"></span>
+            <div class="seg" id="periodSeg"><button class="active" data-period="week">By week</button><button data-period="month">By month</button></div>
+          </div>
+          <canvas id="chPeriod" class="tall"></canvas>
+        </div>
       </div>
-    </div>
+    </details>
 
     <div class="card">
       <div class="row" style="margin-bottom:10px"><h2>Filters</h2><div class="spacer"></div><button class="ghost small" id="resetFilters">Reset filters</button></div>
@@ -57,13 +60,15 @@
         <div><label for="fJournal">Journal</label><select id="fJournal"></select></div>
         <div><label for="fStatus">Review status</label><select id="fStatus"><option value="">All</option><option>Open</option><option>In Progress</option><option>Complete</option></select></div>
         <div><label for="fFeedback">Feedback incorporation</label><select id="fFeedback"><option value="">All</option><option>In Progress</option><option>Complete</option></select></div>
-        <div><label for="fDecision">Final decision</label><select id="fDecision"><option value="">All</option><option>Accept</option><option>Reject</option><option>Transfer</option><option>Revise</option><option value="none">Pending</option></select></div>
+        <div><label for="fDecision">Final decision</label><select id="fDecision"><option value="">All</option><option>Accept</option><option>Reject</option><option>Transfer</option><option>Revise</option><option>Assign to PE</option><option value="none">Pending</option></select></div>
         <div><label for="fSearch">Search</label><input type="text" id="fSearch" placeholder="MSC ID, title…"></div>
       </div>
     </div>
 
     <div class="card">
-      <div class="row" style="margin-bottom:10px"><h2>Manuscripts</h2><span class="muted" id="countLabel"></span></div>
+      <div class="row" style="margin-bottom:10px"><h2>Manuscripts</h2><span class="muted" id="countLabel"></span><div class="spacer"></div>
+        <label for="pageSize" class="small" style="margin:0;font-weight:600">Records per page</label>
+        <select id="pageSize" style="width:auto"><option>20</option><option>50</option><option>100</option></select></div>
       <div class="table-wrap dash-table-wrap">
         <table class="data" id="mscTable">
           <thead><tr>
@@ -88,6 +93,7 @@
           <tbody></tbody>
         </table>
       </div>
+      <div class="row pager" id="pager"></div>
     </div>
   </main>
 

@@ -299,8 +299,8 @@
 
   function decisionPill(d) {
     if (!d) return '<span class="muted">—</span>';
-    const cls = { Accept: 'green', Reject: 'red', Transfer: 'violet', Revise: 'amber' }[d.type];
-    const extra = d.type === 'Revise' ? ` (${d.revisionType})` : d.type === 'Transfer' ? ` → ${d.alternateJournalId}` : '';
+    const cls = { Accept: 'green', Reject: 'red', Transfer: 'violet', Revise: 'amber', 'Assign to PE': 'teal' }[d.type];
+    const extra = d.type === 'Revise' ? ` (${d.revisionType})` : d.type === 'Transfer' ? ` → ${d.alternateJournalId}` : d.type === 'Assign to PE' && d.publishingEditor ? ` → ${d.publishingEditor}` : '';
     return `<span class="pill ${cls}">${d.type}${extra}</span>`;
   }
 

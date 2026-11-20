@@ -8,6 +8,30 @@ const { getJournal, proposeAlternates, JOURNALS } = require('./journals');
 
 const ACTIVE = s => s !== 'Complete';
 
+const DECISIONS = ['Accept', 'Reject', 'Transfer', 'Revise', 'Assign to PE'];
+
+// Publishing Editors (PE) who take over an MSC on an "Assign to PE" decision.
+const PUBLISHING_EDITORS = [
+  { id: 'PE-1', name: 'Margaret Ellis', team: 'Production — Organic & Medicinal' },
+  { id: 'PE-2', name: 'Tobias Kern', team: 'Production — Materials & Physical' },
+  { id: 'PE-3', name: 'Nadia Farouk', team: 'Production — Environmental & Analytical' }
+];
+
+function publishingEditors() {
+  const db = store.get();
+  return db.publishingEditors && db.publishingEditors.length ? db.publishingEditors : PUBLISHING_EDITORS;
+}
+
+function peName(id) {
+  const pe = publishingEditors().find(p => p.id === id);
+  return pe ? pe.name : null;
+}
+
+/** Review & annotate is allowed only for open/in-progress MSCs with an assigned reviewer. */
+function canReview(m) {
+  return ACTIVE(m.reviewStatus) && !!m.assignedReviewer;
+}
+
 /** Strips the bulky html/text fields from an integrity report. */
 function compactReport(report) {
   const { html, text, ...rest } = report;
@@ -180,6 +204,8 @@ function dashboardRow(m) {
     finalDecision: m.decision ? m.decision.type : null,
     revisionType: m.decision ? m.decision.revisionType || null : null,
     transferredTo: m.decision && m.decision.alternateJournalId ? m.decision.alternateJournalId : null,
+    publishingEditor: m.decision && m.decision.publishingEditorId ? peName(m.decision.publishingEditorId) : null,
+    canReview: canReview(m),
     completedAt: m.completedAt,
     annotationCount: m.annotations.length
   };
@@ -204,6 +230,7 @@ function reviewPayload(m) {
     decision: m.decision,
     decisionHistory: m.decisionHistory,
     alternates: proposeAlternates(m.journalId, fitScores),
+    publishingEditors: publishingEditors(),
     reviewerDetails: db.reviewers.find(r => r.id === m.assignedReviewer) || null
   };
 }
@@ -221,7 +248,7 @@ function authorView(m) {
     integrityPassed: m.integrity.passed,
     revisions: m.revisions,
     reviewStatus: m.reviewStatus,
-    decision: m.decision,
+    decision: m.decision ? { ...m.decision, publishingEditor: m.decision.publishingEditorId ? peName(m.decision.publishingEditorId) : null } : null,
     feedbackStatus: m.feedbackStatus,
     canRevise: !!(m.decision && m.decision.type === 'Revise' && m.feedbackStatus === 'In Progress'),
     reviewerFeedback: m.decision ? {
@@ -233,6 +260,7 @@ function authorView(m) {
 }
 
 module.exports = {
+  DECISIONS, PUBLISHING_EDITORS, publishingEditors, peName, canReview,
   compactReport, corpusFor, pickEditor, suggestReviewers, createMsc, reviseMsc,
   dashboardRow, reviewPayload, authorView, reviewerLoad, editorLoad, JOURNALS
 };

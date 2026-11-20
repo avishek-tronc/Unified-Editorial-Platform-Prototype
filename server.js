@@ -252,6 +252,10 @@ function requireReviewable(msc, res) {
     res.status(409).json({ error: 'The review of this MSC is complete; it is read-only.' });
     return false;
   }
+  if (!msc.assignedReviewer) {
+    res.status(409).json({ error: 'Assign a reviewer to this MSC (Look up reviewer on the dashboard) before it can be reviewed and annotated.' });
+    return false;
+  }
   return true;
 }
 
@@ -347,8 +351,13 @@ app.put('/api/mscs/:id/feedback', requireRole('Editor'), (req, res) => {
 app.post('/api/mscs/:id/decision', requireRole('Editor'), (req, res) => {
   const msc = findMsc(req, res);
   if (!msc || !requireReviewable(msc, res)) return;
-  const { type, revisionType, alternateJournalId, summary } = req.body || {};
-  if (!['Accept', 'Reject', 'Transfer', 'Revise'].includes(type)) return res.status(400).json({ error: 'Choose a decision: Accept, Reject, Transfer or Revise.' });
+  const { type, revisionType, alternateJournalId, publishingEditorId, summary } = req.body || {};
+  if (!service.DECISIONS.includes(type)) return res.status(400).json({ error: 'Choose a decision: Accept, Reject, Transfer, Revise or Assign to PE.' });
+  if (type === 'Assign to PE') {
+    if (!service.peName(publishingEditorId)) return res.status(400).json({ error: 'Select the Publishing Editor (PE) to assign the MSC to.' });
+  } else if (publishingEditorId) {
+    return res.status(400).json({ error: 'A Publishing Editor can only be selected when the decision is Assign to PE.' });
+  }
   if (!String(summary || '').trim()) return res.status(400).json({ error: 'Add a decision summary for the author.' });
   if (type === 'Revise' && !['Minor', 'Major'].includes(revisionType)) return res.status(400).json({ error: 'Choose Minor or Major revision.' });
   if (type === 'Transfer') {
@@ -361,6 +370,7 @@ app.post('/api/mscs/:id/decision', requireRole('Editor'), (req, res) => {
     type,
     revisionType: type === 'Revise' ? revisionType : null,
     alternateJournalId: type === 'Transfer' ? alternateJournalId : null,
+    publishingEditorId: type === 'Assign to PE' ? publishingEditorId : null,
     summary: String(summary).slice(0, 8000),
     decidedAt: now,
     decidedBy: msc.assignedReviewer || req.session.user.displayName
