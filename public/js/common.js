@@ -97,5 +97,25 @@ const UEP = (() => {
   }
   function stopTracking() { tracking = false; clearInterval(hbTimer); }
 
-  return { api, esc, fmtDate, fmtElapsed, scoreColor, toast, initTopbar };
+  // ----- journal cover thumbnails (current issue cover from pubs.acs.org) -----
+  function journalCover(j, size = 'md') {
+    if (!j) return '';
+    const label = `${j.name} — current issue cover`;
+    return `<a class="jcover jcover-${size}" href="${esc(j.homepage || '#')}" target="_blank" rel="noopener" title="${esc(label)}">
+      <img src="${esc(j.cover || '')}" alt="${esc(label)}" loading="lazy" referrerpolicy="no-referrer"
+        data-short="${esc(j.shortName)}" data-name="${esc(j.name)}" onerror="UEP.coverFallback(this)"></a>`;
+  }
+  // If the cover can't be loaded (offline, CDN blocked), draw a plain journal-style cover instead.
+  function coverFallback(img) {
+    img.onerror = null;
+    const words = img.dataset.short.length > 12 ? img.dataset.short.split(' ') : [img.dataset.short];
+    const lines = words.map((w, i) => `<text x="130" y="${170 + i * 34}" font-size="30" font-weight="700" text-anchor="middle" fill="#fff" font-family="Roboto,Arial,sans-serif">${esc(w)}</text>`).join('');
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 345"><rect width="260" height="345" fill="#0039a6"/><rect y="0" width="260" height="10" fill="#fdc82f"/>
+      <circle cx="210" cy="290" r="90" fill="#412bfd" opacity=".55"/><circle cx="40" cy="70" r="60" fill="#3361b8" opacity=".5"/>${lines}
+      <text x="130" y="320" font-size="13" text-anchor="middle" fill="#e6ebf6" font-family="Roboto,Arial,sans-serif">ACS Publications</text></svg>`;
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    img.closest('.jcover').classList.add('fallback');
+  }
+
+  return { api, esc, fmtDate, fmtElapsed, scoreColor, toast, initTopbar, journalCover, coverFallback };
 })();

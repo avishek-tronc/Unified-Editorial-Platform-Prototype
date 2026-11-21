@@ -28,6 +28,7 @@
     const j = journals.find(x => x.id === journalSel.value);
     templateLink.href = `/api/template/${j.id}`;
     templateLink.textContent = `⬇ Download ${j.shortName} MSC template`;
+    document.getElementById('journalCover').innerHTML = UEP.journalCover(j, 'sm');
     journalInfo.innerHTML = `<b>Scope:</b> ${esc(j.context)}.<br><b>Limits:</b> abstract ≤ ${j.limits.abstractWords} words · total ≤ ${j.limits.totalWords} words · ≥ ${j.limits.minReferences} references`;
   }
   journalSel.addEventListener('change', updateJournal);
@@ -170,6 +171,7 @@
           </div>
           ${r.caps && r.caps.length ? `<div class="muted small" style="margin-top:4px">${r.caps.map(esc).join(' ')}</div>` : ''}
         </div>
+        ${journal ? `<div class="hero-cover">${UEP.journalCover(journal, 'md')}<div class="small muted">${esc(journal.shortName)}</div></div>` : ''}
       </div>
 
       <div style="margin-top:16px">

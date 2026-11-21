@@ -133,6 +133,9 @@ Tracks how the application is used and keeps an audit trail. Available to both v
 ### ACS Publications theme
 The UI follows the **pubs.acs.org** look (`public/css/acs-theme.css`, loaded after `app.css` on every page). The values were measured from the live site: the blue `#0039A6` top bar with white 12 px links and a gold `#FDC82F` underline on the active item, a white masthead with a hairline `#D7D7D9` rule and dark `#151515` navigation, the indigo `#412BFD` wordmark colour, **Roboto** type on white with `#1A1A1A` text and weight-600 black headings, underlined `#3361B8` links, square `#0039A6` buttons, flat square-cornered panels, and a `#0039A6` footer with `#E6EBF6` text. Usage Metrics and Log out sit in the top bar. Roboto is self-hosted from `@fontsource/roboto`, so there are no external font requests. All colours are CSS variables at the top of the file. The wordmark is text; the official ACS Publications logo is not used.
 
+### Journal cover thumbnails
+The current issue cover of the selected journal is shown on the author's **MSC Upload & Integrity Check** page (next to the journal selector and beside the integrity score) and on the **MSC Review & Annotation** page header. Clicking a cover opens the journal's home page on pubs.acs.org. Cover URLs (ACS Publications CDN, November 2026 issues) are set per journal in `src/journals.js` (`cover`); update them there for newer issues. If a cover can't load (offline or CDN blocked), a plain journal-style placeholder with the journal's short name is drawn instead.
+
 ## Project structure
 
 ```

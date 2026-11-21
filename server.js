@@ -105,7 +105,7 @@ app.use('/samples', requireRole(), express.static(path.join(__dirname, 'samples'
 // ---------- shared ----------
 
 app.get('/api/journals', requireRole(), (req, res) => {
-  res.json(JOURNALS.map(j => ({ id: j.id, name: j.name, shortName: j.shortName, genre: j.genre, context: j.context, limits: j.limits })));
+  res.json(JOURNALS.map(j => ({ id: j.id, name: j.name, shortName: j.shortName, genre: j.genre, context: j.context, limits: j.limits, coden: j.coden, cover: j.cover, homepage: `https://pubs.acs.org/journal/${j.coden}` })));
 });
 
 app.get('/api/template/:journalId', requireRole(), async (req, res, next) => {

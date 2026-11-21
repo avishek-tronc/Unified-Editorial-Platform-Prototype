@@ -141,3 +141,14 @@ button.danger:hover:not(:disabled) { background: #a33024; border-color: #a33024;
 .pager button.current, .pager button.current:hover:not(:disabled) { background: var(--pubs-blue); }
 .pager button:not(.current):not(:disabled) { background: #fff; color: var(--pubs-blue); border-color: var(--pubs-rule); }
 .pager button:not(.current):not(:disabled):hover { background: var(--pubs-tint); }
+
+/* journal cover thumbnails */
+.jcover { display: inline-block; flex: none; line-height: 0; border: 1px solid var(--pubs-rule); background: #f4f5f8; box-shadow: 0 2px 6px rgba(0,0,0,.18); transition: transform .15s, box-shadow .15s; }
+.jcover:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,.22); }
+.jcover img { display: block; width: 100%; aspect-ratio: 520 / 691; object-fit: cover; }
+.jcover-sm { width: 64px; }
+.jcover-md { width: 96px; }
+.jcover-lg { width: 108px; }
+.journal-meta { display: flex; gap: 12px; align-items: flex-start; margin-top: 10px; }
+.journal-meta #journalInfo { flex: 1; }
+.hero-cover { display: flex; flex-direction: column; align-items: center; gap: 4px; }

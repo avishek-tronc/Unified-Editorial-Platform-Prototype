@@ -11,6 +11,9 @@
 const JOURNALS = [
   {
     id: 'JACS',
+    coden: 'jacsat',
+    // Current issue cover from pubs.acs.org (Nov 2026 issue)
+    cover: 'https://acs.silverchair-cdn.com/acs/content_public/journal/jacsat/issue/148/45/8/m_jacsat.2026.148.issue-45.xlargecover.jpeg',
     name: 'Journal of the American Chemical Society',
     shortName: 'JACS',
     genre: 'Broad-scope chemistry (high impact)',
@@ -26,6 +29,9 @@ const JOURNALS = [
   },
   {
     id: 'ORGLETT',
+    coden: 'orlef7',
+    // Current issue cover from pubs.acs.org (Nov 2026 issue)
+    cover: 'https://acs.silverchair-cdn.com/acs/content_public/journal/orlef7/issue/28/46/2/m_orlef7.2026.28.issue-46.xlargecover.jpeg',
     name: 'Organic Letters',
     shortName: 'Org. Lett.',
     genre: 'Rapid communications in organic chemistry',
@@ -41,6 +47,9 @@ const JOURNALS = [
   },
   {
     id: 'INORGCHEM',
+    coden: 'inocaj',
+    // Current issue cover from pubs.acs.org (Nov 2026 issue)
+    cover: 'https://acs.silverchair-cdn.com/acs/content_public/journal/inocaj/issue/65/45/3/m_inocaj.2026.65.issue-45.xlargecover.jpeg',
     name: 'Inorganic Chemistry',
     shortName: 'Inorg. Chem.',
     genre: 'Inorganic and bioinorganic chemistry',
@@ -56,6 +65,9 @@ const JOURNALS = [
   },
   {
     id: 'JMEDCHEM',
+    coden: 'jmcmar',
+    // Current issue cover from pubs.acs.org (Nov 2026 issue)
+    cover: 'https://acs.silverchair-cdn.com/acs/content_public/journal/jmcmar/issue/69/21/3/m_jmcmar.2026.69.issue-21.xlargecover.jpeg',
     name: 'Journal of Medicinal Chemistry',
     shortName: 'J. Med. Chem.',
     genre: 'Medicinal chemistry and drug discovery',
@@ -71,6 +83,9 @@ const JOURNALS = [
   },
   {
     id: 'ACSNANO',
+    coden: 'ancac3',
+    // Current issue cover from pubs.acs.org (Nov 2026 issue)
+    cover: 'https://acs.silverchair-cdn.com/acs/content_public/journal/ancac3/issue/20/45/2/m_ancac3.2026.20.issue-45.xlargecover.jpeg',
     name: 'ACS Nano',
     shortName: 'ACS Nano',
     genre: 'Nanoscience and nanotechnology',
@@ -85,6 +100,9 @@ const JOURNALS = [
   },
   {
     id: 'JPCC',
+    coden: 'jpccck',
+    // Current issue cover from pubs.acs.org (Nov 2026 issue)
+    cover: 'https://acs.silverchair-cdn.com/acs/content_public/journal/jpccck/issue/130/46/2/m_jpccck.2026.130.issue-46.xlargecover.jpeg',
     name: 'The Journal of Physical Chemistry C',
     shortName: 'J. Phys. Chem. C',
     genre: 'Physical chemistry of materials, interfaces and energy',
@@ -100,6 +118,9 @@ const JOURNALS = [
   },
   {
     id: 'ESTECH',
+    coden: 'esthag',
+    // Current issue cover from pubs.acs.org (Nov 2026 issue)
+    cover: 'https://acs.silverchair-cdn.com/acs/content_public/journal/esthag/issue/60/45/3/m_esthag.2026.60.issue-45.xlargecover.jpeg',
     name: 'Environmental Science & Technology',
     shortName: 'Environ. Sci. Technol.',
     genre: 'Environmental science, engineering and policy',
@@ -115,6 +136,9 @@ const JOURNALS = [
   },
   {
     id: 'ANALCHEM',
+    coden: 'ancham',
+    // Current issue cover from pubs.acs.org (Nov 2026 issue)
+    cover: 'https://acs.silverchair-cdn.com/acs/content_public/journal/ancham/issue/98/45/99/m_ancham.2026.98.issue-45.xlargecover.jpeg',
     name: 'Analytical Chemistry',
     shortName: 'Anal. Chem.',
     genre: 'Measurement science',

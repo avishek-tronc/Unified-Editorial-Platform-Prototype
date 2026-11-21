@@ -30,7 +30,8 @@
   // ---------- header ----------
   function renderHead() {
     $('head').innerHTML = `
-      <div class="row" style="align-items:flex-start">
+      <div class="row" style="align-items:flex-start;flex-wrap:nowrap">
+        ${UEP.journalCover(journals.find(x => x.id === msc.journalId), 'lg')}
         <div style="flex:1;min-width:300px">
           <div class="muted small">${esc(msc.id)} · ${esc(jName(msc.journalId))}</div>
           <h1 style="margin:4px 0">${esc(msc.title)}</h1>
