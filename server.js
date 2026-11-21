@@ -97,7 +97,7 @@ app.get('/metrics', requireRole(), page('metrics'));
 // Reviewer-facing invitation page: reached from the invitation e-mail, no login needed.
 app.get('/invite/:token', page('invite'));
 
-app.use('/vendor/fonts', express.static(path.join(__dirname, 'node_modules', '@fontsource', 'source-sans-3', 'files'), { maxAge: '30d' }));
+app.use('/vendor/fonts', express.static(path.join(__dirname, 'node_modules', '@fontsource', 'roboto', 'files'), { maxAge: '30d' }));
 app.use('/vendor/chart.js', express.static(path.join(__dirname, 'node_modules', 'chart.js', 'dist')));
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 app.use('/samples', requireRole(), express.static(path.join(__dirname, 'samples')));

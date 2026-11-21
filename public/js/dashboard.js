@@ -2,7 +2,7 @@
   const { api, esc, fmtDate, fmtElapsed, toast } = UEP;
   await UEP.initTopbar('dashboard');
 
-  const COLORS = { green: '#12805c', amber: '#e19a17', red: '#c0392b', blue: '#0067b1', violet: '#6d3fc0', grey: '#9aa4b8', teal: '#16a085' };
+  const COLORS = { green: '#12805c', amber: '#e19a17', red: '#c0392b', blue: '#0039a6', violet: '#6d3fc0', grey: '#9aa4b8', teal: '#16a085' };
   const DECISION_COLORS = { Accept: COLORS.green, Reject: COLORS.red, Transfer: COLORS.violet, Revise: COLORS.amber, 'Assign to PE': '#0e6a7d', Pending: COLORS.grey };
   let page = 1;
   let tab = 'active'; // 'active' = Open & In Progress, 'complete' = Complete

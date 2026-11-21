@@ -130,8 +130,8 @@ Tracks how the application is used and keeps an audit trail. Available to both v
 * KPIs and charts (sessions per day, OS, location, top pages), a period selector and **CSV export** of sessions and the audit trail.
 * **Audit trail:** an append-only log (`data/audit-log.jsonl`) of logins, failed logins, logouts, page views, integrity checks, submissions, invitations sent / viewed / accepted / declined, review starts, annotations, decisions and exports, each with time, user, IP and OS. Filter by event or search (IP, MSC ID, reviewer…). Sessions are kept in `data/usage-sessions.json`.
 
-### ACS site theme
-The UI uses the American Chemical Society look and feel (`public/css/acs-theme.css`, loaded after `app.css` on every page): a deep-navy masthead with a slim utility bar (Usage Metrics and Log out), the ACS blue for actions and links, a gold active-tab marker, navy table headers, square-cornered cards and **Source Sans 3** typography (self-hosted from `@fontsource/source-sans-3`, so no external font requests). All colours are CSS variables at the top of the file (`--acs-navy`, `--acs-blue`, `--acs-gold`, …), so they can be matched exactly to the official ACS brand guide. The "ACS" mark in the header is a text placeholder, not the official logo.
+### ACS Publications theme
+The UI follows the **pubs.acs.org** look (`public/css/acs-theme.css`, loaded after `app.css` on every page). The values were measured from the live site: the blue `#0039A6` top bar with white 12 px links and a gold `#FDC82F` underline on the active item, a white masthead with a hairline `#D7D7D9` rule and dark `#151515` navigation, the indigo `#412BFD` wordmark colour, **Roboto** type on white with `#1A1A1A` text and weight-600 black headings, underlined `#3361B8` links, square `#0039A6` buttons, flat square-cornered panels, and a `#0039A6` footer with `#E6EBF6` text. Usage Metrics and Log out sit in the top bar. Roboto is self-hosted from `@fontsource/roboto`, so there are no external font requests. All colours are CSS variables at the top of the file. The wordmark is text; the official ACS Publications logo is not used.
 
 ## Project structure
 

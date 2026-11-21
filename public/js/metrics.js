@@ -2,7 +2,7 @@
   const { api, esc, fmtDate } = UEP;
   await UEP.initTopbar('metrics');
   const $ = id => document.getElementById(id);
-  const PALETTE = ['#0067b1', '#002b5c', '#00a3e0', '#f2a900', '#12805c', '#6d3fc0', '#c0392b', '#9aa4b8'];
+  const PALETTE = ['#0039a6', '#412bfd', '#3361b8', '#fdc82f', '#12805c', '#6d3fc0', '#c0392b', '#9aa4b8'];
   const charts = {};
   let data = null;
   let tab = 'sessions';
@@ -20,7 +20,7 @@
     if (charts[id]) charts[id].destroy();
     charts[id] = new Chart($(id), {
       type,
-      data: { labels, datasets: [{ data: values, backgroundColor: type === 'doughnut' ? PALETTE : '#0067b1', borderRadius: type === 'bar' ? 4 : 0 }] },
+      data: { labels, datasets: [{ data: values, backgroundColor: type === 'doughnut' ? PALETTE : '#0039a6', borderRadius: type === 'bar' ? 4 : 0 }] },
       options: Object.assign({
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: type === 'doughnut', position: 'right', labels: { boxWidth: 8, font: { size: 10 }, padding: 6 } } },

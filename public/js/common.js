@@ -1,5 +1,5 @@
 /* Shared helpers for all pages */
-if (window.Chart) { Chart.defaults.font.family = '"Source Sans 3", "Segoe UI", Helvetica, Arial, sans-serif'; Chart.defaults.color = '#5d6b7e'; }
+if (window.Chart) { Chart.defaults.font.family = 'Roboto, Helvetica, Arial, sans-serif'; Chart.defaults.color = '#4a4a52'; }
 const UEP = (() => {
   async function api(url, opts = {}) {
     const o = { credentials: 'same-origin', ...opts };
@@ -54,16 +54,18 @@ const UEP = (() => {
       : `<a href="/author" class="${active === 'author' ? 'active' : ''}">MSC Upload</a>`;
     bar.innerHTML = `
       <div class="utility">
-        <span class="org">American Chemical Society · Publications</span>
-        <div class="spacer"></div>
-        <span class="user">Signed in as <b>${esc(me.displayName)}</b></span>
+        <span class="site active">Unified Editorial Platform</span>
+        <span class="spacer"></span>
+        <span class="user">Signed in as&nbsp;<b>${esc(me.displayName)}</b></span>
         <span class="sep"></span>
-        <a href="/metrics" class="metrics-link ${active === 'metrics' ? 'active' : ''}" title="Usage analytics &amp; audit trail">📈 Usage Metrics</a>
+        <a href="/metrics" class="metrics-link ${active === 'metrics' ? 'active' : ''}" title="Usage analytics &amp; audit trail">Usage Metrics</a>
         <span class="sep"></span>
         <button class="small" id="logoutBtn">Log out</button>
       </div>
       <div class="mainbar">
-        <div class="logo"><span class="mark">ACS</span><span class="divider"></span>Unified Editorial Platform <span class="badge">${esc(me.role)} view</span></div>
+        <div class="logo"><span class="name">Unified Editorial Platform</span><span class="tagline">ACS Publications · Editorial Office</span></div>
+        <span class="role">${esc(me.role)} view</span>
+        <span class="spacer"></span>
         <nav>${nav}</nav>
       </div>`;
     document.getElementById('logoutBtn').onclick = async () => {
