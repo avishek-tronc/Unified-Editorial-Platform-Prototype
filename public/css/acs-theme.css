@@ -1,0 +1,123 @@
+/*
+ * ACS site theme — American Chemical Society look & feel applied on top of
+ * app.css: deep navy masthead with a slim utility bar, ACS blue for actions
+ * and links, Source Sans typography, crisp square-cornered cards.
+ * Colours are set through the variables below, so they are easy to tune to
+ * the official ACS brand guide.
+ */
+@font-face { font-family: "Source Sans 3"; font-weight: 400; font-display: swap; src: url(/vendor/fonts/source-sans-3-latin-400-normal.woff2) format("woff2"); }
+@font-face { font-family: "Source Sans 3"; font-weight: 600; font-display: swap; src: url(/vendor/fonts/source-sans-3-latin-600-normal.woff2) format("woff2"); }
+@font-face { font-family: "Source Sans 3"; font-weight: 700; font-display: swap; src: url(/vendor/fonts/source-sans-3-latin-700-normal.woff2) format("woff2"); }
+
+:root {
+  --acs-navy: #002b5c;        /* masthead */
+  --acs-navy-deep: #001a3a;   /* utility bar, footer */
+  --acs-blue: #0067b1;        /* primary actions, links */
+  --acs-blue-dark: #00508a;   /* hover */
+  --acs-sky: #00a3e0;         /* accent / focus */
+  --acs-gold: #f2a900;        /* active-nav highlight */
+  --acs-tint: #e6f0f8;        /* light blue surfaces */
+
+  --bg: #f3f5f8;
+  --ink: #1b2533;
+  --muted: #5d6b7e;
+  --line: #dde3ea;
+  --brand: var(--acs-navy);
+  --brand-2: var(--acs-blue);
+  --radius: 4px;
+  --shadow: 0 1px 2px rgba(0, 27, 58, .06);
+  --header-h: 98px;
+}
+
+body { font-family: "Source Sans 3", "Source Sans Pro", "Segoe UI", Helvetica, Arial, sans-serif; font-size: 15px; }
+h1, h2, h3 { color: var(--acs-navy); font-weight: 700; letter-spacing: -.01em; }
+h1 { font-size: 1.75rem; }
+a { color: var(--acs-blue); }
+a:hover { color: var(--acs-blue-dark); }
+
+/* ---------- masthead: utility bar + main bar ---------- */
+.topbar { display: block; height: auto; padding: 0; background: var(--acs-navy); box-shadow: 0 2px 6px rgba(0, 20, 50, .25); }
+.topbar .utility { display: flex; align-items: center; gap: 14px; height: 34px; padding: 0 28px; background: var(--acs-navy-deep); font-size: 13px; color: #c7d3e3; }
+.topbar .utility .org { letter-spacing: .02em; }
+.topbar .utility .user { color: #c7d3e3; font-size: 13px; }
+.topbar .utility .user b { color: #fff; }
+.topbar .utility .sep { width: 1px; height: 14px; background: rgba(255,255,255,.25); }
+.topbar .utility .metrics-link { background: none; padding: 0; border-radius: 0; color: #fff; font-weight: 600; }
+.topbar .utility .metrics-link:hover, .topbar .utility .metrics-link.active { background: none; color: var(--acs-gold); text-decoration: none; }
+.topbar .utility button { background: none; border: 1px solid rgba(255,255,255,.4); color: #fff; padding: 2px 12px; font-size: 12.5px; border-radius: 2px; }
+.topbar .utility button:hover { background: #fff; color: var(--acs-navy); }
+.topbar .mainbar { display: flex; align-items: center; gap: 28px; height: 64px; padding: 0 28px; }
+.topbar .logo { gap: 12px; color: #fff; font-weight: 600; font-size: 19px; }
+.topbar .logo .mark { display: inline-grid; place-items: center; height: 38px; padding: 0 10px; background: #fff; color: var(--acs-navy); font-weight: 700; font-size: 20px; letter-spacing: .04em; border-radius: 2px; }
+.topbar .logo .divider { width: 1px; height: 30px; background: rgba(255,255,255,.35); }
+.topbar .logo span.badge { background: var(--acs-blue); color: #fff; border-radius: 2px; text-transform: uppercase; font-size: 11px; letter-spacing: .06em; padding: 3px 8px; }
+.topbar nav { display: flex; align-self: stretch; }
+.topbar nav a { display: flex; align-items: center; margin: 0; padding: 0 16px; color: #dbe5f1; font-weight: 600; font-size: 15px; border-bottom: 4px solid transparent; border-top: 4px solid transparent; }
+.topbar nav a:hover { color: #fff; text-decoration: none; background: rgba(255,255,255,.06); }
+.topbar nav a.active { color: #fff; border-bottom-color: var(--acs-gold); }
+
+.side, .preview-nav { top: calc(var(--header-h) + 16px); }
+.side { max-height: calc(100vh - var(--header-h) - 32px); }
+
+/* ---------- surfaces ---------- */
+.card, .kpi, .chart-card, .table-wrap, .modal, .email-preview, .msc-paper { border-radius: var(--radius); }
+.card { border-top: 3px solid var(--acs-navy); }
+.kpi { border-left: 4px solid var(--acs-blue); }
+.kpi .label { color: var(--muted); letter-spacing: .06em; }
+.kpi .value { color: var(--acs-navy); }
+.chart-card h3 { color: var(--acs-navy); text-transform: uppercase; letter-spacing: .05em; font-size: 11.5px; }
+details.collapsible > summary { color: var(--acs-navy); }
+
+/* ---------- controls ---------- */
+button, .btn { border-radius: 3px; background: var(--acs-blue); font-weight: 600; letter-spacing: .01em; }
+button:hover:not(:disabled), .btn:hover { background: var(--acs-blue-dark); text-decoration: none; }
+button.secondary, .btn.secondary { background: #fff; color: var(--acs-blue); border: 1px solid var(--acs-blue); }
+button.secondary:hover:not(:disabled), .btn.secondary:hover { background: var(--acs-tint); color: var(--acs-blue-dark); }
+button.ghost { background: transparent; color: var(--acs-blue); }
+button.ghost:hover:not(:disabled) { background: var(--acs-tint); }
+input[type=text], input[type=password], input[type=date], input[type=search], select, textarea { border-radius: 3px; border-color: #c4cdd8; }
+input:focus, select:focus, textarea:focus { outline: 2px solid rgba(0, 163, 224, .35); border-color: var(--acs-sky); }
+.tabs button { font-weight: 600; font-size: 15px; }
+.tabs button:hover:not(:disabled) { background: none; color: var(--acs-navy); }
+.tabs button.active { color: var(--acs-navy); border-bottom: 3px solid var(--acs-gold); }
+.seg button.active { background: var(--acs-navy); }
+.pager button.current { background: var(--acs-navy); }
+.pager button:not(.current):not(:disabled) { color: var(--acs-blue); }
+
+/* ---------- tables ---------- */
+table.data th { background: var(--acs-navy); color: #fff; border-bottom: 0; font-weight: 600; }
+table.data th:hover { background: var(--acs-blue-dark); }
+table.data tr:hover td { background: #f2f7fb; }
+table.data tbody tr:nth-child(even) td { background: #fafbfd; }
+table.data tbody tr:nth-child(even):hover td { background: #f2f7fb; }
+
+/* ---------- status colours ---------- */
+.alert, .pill, .reviewer { border-radius: 3px; }
+.alert.info, .pill.blue { background: var(--acs-tint); color: var(--acs-blue-dark); }
+.reviewer.selected { border-color: var(--acs-blue); background: #f0f6fb; }
+.role-toggle input:checked + label { border-color: var(--acs-blue); background: var(--acs-tint); color: var(--acs-navy); box-shadow: 0 0 0 1px var(--acs-blue); }
+.dropzone.drag { border-color: var(--acs-blue); background: var(--acs-tint); }
+.preview-nav a:hover, .preview-nav a.active { background: var(--acs-tint); color: var(--acs-navy); }
+.msc-paper h1, .msc-paper h2 { font-family: "Source Sans 3", "Segoe UI", sans-serif; color: var(--acs-navy); }
+
+/* ---------- login & invitation (no masthead) ---------- */
+.login-wrap { background:
+  radial-gradient(circle at 85% 15%, rgba(0, 163, 224, .25), transparent 40%),
+  linear-gradient(160deg, var(--acs-navy-deep) 0%, var(--acs-navy) 55%, #00427f 100%); }
+.login-card, .invite-card { border-top: 4px solid var(--acs-gold); border-radius: 4px; }
+.login-card h1, .invite-card h1 { color: var(--acs-navy); }
+.brand-lockup { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.brand-lockup .mark { display: inline-grid; place-items: center; height: 34px; padding: 0 9px; background: var(--acs-navy); color: #fff; font-weight: 700; font-size: 18px; letter-spacing: .04em; border-radius: 2px; }
+.brand-lockup .org { color: var(--muted); font-size: 13px; line-height: 1.2; }
+
+/* ---------- footer ---------- */
+.site-footer { background: var(--acs-navy-deep); color: #9fb1c8; font-size: 12.5px; padding: 18px 28px; margin-top: 32px; display: flex; gap: 18px; flex-wrap: wrap; }
+.site-footer b { color: #fff; font-weight: 600; }
+
+/* keep special-purpose buttons' own hover states */
+button.danger:hover:not(:disabled) { background: #a33024; }
+.sel-toolbar button:hover:not(:disabled) { background: rgba(255,255,255,.15); }
+.seg button:not(.active):hover:not(:disabled) { background: var(--acs-tint); color: var(--acs-navy); }
+.seg button.active:hover:not(:disabled) { background: var(--acs-navy); }
+.pager button:not(.current):not(:disabled):hover { background: var(--acs-tint); }
+.pager button.current:hover:not(:disabled) { background: var(--acs-navy); }

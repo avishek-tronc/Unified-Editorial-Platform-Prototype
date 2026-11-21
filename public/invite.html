@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Review invitation · Unified Editorial Platform</title>
   <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/acs-theme.css">
 </head>
 <body>
   <div class="login-wrap">
     <div class="card invite-card" id="card">
-      <h1>📚 Invitation to review</h1>
+      <div class="brand-lockup"><span class="mark">ACS</span><span class="org">American Chemical Society<br>Publications</span></div><h1>Invitation to review</h1>
       <p class="muted">Loading invitation…</p>
     </div>
   </div>
@@ -32,7 +33,7 @@
           ? '<span class="pill amber">Awaiting your response</span>'
           : inv.status === 'Accepted' ? '<span class="pill green">✓ Accepted</span>' : `<span class="pill grey">${esc(inv.status)}</span>`;
         card.innerHTML = `
-          <h1>📚 Invitation to review</h1>
+          <div class="brand-lockup"><span class="mark">ACS</span><span class="org">American Chemical Society<br>Publications</span></div><h1>Invitation to review</h1>
           <p class="muted">${esc(inv.msc.journal)}</p>
           ${note || ''}
           <p>Dear <b>${esc(inv.reviewer ? inv.reviewer.name : 'Reviewer')}</b>${inv.reviewer ? ` <span class="muted small">&lt;${esc(inv.reviewer.email)}&gt;</span>` : ''},<br>you have been invited to review the manuscript below.</p>
@@ -65,7 +66,7 @@
         }
       }
       try { render(await call('GET')); } catch (ex) {
-        card.innerHTML = `<h1>📚 Invitation to review</h1><div class="alert error">${esc(ex.message)}</div>`;
+        card.innerHTML = `<div class="brand-lockup"><span class="mark">ACS</span><span class="org">American Chemical Society<br>Publications</span></div><h1>Invitation to review</h1><div class="alert error">${esc(ex.message)}</div>`;
       }
     })();
   </script>

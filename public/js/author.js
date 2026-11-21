@@ -155,7 +155,7 @@
     const fitRows = Object.entries(fit.scores).sort((a, b) => b[1] - a[1]).map(([id, v]) => {
       const j = journals.find(x => x.id === id);
       return `<div class="cat"><div>${esc(j ? j.name : id)} ${id === r.journalId ? '<span class="pill blue">selected</span>' : ''} ${id === fit.recommended.journalId ? '<span class="pill green">best fit</span>' : ''}</div>
-        <div class="bar"><span style="width:${v}%;background:${id === r.journalId ? 'var(--brand-2)' : '#9fb3d9'}"></span></div><b>${v}</b></div>`;
+        <div class="bar"><span style="width:${v}%;background:${id === r.journalId ? 'var(--brand-2)' : '#9fbcd6'}"></span></div><b>${v}</b></div>`;
     }).join('');
 
     result.innerHTML = `
