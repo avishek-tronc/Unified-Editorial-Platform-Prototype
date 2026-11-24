@@ -360,3 +360,20 @@ body.modal-open { overflow: hidden; }
 .an-threshold .an-scale { position: relative; height: 16px; max-width: 420px; }
 .an-threshold .an-scale span { position: absolute; left: 0; transform: none; }
 .an-threshold .an-scale span:nth-child(2) { transform: translateX(-50%); font-weight: 600; }
+
+/* ---------- global processing spinner ---------- */
+.busy-indicator { position: fixed; top: 14px; left: 50%; transform: translate(-50%, -12px); z-index: 200; display: flex; align-items: center; gap: 10px;
+  background: #1d2433; color: #fff; padding: 8px 16px 8px 12px; border-radius: 999px; box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  font: 600 13px/1 Roboto, -apple-system, "Segoe UI", sans-serif; opacity: 0; pointer-events: none; transition: opacity .15s, transform .15s; }
+.busy-indicator.show { opacity: 1; transform: translate(-50%, 0); }
+.busy-spinner { width: 18px; height: 18px; border-radius: 50%; border: 3px solid rgba(255,255,255,.25); border-top-color: #fdc82f; animation: spin .8s linear infinite; flex: none; }
+html.is-busy, html.is-busy * { cursor: progress; }
+
+/* ---------- invitation status refresh ---------- */
+.rv-refresh { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; min-width: 0; padding: 0 !important; margin-left: 4px;
+  border-radius: 50%; border: 1px solid #cfd6e4 !important; background: #fff !important; color: var(--brand-2) !important; font-size: 13px; line-height: 1; cursor: pointer; vertical-align: middle; }
+.rv-refresh:hover { background: #e8effc !important; }
+.rv-refresh.spinning span { display: inline-block; animation: spin .8s linear infinite; }
+.rv-refresh:disabled { opacity: .7; }
+.rv-cell .rv-name { display: flex; align-items: center; gap: 2px; }
+.rv-cell .rv-name .rv-refresh { flex: none; }

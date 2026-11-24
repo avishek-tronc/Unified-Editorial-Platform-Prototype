@@ -307,6 +307,14 @@ app.get('/api/editor/mscs', requireRole('Editor'), (req, res) => {
   });
 });
 
+// Current dashboard row of one MSC: used by the refresh icon beside a pending
+// reviewer to check whether the invitation has been accepted.
+app.get('/api/editor/mscs/:id', requireRole('Editor'), (req, res) => {
+  const msc = store.get().mscs.find(m => m.id === req.params.id);
+  if (!msc) return res.status(404).json({ error: 'MSC not found' });
+  res.json(service.dashboardRow(msc));
+});
+
 app.get('/api/editor/mscs/:id/reviewers', requireRole('Editor'), (req, res) => {
   const msc = store.get().mscs.find(m => m.id === req.params.id);
   if (!msc) return res.status(404).json({ error: 'MSC not found' });

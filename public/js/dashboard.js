@@ -125,6 +125,24 @@
     }).join('');
     tb.querySelectorAll('[data-lookup]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); openModal(a.dataset.lookup); }));
     tb.querySelectorAll('[data-invite]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); openInvitation(a.dataset.invite); }));
+    tb.querySelectorAll('[data-refresh]').forEach(b => b.addEventListener('click', () => refreshInvitation(b)));
+  }
+
+  // Re-checks one pending invitation; when accepted, the row unlocks Review.
+  async function refreshInvitation(btn) {
+    btn.disabled = true; btn.classList.add('spinning');
+    try {
+      const row = await api(`/api/editor/mscs/${encodeURIComponent(btn.dataset.refresh)}`);
+      const i = data.mscs.findIndex(m => m.id === row.id);
+      if (i >= 0) data.mscs[i] = row;
+      if (row.invitationStatus === 'Accepted') toast(`✓ ${row.assignedReviewer} accepted the invitation for ${row.id}. Review is now enabled.`, 4000);
+      else if (!row.assignedReviewerId) toast(`The reviewer declined the invitation for ${row.id}. Look up another reviewer.`, 4000);
+      else toast(`${row.assignedReviewer} has not accepted the invitation for ${row.id} yet.`);
+      render();
+    } catch (ex) {
+      toast(ex.message);
+      btn.disabled = false; btn.classList.remove('spinning');
+    }
   }
 
   function reviewerCell(m) {
@@ -132,7 +150,10 @@
     const pill = m.invitationStatus === 'Pending'
       ? `<span class="pill amber" title="Invitation sent ${esc(UEP.fmtDate(m.invitationSentAt))}">✉ Invited</span>`
       : '<span class="pill green" title="Reviewer accepted the invitation">✓ Accepted</span>';
-    return `<div class="rv-cell"><b>${esc(m.assignedReviewer)}</b>
+    const refresh = m.invitationStatus === 'Pending'
+      ? `<button type="button" class="rv-refresh" data-refresh="${esc(m.id)}" title="Check whether ${esc(m.assignedReviewer)} has accepted the invitation" aria-label="Refresh invitation status"><span>⟳</span></button>`
+      : '';
+    return `<div class="rv-cell"><div class="rv-name"><b>${esc(m.assignedReviewer)}</b>${refresh}</div>
       <a class="rv-mail small" href="mailto:${esc(m.assignedReviewerEmail)}" title="${esc(m.assignedReviewerEmail)}">${esc(m.assignedReviewerEmail).replace('@', '<wbr>@')}</a>
       <div>${pill}${m.invitationSentAt ? ` <a href="#" class="small" data-invite="${esc(m.id)}" title="View the invitation e-mail">View invite</a>` : ''}</div></div>`;
   }
@@ -360,7 +381,7 @@
     const cur = reviewerList.find(r => r.current);
     const banner = cur ? `<div class="alert ${cur.invitationStatus === 'Pending' ? 'warn' : 'ok'} small">
         ${cur.invitationStatus === 'Pending'
-          ? `Invitation sent to <b>${esc(cur.name)}</b> &lt;${esc(cur.email)}&gt; on ${esc(UEP.fmtDate(res.msc.invitationSentAt))} is <b>awaiting acceptance</b>. Re-send it, or pick another reviewer to withdraw it. <a href="#" id="mViewInvite">View invitation e-mail</a>`
+          ? `Invitation sent to <b>${esc(cur.name)}</b> <button type="button" class="rv-refresh" id="mRefresh" title="Check whether ${esc(cur.name)} has accepted the invitation" aria-label="Refresh invitation status"><span>⟳</span></button> &lt;${esc(cur.email)}&gt; on ${esc(UEP.fmtDate(res.msc.invitationSentAt))} is <b>awaiting acceptance</b>. Re-send it, or pick another reviewer to withdraw it. <a href="#" id="mViewInvite">View invitation e-mail</a>`
           : `<b>${esc(cur.name)}</b> accepted the invitation. Choosing another reviewer sends them a new invitation and locks the review until they accept.`}
       </div>` : '';
     $('mList').innerHTML = banner + reviewerList.map(r => `
@@ -379,6 +400,16 @@
         </div>
       </div>`).join('');
     if ($('mViewInvite')) $('mViewInvite').addEventListener('click', e => { e.preventDefault(); openInvitation(id); });
+    if ($('mRefresh')) $('mRefresh').addEventListener('click', async () => {
+      $('mRefresh').disabled = true; $('mRefresh').classList.add('spinning');
+      const row = await api(`/api/editor/mscs/${encodeURIComponent(id)}`).catch(ex => { toast(ex.message); return null; });
+      if (!row) { $('mRefresh').disabled = false; $('mRefresh').classList.remove('spinning'); return; }
+      const i = data.mscs.findIndex(m => m.id === row.id);
+      if (i >= 0) { data.mscs[i] = row; render(); }
+      if (row.invitationStatus === 'Pending') { toast(`${row.assignedReviewer} has not accepted the invitation yet.`); $('mRefresh').disabled = false; $('mRefresh').classList.remove('spinning'); return; }
+      toast(row.invitationStatus === 'Accepted' ? `✓ ${row.assignedReviewer} accepted the invitation.` : 'The reviewer declined the invitation.', 4000);
+      openModal(id); // re-render the modal with the new status
+    });
     if (cur) { selected = cur.id; updateSendButton(); }
     $('mList').querySelectorAll('.reviewer').forEach(el => el.addEventListener('click', () => {
       if (el.dataset.ok !== 'true') return;

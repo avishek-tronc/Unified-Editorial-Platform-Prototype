@@ -115,6 +115,9 @@ const samples = path.join(__dirname, '..', 'samples');
     assert.strictEqual((await call('POST', `/api/invitations/${token}/respond`, { accept: false })).status, 409);
     cookie = saved;
     assert.strictEqual((await call('GET', `/api/editor/mscs/${mscId}/invitation`)).body.status, 'Accepted');
+    const refreshed = await call('GET', `/api/editor/mscs/${mscId}`);
+    assert.strictEqual(refreshed.body.invitationStatus, 'Accepted', 'refresh icon endpoint reports the accepted invitation');
+    assert.ok(refreshed.body.canReview);
     step('Review blocked until the reviewer accepts the invitation link (no login needed)');
 
     const other = dash.body.mscs.find(m => m.reviewStatus === 'Open' && !m.assignedReviewerId && m.id !== mscId);

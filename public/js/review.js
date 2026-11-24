@@ -10,8 +10,21 @@
   try {
     msc = await api(`/api/mscs/${encodeURIComponent(mscId)}`);
     if (msc.reviewStatus !== 'Complete' && msc.assignedReviewerId && msc.invitationStatus === 'Pending') {
-      $('head').innerHTML = `<div class="alert warn"><b>${esc(msc.id)} cannot be reviewed yet.</b> The invitation e-mail sent to <b>${esc(msc.assignedReviewer)}</b> &lt;${esc(msc.assignedReviewerEmail)}&gt; on ${esc(UEP.fmtDate(msc.invitationSentAt))} has not been accepted. The review starts once the reviewer accepts the invitation.</div><a class="btn" href="/dashboard">← Back to dashboard</a>`;
+      $('head').innerHTML = `<div class="alert warn"><b>${esc(msc.id)} cannot be reviewed yet.</b> The invitation e-mail sent to <b>${esc(msc.assignedReviewer)}</b> <button type="button" class="rv-refresh" id="invRefresh" title="Check whether ${esc(msc.assignedReviewer)} has accepted the invitation" aria-label="Refresh invitation status"><span>⟳</span></button> &lt;${esc(msc.assignedReviewerEmail)}&gt; on ${esc(UEP.fmtDate(msc.invitationSentAt))} has not been accepted. The review starts once the reviewer accepts the invitation.</div><a class="btn" href="/dashboard">← Back to dashboard</a>`;
       document.querySelector('.review-layout').classList.add('hidden');
+      $('invRefresh').addEventListener('click', async () => {
+        const b = $('invRefresh'); b.disabled = true; b.classList.add('spinning');
+        try {
+          const now = await api(`/api/mscs/${encodeURIComponent(mscId)}`);
+          if (now.invitationStatus === 'Pending' && now.assignedReviewerId) {
+            toast(`${now.assignedReviewer} has not accepted the invitation yet.`);
+            b.disabled = false; b.classList.remove('spinning');
+          } else {
+            toast(now.assignedReviewerId ? 'Invitation accepted. Opening the review…' : 'The reviewer declined the invitation.');
+            setTimeout(() => location.reload(), 700);
+          }
+        } catch (ex) { toast(ex.message); b.disabled = false; b.classList.remove('spinning'); }
+      });
       return;
     }
     if (msc.reviewStatus !== 'Complete' && !msc.assignedReviewerId) {
