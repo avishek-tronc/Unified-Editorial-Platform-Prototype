@@ -133,9 +133,22 @@ const samples = path.join(__dirname, '..', 'samples');
     assert.strictEqual(started.body.reviewStatus, 'In Progress');
     const ann = await call('POST', `/api/mscs/${mscId}/annotations`, { type: 'comment', quote: 'aryl chlorides', comment: 'Define scope.' });
     assert.strictEqual(ann.status, 200);
-    await call('POST', `/api/mscs/${mscId}/annotations`, { type: 'highlight', quote: 'copper' });
+    const hl = await call('POST', `/api/mscs/${mscId}/annotations`, { type: 'highlight', quote: 'copper', color: 'green' });
+    assert.strictEqual(hl.body.color, 'green');
+    assert.strictEqual((await call('PUT', `/api/mscs/${mscId}/annotations/${hl.body.id}`, { color: 'purple' })).body.color, 'purple');
+    assert.strictEqual((await call('PUT', `/api/mscs/${mscId}/annotations/${hl.body.id}`, { color: 'black' })).status, 400);
     await call('POST', `/api/mscs/${mscId}/progress`, { percent: 60 });
-    step('Review started, annotations added, progress tracked');
+    step('Review started, annotations (coloured highlights) added, progress tracked');
+
+    const an = await call('GET', `/api/mscs/${mscId}/analysis`);
+    assert.strictEqual(an.status, 200);
+    assert.ok(an.body.summary.blocks.length >= 2, 'summary has sections');
+    const reviewMsc = (await call('GET', `/api/mscs/${mscId}`)).body;
+    assert.strictEqual(an.body.integrity.score, reviewMsc.integrity.score, 'reviewer integrity score matches the Author upload check');
+    assert.strictEqual(an.body.integrity.passed, an.body.integrity.score > 6);
+    assert.strictEqual(an.body.fitment.journal.id, reviewMsc.journalId);
+    assert.strictEqual(an.body.fitment.index, reviewMsc.fitmentIndex);
+    step(`MSC analysis: summary, integrity ${an.body.integrity.score}/10 (same rules), fitment ${an.body.fitment.index}% with ${an.body.fitment.journal.shortName}`);
 
     assert.strictEqual((await call('POST', `/api/mscs/${mscId}/decision`, { type: 'Accept', alternateJournalId: 'ORGLETT', summary: 'x' })).status, 400);
     const dec = await call('POST', `/api/mscs/${mscId}/decision`, { type: 'Revise', revisionType: 'Minor', summary: 'Please address comments.' });

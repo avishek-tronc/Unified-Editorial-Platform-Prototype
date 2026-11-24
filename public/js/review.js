@@ -25,6 +25,25 @@
     return;
   }
   const readOnly = () => msc.reviewStatus === 'Complete';
+  // ---------- highlight palette ----------
+  const HL_COLORS = [
+    { id: 'yellow', name: 'Yellow', hex: '#fff3a3' },
+    { id: 'green', name: 'Green', hex: '#c6f1c0' },
+    { id: 'blue', name: 'Sky blue', hex: '#bfe6ff' },
+    { id: 'pink', name: 'Pink', hex: '#ffcfe6' },
+    { id: 'orange', name: 'Orange', hex: '#ffd8a8' },
+    { id: 'purple', name: 'Lavender', hex: '#e2d3ff' }
+  ];
+  const hlColor = a => (HL_COLORS.some(c => c.id === a.color) ? a.color : 'yellow');
+  const hlHex = id => (HL_COLORS.find(c => c.id === id) || HL_COLORS[0]).hex;
+  let currentHl = HL_COLORS.some(c => c.id === localStorage.getItem('uep.hlColor')) ? localStorage.getItem('uep.hlColor') : 'yellow';
+  function renderPalette() {
+    $('hlPalette').innerHTML = HL_COLORS.map(c => `<button type="button" class="swatch ${c.id === currentHl ? 'active' : ''}" role="radio" aria-checked="${c.id === currentHl}" data-hl="${c.id}" title="Highlight in ${c.name}" aria-label="${c.name}" style="background:${c.hex}"></button>`).join('');
+    $('hlCurrent').style.background = hlHex(currentHl);
+  }
+  renderPalette();
+  $('annFilter').insertAdjacentHTML('beforeend', HL_COLORS.map(c => `<option value="hl:${c.id}">Highlights · ${c.name}</option>`).join(''));
+
   const jName = id => { const j = journals.find(x => x.id === id); return j ? j.name : id; };
 
   // ---------- header ----------
@@ -36,6 +55,10 @@
           <div class="muted small">${esc(msc.id)} · ${esc(jName(msc.journalId))}</div>
           <h1 style="margin:4px 0">${esc(msc.title)}</h1>
           <div>${esc((msc.authors || []).join(', '))} <span class="muted small">${esc(msc.authorEmail)}</span></div>
+          <div class="row" style="margin-top:10px">
+            <button class="analysis-launch" id="openAnalysis" title="Open the MSC summary, integrity check and journal fitment">🔍 MSC Analysis</button>
+            <span class="muted small">Summary · Integrity check · Journal fitment</span>
+          </div>
         </div>
         <dl class="kv" style="grid-template-columns:auto auto;min-width:420px">
           <dt>Submitted</dt><dd>${fmtDate(msc.submittedAt)} <span class="pill ${msc.elapsedBand}">${fmtElapsed(msc.elapsedHours)}</span></dd>
@@ -45,6 +68,7 @@
           <dt>Revisions</dt><dd>${msc.revisions ? `Yes (${msc.revisions}) — version ${msc.versions.length}` : 'No'}</dd>
         </dl>
       </div>`;
+    $('openAnalysis').addEventListener('click', () => MscAnalysis.open(msc, { readOnly: readOnly(), onAddFeedback: addToGeneralFeedback }));
     $('immutableBar').innerHTML = `🔒 <b>Immutable manuscript</b> — version ${msc.versions.length}, ${esc(msc.fileName || '')} · SHA-256 <code title="${esc(msc.contentHash)}">${esc(msc.contentHash.slice(0, 16))}…</code> · annotations are stored separately`;
   }
 
@@ -72,7 +96,7 @@
         if (s - pos > 0) target = target.splitText(s - pos);
         if (e - s < target.nodeValue.length) target.splitText(e - s);
         const mark = document.createElement('mark');
-        mark.className = `ann ${a.type}`;
+        mark.className = `ann ${a.type}${a.type === 'highlight' ? ` hl-${hlColor(a)}` : ''}`;
         mark.dataset.id = a.id;
         mark.title = a.comment ? `${a.author}: ${a.comment}` : `${a.type} by ${a.author}`;
         target.parentNode.insertBefore(mark, target);
@@ -98,19 +122,28 @@
 
   function renderAnnList() {
     const filter = $('annFilter').value;
-    const list = msc.annotations.filter(a => !filter || a.type === filter);
+    const list = msc.annotations.filter(a => !filter || a.type === filter || (filter.startsWith('hl:') && a.type === 'highlight' && hlColor(a) === filter.slice(3)));
     $('annCount').textContent = `(${msc.annotations.length})`;
     $('annList').innerHTML = list.length ? list.map(a => `
       <div class="ann-item" data-id="${a.id}">
         <blockquote>${esc(a.quote.length > 160 ? a.quote.slice(0, 160) + '…' : a.quote)}</blockquote>
         ${a.comment ? `<div>${esc(a.comment)}</div>` : ''}
-        <div class="meta"><span class="pill ${a.type === 'comment' ? 'blue' : a.type === 'highlight' ? 'amber' : 'red'}">${a.type}</span>
+        ${a.type === 'highlight' && !readOnly() ? `<div class="recolor small"><span class="muted">Colour</span>${HL_COLORS.map(c => `<button type="button" class="swatch ${c.id === hlColor(a) ? 'active' : ''}" data-recolor="${a.id}" data-hl="${c.id}" title="${c.name}" aria-label="Change to ${c.name}" style="background:${c.hex}"></button>`).join('')}</div>` : ''}
+        <div class="meta"><span class="pill ${a.type === 'comment' ? 'blue' : a.type === 'highlight' ? 'grey' : 'red'}" ${a.type === 'highlight' ? `style="background:${hlHex(hlColor(a))};color:#1d2433"` : ''}>${a.type}</span>
           ${esc(a.author)} · ${fmtDate(a.createdAt)} ${a._found === false ? '<span class="pill grey">text not found</span>' : ''}
           <span class="spacer"></span>
           ${readOnly() ? '' : `<button class="ghost small" data-edit="${a.id}">${a.comment ? 'Edit' : 'Add note'}</button><button class="ghost small" data-del="${a.id}" style="color:var(--red)">Delete</button>`}
         </div>
       </div>`).join('') : '<p class="muted small">No annotations yet.</p>';
     $('annList').querySelectorAll('.ann-item').forEach(el => el.addEventListener('click', e => { if (!e.target.closest('button')) focusAnn(el.dataset.id, true); }));
+    $('annList').querySelectorAll('[data-recolor]').forEach(b => b.addEventListener('click', async e => {
+      e.stopPropagation();
+      try {
+        const updated = await api(`/api/mscs/${encodeURIComponent(msc.id)}/annotations/${b.dataset.recolor}`, { method: 'PUT', body: { color: b.dataset.hl } });
+        Object.assign(msc.annotations.find(x => x.id === updated.id), updated);
+        renderPaper(); renderAnnList();
+      } catch (ex) { toast(ex.message); }
+    }));
     $('annList').querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async () => {
       await api(`/api/mscs/${encodeURIComponent(msc.id)}/annotations/${b.dataset.del}`, { method: 'DELETE' });
       msc.annotations = msc.annotations.filter(a => a.id !== b.dataset.del);
@@ -174,7 +207,9 @@
   paper.addEventListener('scroll', () => { toolbar.classList.add('hidden'); });
 
   async function addAnnotation(type, comment) {
-    const a = await api(`/api/mscs/${encodeURIComponent(msc.id)}/annotations`, { method: 'POST', body: { type, start: pending.start, end: pending.end, quote: pending.quote, comment } });
+    const body = { type, start: pending.start, end: pending.end, quote: pending.quote, comment };
+    if (type === 'highlight') body.color = currentHl;
+    const a = await api(`/api/mscs/${encodeURIComponent(msc.id)}/annotations`, { method: 'POST', body });
     msc.annotations.push(a);
     window.getSelection().removeAllRanges();
     toolbar.classList.add('hidden');
@@ -184,8 +219,18 @@
     toast(`${type[0].toUpperCase() + type.slice(1)} added`);
   }
 
-  toolbar.querySelectorAll('button').forEach(b => b.addEventListener('mousedown', e => e.preventDefault()));
-  toolbar.querySelectorAll('button').forEach(b => b.addEventListener('click', async () => {
+  // keep the text selection while using the toolbar
+  toolbar.addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });
+  // picking a colour selects it for future highlights and highlights the current selection
+  $('hlPalette').addEventListener('click', async e => {
+    const sw = e.target.closest('[data-hl]');
+    if (!sw) return;
+    currentHl = sw.dataset.hl;
+    localStorage.setItem('uep.hlColor', currentHl);
+    renderPalette();
+    if (pending) { try { await addAnnotation('highlight', ''); } catch (ex) { toast(ex.message); } }
+  });
+  toolbar.querySelectorAll('button[data-act]').forEach(b => b.addEventListener('click', async () => {
     if (!pending) return;
     const act = b.dataset.act;
     if (act === 'comment') {
@@ -216,6 +261,14 @@
     $('saveState').textContent = `Saved ${new Date().toLocaleTimeString()}`;
   }
   $('saveGeneral').addEventListener('click', saveGeneral);
+  // Points picked in the MSC analysis overlay are appended to the general feedback.
+  async function addToGeneralFeedback(points, heading) {
+    if (readOnly()) return;
+    const cur = $('general').value.replace(/\s+$/, '');
+    const block = `${heading ? `${heading}:\n` : ''}${points.map(p => `• ${p}`).join('\n')}`;
+    $('general').value = cur ? `${cur}\n\n${block}` : block;
+    await saveGeneral();
+  }
   let genTimer;
   $('general').addEventListener('input', () => { $('saveState').textContent = 'Unsaved changes…'; clearTimeout(genTimer); genTimer = setTimeout(saveGeneral, 1500); });
 

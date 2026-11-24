@@ -25,7 +25,7 @@
 
         <div data-pane="feedback">
           <div id="readonlyNote" class="alert info hidden"></div>
-          <div class="muted small" id="howto">Select text in the manuscript to <b>highlight</b>, <b>underline</b> or <b>comment</b> on it. The MSC itself cannot be edited.</div>
+          <div class="muted small" id="howto">Select text in the manuscript to <b>highlight</b>, <b>underline</b> or <b>comment</b> on it. Pick a highlight colour from the palette in the toolbar (6 colours) — e.g. one colour per type of concern. The MSC itself cannot be edited.</div>
           <div class="section-title">General feedback</div>
           <textarea id="general" placeholder="Overall assessment for the author and editor…"></textarea>
           <div class="row small" style="justify-content:space-between"><span class="muted" id="saveState"></span><button class="small secondary" id="saveGeneral">Save feedback</button></div>
@@ -49,7 +49,9 @@
   <footer class="site-footer"><span><b>ACS Publications</b> · Unified Editorial Platform</span><span>Prototype for internal evaluation</span></footer>
 
   <div class="sel-toolbar hidden" id="selToolbar">
-    <button data-act="highlight">🖍 Highlight</button>
+    <button data-act="highlight" title="Highlight with the selected colour">🖍 Highlight <span class="swatch-dot" id="hlCurrent"></span></button>
+    <span class="hl-palette" id="hlPalette" role="radiogroup" aria-label="Highlight colour"></span>
+    <span class="tb-sep"></span>
     <button data-act="underline">U̲ Underline</button>
     <button data-act="comment">💬 Comment</button>
   </div>
@@ -62,7 +64,32 @@
     </div>
   </div>
 
+  <!-- MSC analysis overlay: Summary · Integrity check · Journal fitment -->
+  <div class="modal-back analysis-back hidden" id="analysisModal">
+    <div class="modal analysis-modal" role="dialog" aria-modal="true" aria-labelledby="anTitle">
+      <header>
+        <div style="flex:1;min-width:0">
+          <div class="muted small" id="anSub">MSC analysis</div>
+          <h2 id="anTitle" style="margin:2px 0 0">MSC analysis</h2>
+        </div>
+        <button class="ghost" id="anClose" aria-label="Close analysis" title="Close (Esc)">✕</button>
+      </header>
+      <div class="tabs an-tabs" role="tablist">
+        <button role="tab" class="active" data-an="summary">📄 MSC Summary</button>
+        <button role="tab" data-an="integrity">🛡 MSC Integrity Check <span class="pill grey" id="anIntBadge"></span></button>
+        <button role="tab" data-an="fitment">🎯 Journal Fitment <span class="pill grey" id="anFitBadge"></span></button>
+      </div>
+      <div class="body" id="anBody"></div>
+      <footer>
+        <span class="muted small" id="anFoot" style="margin-right:auto"></span>
+        <button class="secondary" id="anDone">Close</button>
+      </footer>
+    </div>
+  </div>
+
+  <script src="/vendor/chart.js/chart.umd.min.js"></script>
   <script src="/js/common.js"></script>
+  <script src="/js/msc-analysis.js"></script>
   <script src="/js/review.js"></script>
 </body>
 </html>

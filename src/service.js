@@ -376,5 +376,5 @@ module.exports = {
   reviewerEmail, invitationStatus, inviteReviewer, findInvitation, respondInvitation, latestInvitationEmail,
   DECISIONS, PUBLISHING_EDITORS, publishingEditors, peName, canReview,
   compactReport, corpusFor, pickEditor, suggestReviewers, createMsc, reviseMsc,
-  dashboardRow, reviewPayload, authorView, reviewerLoad, editorLoad, JOURNALS
+  dashboardRow, reviewPayload, authorView, getContent, reviewerLoad, editorLoad, JOURNALS
 };
