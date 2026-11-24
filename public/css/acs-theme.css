@@ -39,6 +39,9 @@
 }
 
 body { font-family: Roboto, Helvetica, Arial, sans-serif; font-size: 15px; color: var(--pubs-ink); background: #fff; }
+/* Light shade of the login page's chemistry/journal artwork behind every app page.
+   Fixed so it stays put while content scrolls; cards and tables stay solid white. */
+body { background: #f5f7fc url("/img/chem-journals-bg-light.svg") center / cover no-repeat fixed; }
 h1, h2, h3 { color: #000; font-weight: 600; }
 h1 { font-size: 1.85rem; }
 a { color: var(--pubs-link); }
