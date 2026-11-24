@@ -690,6 +690,21 @@ function checkScope(ctx) {
   };
 }
 
+/**
+ * Overall 1–10 integrity score from the weighted category scores, with the
+ * hard caps (high similarity, multiple critical issues) and the PASS rule.
+ * Shared by the Author upload check and the reviewer's MSC analysis.
+ */
+function finalScore(categories, similarity) {
+  let score = categories.reduce((s, c) => s + c.weight * c.score, 0);
+  const criticalCount = categories.flatMap(c => c.issues).filter(i => i.severity === 'critical').length;
+  const caps = [];
+  if (similarity > 25) { score = Math.min(score, 4); caps.push('Score capped at 4 because of high text similarity.'); }
+  if (criticalCount >= 2) { score = Math.min(score, 5); caps.push('Score capped at 5 because of multiple critical issues.'); }
+  score = Math.max(1, Math.min(10, round1(score)));
+  return { score, caps, passed: score > PASS_THRESHOLD, weighted: round1(categories.reduce((s, c) => s + c.weight * c.score, 0)) };
+}
+
 // ---------- main ----------
 
 async function validateFormat(buffer, originalName) {
@@ -795,14 +810,9 @@ async function analyzeManuscript({ buffer, originalName, journalId, corpus }) {
     issues: results[key].issues.map(i => ({ ...i, category: key, categoryLabel: CATEGORY_LABELS[key] }))
   }));
 
-  let score = categories.reduce((s, c) => s + c.weight * c.score, 0);
   const allIssues = categories.flatMap(c => c.issues);
   const criticalCount = allIssues.filter(i => i.severity === 'critical').length;
-  const caps = [];
-  if (plagiarism.stats.similarity > 25) { score = Math.min(score, 4); caps.push('Score capped at 4 because of high text similarity.'); }
-  if (criticalCount >= 2) { score = Math.min(score, 5); caps.push('Score capped at 5 because of multiple critical issues.'); }
-  score = Math.max(1, Math.min(10, round1(score)));
-  const passed = score > PASS_THRESHOLD;
+  const { score, caps, passed } = finalScore(categories, plagiarism.stats.similarity);
 
   const sevOrder = { critical: 0, major: 1, minor: 2, info: 3 };
   allIssues.sort((a, b) => sevOrder[a.severity] - sevOrder[b.severity]);
@@ -871,4 +881,4 @@ async function parseForPreview(buffer, originalName) {
   return { valid: true, html, meta };
 }
 
-module.exports = { COMMUNICATION_EXEMPT, analyzeManuscript, parseForPreview, PASS_THRESHOLD, WEIGHTS, CATEGORY_LABELS, SECTION_DEFS, matchSection, validOrcid, computeFitment };
+module.exports = { COMMUNICATION_EXEMPT, analyzeManuscript, finalScore, parseStructure, detectCommunication, countTerm, words, PENALTY, parseForPreview, PASS_THRESHOLD, WEIGHTS, CATEGORY_LABELS, SECTION_DEFS, matchSection, validOrcid, computeFitment };

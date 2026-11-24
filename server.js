@@ -20,6 +20,7 @@ const { JOURNALS, getJournal } = require('./src/journals');
 const service = require('./src/service');
 const { buildOutline } = require('./src/outline');
 const usage = require('./src/usage');
+const analysis = require('./src/analysis');
 
 const PORT = Number(process.env.PORT) || 3000;
 const POC_USER = 'Admin';
@@ -349,6 +350,9 @@ app.get('/api/editor/mscs/:id/invitation', requireRole('Editor'), (req, res) => 
 
 // ---------- review & annotation ----------
 
+// Highlight palette offered to reviewers (see public/js/review.js).
+const HIGHLIGHT_COLORS = ['yellow', 'green', 'blue', 'pink', 'orange', 'purple'];
+
 function findMsc(req, res) {
   const msc = store.get().mscs.find(m => m.id === req.params.id);
   if (!msc) { res.status(404).json({ error: 'MSC not found' }); return null; }
@@ -381,6 +385,18 @@ app.get('/api/mscs/:id', requireRole('Editor'), (req, res) => {
   if (msc) res.json(service.reviewPayload(msc));
 });
 
+// MSC analysis for the reviewer: summary, integrity check (same rules as the
+// Author upload check) and fitment with the journal chosen by the author.
+app.get('/api/mscs/:id/analysis', requireRole('Editor'), (req, res, next) => {
+  try {
+    const msc = findMsc(req, res);
+    if (!msc) return;
+    const out = analysis.analyze(msc, service.getContent(msc));
+    usage.audit(req, 'review.msc-analysis', { mscId: msc.id, score: out.integrity.score, fitment: out.fitment.index });
+    res.json(out);
+  } catch (e) { next(e); }
+});
+
 app.post('/api/mscs/:id/start', requireRole('Editor'), (req, res) => {
   const msc = findMsc(req, res);
   if (!msc || !requireReviewable(msc, res)) return;
@@ -409,7 +425,7 @@ app.post('/api/mscs/:id/progress', requireRole('Editor'), (req, res) => {
 app.post('/api/mscs/:id/annotations', requireRole('Editor'), (req, res) => {
   const msc = findMsc(req, res);
   if (!msc || !requireReviewable(msc, res)) return;
-  const { type, start, end, quote, comment } = req.body || {};
+  const { type, start, end, quote, comment, color } = req.body || {};
   if (!['highlight', 'underline', 'comment'].includes(type)) return res.status(400).json({ error: 'Invalid annotation type' });
   if (!quote || typeof quote !== 'string') return res.status(400).json({ error: 'Select some text to annotate' });
   if (type === 'comment' && !(comment || '').trim()) return res.status(400).json({ error: 'Enter a comment' });
@@ -420,6 +436,7 @@ app.post('/api/mscs/:id/annotations', requireRole('Editor'), (req, res) => {
     end: Number.isInteger(end) ? end : null,
     quote: quote.slice(0, 2000),
     comment: (comment || '').slice(0, 4000),
+    color: type === 'highlight' ? (HIGHLIGHT_COLORS.includes(color) ? color : 'yellow') : undefined,
     author: reviewerName(msc, req),
     createdAt: new Date().toISOString()
   };
@@ -438,7 +455,12 @@ app.put('/api/mscs/:id/annotations/:aid', requireRole('Editor'), (req, res) => {
   if (!msc || !requireReviewable(msc, res)) return;
   const a = msc.annotations.find(x => x.id === req.params.aid);
   if (!a) return res.status(404).json({ error: 'Annotation not found' });
-  a.comment = String((req.body || {}).comment || '').slice(0, 4000);
+  const body = req.body || {};
+  if (body.comment !== undefined) a.comment = String(body.comment || '').slice(0, 4000);
+  if (body.color !== undefined) {
+    if (a.type !== 'highlight' || !HIGHLIGHT_COLORS.includes(body.color)) return res.status(400).json({ error: 'Invalid highlight colour' });
+    a.color = body.color;
+  }
   a.updatedAt = new Date().toISOString();
   store.save();
   res.json(a);

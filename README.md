@@ -115,6 +115,11 @@ Two or more critical issues cap the score at 5.
 * All MSC details are shown: header metadata, integrity report, version and decision history.
 * The **MSC is immutable.** It is rendered read-only from the uploaded .docx and identified by its SHA-256 fingerprint. Annotations are stored separately and anchored by text offset and quote.
 * Scroll and read the MSC. Select text to **highlight**, **underline** or **comment**. The **left pane** holds general feedback (auto-saved) and the list of annotations (click to jump, edit, delete).
+* **Highlight colour palette:** the selection toolbar offers 6 highlight colours (yellow, green, sky blue, pink, orange, lavender). Click a swatch to highlight the selection in that colour; the choice is remembered for the next highlights. A highlight's colour can be changed from the annotation list, and the list can be filtered by colour.
+* **🔍 MSC Analysis** (button in the page header) opens an overlay that disables the page behind it (close with ✕, *Close* or Esc). It has three tabs:
+  * **MSC Summary:** a one-sentence summary and a structured, extractive summary (overview, background & objective, approach, key findings, conclusions) taken from the MSC's own sections, plus composition tiles (words, reading time, figures, tables, equations, references), a words-per-section chart, the author keywords and the key terms of the MSC.
+  * **MSC Integrity Check:** the same rules as the Author upload page (7 weighted parameters, severity penalties, similarity and critical-issue caps, PASS when the score is above 6). It shows the 1–10 score with PASS/FAIL against the threshold, a radar chart by parameter, each parameter's weighted contribution, and a review guide (weakest parameters first, with questions to check and the detected findings). Findings can be ticked and added to the general feedback.
+  * **Journal Fitment:** the % fit of the MSC with the journal the author selected at upload (the same fitment index as the Author check), a fitment profile (subject match, topic coverage, scope prominence, format conformity, relative fit), the journal's format requirements, a chart of the fit across the whole portfolio, the scope topics found / not addressed, a Transfer hint when another journal fits clearly better, and suggested feedback that can be added to the general feedback.
 * **Decision:** ACCEPT / REJECT / TRANSFER / REVISE (Minor or Major) / **ASSIGN TO PE**. *Assign to PE* hands the MSC to a selected Publishing Editor for production.
   * *Transfer:* the page shows the MSC's applicability (fitment index) for the current journal and proposes an alternate journal from the backend journal mapping (genre, context and subject terms plus related-journal mapping). The alternate journal can only be selected, and is only accepted by the API, when the decision is Transfer.
   * *Revise:* the MSC goes back to the author with the reviewer's comments. Feedback incorporation is *In Progress* until the author re-submits. Then it becomes *Complete*, "Revisions done?" increments, and the MSC returns to *Open*.
@@ -142,6 +147,7 @@ The current issue cover of the selected journal is shown on the author's **MSC U
 server.js             Express app: auth, pages, REST API
 src/
   integrity.js        MSC integrity engine (format validation + 7 checks + scoring)
+  analysis.js         Reviewer MSC analysis: summary, integrity check (same rules) and journal fitment
   journals.js         Journal portfolio and journal mapping (scope, genre, related journals)
   corpus.js           Reference corpus that stands in for a plagiarism database
   template.js         Journal-specific MSC template (.docx) generator
@@ -172,7 +178,8 @@ docs/screenshots/     Screenshots of the prototype
 | `POST /api/track/page`, `…/heartbeat`, `…/leave` | any | Usage tracking from the pages |
 | `GET /api/metrics?days=30`, `GET /api/metrics/audit`, `GET /api/metrics/export/{sessions,audit}` | any | Usage metrics, audit trail, CSV export |
 | `GET /api/mscs/:id`, `POST …/start`, `POST …/progress` | Editor | Review page data, start review, reading progress |
-| `POST/PUT/DELETE /api/mscs/:id/annotations[/:aid]`, `PUT …/feedback` | Editor | Annotations and general feedback |
+| `POST/PUT/DELETE /api/mscs/:id/annotations[/:aid]`, `PUT …/feedback` | Editor | Annotations (highlights take a `color`) and general feedback |
+| `GET /api/mscs/:id/analysis` | Editor | MSC analysis for the reviewer: summary, integrity check, journal fitment |
 | `POST /api/mscs/:id/decision` | Editor | Final decision |
 
 ## Prototype limitations and next steps
@@ -191,3 +198,7 @@ docs/screenshots/     Screenshots of the prototype
 | ![Modal](docs/screenshots/reviewer-modal.png) | ![Review](docs/screenshots/review-annotate.png) |
 | **Reviewer invitation (accept link)** | **Usage Metrics** |
 | ![Invitation](docs/screenshots/reviewer-invitation.png) | ![Usage Metrics](docs/screenshots/usage-metrics.png) |
+| **MSC Analysis · Summary** | **MSC Analysis · Integrity check** |
+| ![MSC Summary](docs/screenshots/msc-analysis-summary.png) | ![Integrity check](docs/screenshots/msc-analysis-integrity.png) |
+| **MSC Analysis · Journal fitment** | **Highlight colour palette** |
+| ![Journal fitment](docs/screenshots/msc-analysis-fitment.png) | ![Highlight palette](docs/screenshots/highlight-palette.png) |
