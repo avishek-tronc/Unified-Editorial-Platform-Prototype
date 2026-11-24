@@ -1,4 +1,65 @@
 /* Shared helpers for all pages */
+
+// ----- global "processing" spinner: shown while any request to the server is in flight -----
+const UEPBusy = (() => {
+  let count = 0; let showTimer = null; let shownAt = 0; let el = null;
+  const QUIET = /\/api\/track\//; // background usage tracking never shows the spinner
+  function node() {
+    if (el) return el;
+    el = document.createElement('div');
+    el.className = 'busy-indicator';
+    el.setAttribute('role', 'status');
+    el.setAttribute('aria-live', 'polite');
+    el.innerHTML = '<span class="busy-spinner" aria-hidden="true"></span><span class="busy-label">Processing…</span>';
+    document.body.appendChild(el);
+    return el;
+  }
+  function start(label) {
+    count += 1;
+    if (count === 1) {
+      clearTimeout(showTimer);
+      showTimer = setTimeout(() => {
+        if (!count) return;
+        const n = node();
+        n.querySelector('.busy-label').textContent = label || 'Processing…';
+        n.classList.add('show');
+        document.documentElement.classList.add('is-busy');
+        shownAt = Date.now();
+      }, 150); // skip the spinner for very fast requests
+    }
+  }
+  function stop() {
+    count = Math.max(0, count - 1);
+    if (count) return;
+    clearTimeout(showTimer);
+    const wait = shownAt ? Math.max(0, 350 - (Date.now() - shownAt)) : 0; // no flicker
+    setTimeout(() => {
+      if (count) return;
+      if (el) el.classList.remove('show');
+      document.documentElement.classList.remove('is-busy');
+      shownAt = 0;
+    }, wait);
+  }
+  /** Wraps any promise (or async function) so the spinner shows while it runs. */
+  async function wrap(work, label) {
+    start(label);
+    try { return await (typeof work === 'function' ? work() : work); } finally { stop(); }
+  }
+  if (window.fetch && !window.fetch.__uepBusy) {
+    const orig = window.fetch.bind(window);
+    const patched = (input, init) => {
+      const url = typeof input === 'string' ? input : (input && input.url) || '';
+      if (QUIET.test(url)) return orig(input, init);
+      const method = ((init && init.method) || 'GET').toUpperCase();
+      const label = init && init.body instanceof FormData ? 'Uploading and processing…' : method === 'GET' ? 'Loading…' : 'Processing…';
+      return wrap(() => orig(input, init), label);
+    };
+    patched.__uepBusy = true;
+    window.fetch = patched;
+  }
+  return { start, stop, wrap };
+})();
+
 if (window.Chart) { Chart.defaults.font.family = 'Roboto, Helvetica, Arial, sans-serif'; Chart.defaults.color = '#4a4a52'; }
 const UEP = (() => {
   async function api(url, opts = {}) {
@@ -117,5 +178,5 @@ const UEP = (() => {
     img.closest('.jcover').classList.add('fallback');
   }
 
-  return { api, esc, fmtDate, fmtElapsed, scoreColor, toast, initTopbar, journalCover, coverFallback };
+  return { api, esc, fmtDate, fmtElapsed, scoreColor, toast, initTopbar, journalCover, coverFallback, busy: UEPBusy.wrap };
 })();

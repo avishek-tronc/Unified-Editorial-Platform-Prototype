@@ -109,6 +109,7 @@ Two or more critical issues cap the score at 5.
 * **Reviewer selection modal:** each reviewer is shown with their **e-mail address** beside the name. Reviewers are ranked by availability (free capacity vs. active reviews, on-leave status, expertise in the journal's scope, average turnaround). The top available reviewer is marked *Recommended*. Unavailable reviewers can't be selected.
 * **Reviewer invitation:** the editor selects a reviewer and clicks **✉ Send invitation e-mail**. The invitation e-mail (with a secret accept/decline link) is recorded in the platform outbox and shown in the modal. *Prototype: no real e-mail is delivered;* use **Open invitation link (as the reviewer)** to play the reviewer. The **Assigned reviewer** column shows the reviewer's e-mail and an *✉ Invited* (pending) or *✓ Accepted* badge, with **View invite** to re-open the e-mail.
   * **Review & annotate stays locked until the reviewer accepts** (dashboard, MSC ID link, review page and API).
+  * While an invitation is pending, a **⟳ refresh icon** appears beside the reviewer's name (dashboard table, reviewer modal and the locked review page). Click it to check whether the reviewer has accepted; if so, Review is enabled straight away. The icon disappears once the invitation is accepted.
   * **Decline** frees the MSC for another reviewer. Re-sending or choosing another reviewer replaces the old link, which then stops working.
 
 ### MSC review & annotation page (`/review/:id`)
@@ -134,6 +135,9 @@ Tracks how the application is used and keeps an audit trail. Available to both v
 * **Pages visited:** every page view with the time spent on it; expand a session to see its page trail. A *Pages visited* tab aggregates views and average time per page.
 * KPIs and charts (sessions per day, OS, location, top pages), a period selector and **CSV export** of sessions and the audit trail.
 * **Audit trail:** an append-only log (`data/audit-log.jsonl`) of logins, failed logins, logouts, page views, integrity checks, submissions, invitations sent / viewed / accepted / declined, review starts, annotations, decisions and exports, each with time, user, IP and OS. Filter by event or search (IP, MSC ID, reviewer…). Sessions are kept in `data/usage-sessions.json`.
+
+### Processing spinner
+Every page shows a small **Processing… / Loading… / Uploading and processing…** spinner at the top of the screen whenever a request to the server is in flight (login, uploads and integrity checks, dashboard loads, reviewer look-ups, invitations, annotations, decisions, MSC analysis, metrics). It is hooked into `fetch` in `public/js/common.js`, so new features get it automatically; very fast requests (under 150 ms) and background usage tracking don't show it.
 
 ### ACS Publications theme
 The UI follows the **pubs.acs.org** look (`public/css/acs-theme.css`, loaded after `app.css` on every page). The values were measured from the live site: the blue `#0039A6` top bar with white 12 px links and a gold `#FDC82F` underline on the active item, a white masthead with a hairline `#D7D7D9` rule and dark `#151515` navigation, the indigo `#412BFD` wordmark colour, **Roboto** type on white with `#1A1A1A` text and weight-600 black headings, underlined `#3361B8` links, square `#0039A6` buttons, flat square-cornered panels, and a `#0039A6` footer with `#E6EBF6` text. Usage Metrics and Log out sit in the top bar. Roboto is self-hosted from `@fontsource/roboto`, so there are no external font requests. All colours are CSS variables at the top of the file. The wordmark is text; the official ACS Publications logo is not used.
@@ -172,6 +176,7 @@ docs/screenshots/     Screenshots of the prototype
 | `POST /api/author/submit` `{checkId}` | Author | Submit a passed MSC (or revision) |
 | `GET /api/author/submissions` | Author | Own MSCs with decisions and reviewer feedback |
 | `GET /api/editor/mscs` | Editor | Dashboard data |
+| `GET /api/editor/mscs/:id` | Editor | One dashboard row (used by the invitation-status refresh icon) |
 | `GET /api/editor/mscs/:id/reviewers`, `POST …/assign` `{reviewerId}` | Editor | Reviewer proposals (with e-mail); send (or re-send) the invitation e-mail |
 | `GET /api/editor/mscs/:id/invitation` | Editor | Latest invitation e-mail and its status |
 | `GET /api/invitations/:token`, `POST …/respond` `{accept}` | public (token) | Reviewer views and accepts / declines the invitation |
