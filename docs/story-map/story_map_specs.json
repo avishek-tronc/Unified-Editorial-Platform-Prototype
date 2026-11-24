@@ -1,0 +1,46 @@
+{
+ "UEP_Story_Map_Author": {
+  "title": "Story Map: Author journey on the Unified Editorial Platform",
+  "persona": "Dr. Priya Nair, a postdoctoral chemist in her early 30s, is preparing a manuscript for JACS",
+  "turn2": "Step 3: Submit with confidence",
+  "lanes": [
+   {"name": "Prepare the MSC", "step": "Step 1: Get the MSC right before I submit",
+    "cards": ["Today: unsure which journal rules apply; a desk reject costs weeks",
+              "Select the target journal (cover thumbnail confirms the choice)",
+              "Download the journal MSC template with guidelines",
+              "Upload the .docx and see an organized preview of the MSC"]},
+   {"name": "Integrity and Fitment", "step": "Step 2: Know my score and how to fix it",
+    "cards": ["Format and required details validated (title, authors, ORCID)",
+              "Integrity score 1-10 across 7 weighted checks",
+              "Issues ranked critical / major / minor with How to fix",
+              "Journal fit % with best-fit journal or transfer path"]},
+   {"name": "Submit and Track", "step": "Step 3: Submit with confidence and stay informed",
+    "cards": ["Score above 6 = PASS enables Submit; FAIL asks for a fix",
+              "My submissions shows status, decision and reviewer feedback",
+              "Revise: upload the revision and re-check before re-submitting",
+              "First-time-right submission, fewer desk rejects, clear next step"]}
+  ]
+ },
+ "UEP_Story_Map_Editor_TR": {
+  "title": "Story Map: Editor journey for Triage and Routing",
+  "persona": "Mark Ellis, an Associate Editor in his 40s, triages 40+ new MSCs a week across several journals",
+  "turn2": "Step 3: Decide with evidence",
+  "lanes": [
+   {"name": "Triage the Inflow", "step": "Step 1: See what needs my attention now",
+    "cards": ["Today: no single view of integrity, fit or age of new MSCs",
+              "Dashboard: Open & In Progress and Complete tabs with live counts",
+              "Time elapsed in green / amber / red with filters and paging",
+              "KPI tiles and a collapsible KPIs & Metrics panel"]},
+   {"name": "Route to Reviewer", "step": "Step 2: Get the right reviewer on it fast",
+    "cards": ["Look up reviewers ranked by availability and expertise",
+              "Send the invitation e-mail with an accept / decline link",
+              "Refresh icon rechecks a pending invitation",
+              "Review unlocks on accept; a decline frees the MSC"]},
+   {"name": "Review and Decide", "step": "Step 3: Decide with evidence",
+    "cards": ["MSC Analysis: Summary, Integrity PASS / FAIL, Journal Fitment %",
+              "Annotate the immutable MSC: 6-colour highlights, underline, comment",
+              "Accept / Reject / Transfer / Revise / Assign to PE",
+              "Faster, consistent and auditable triage and routing decisions"]}
+  ]
+ }
+}
