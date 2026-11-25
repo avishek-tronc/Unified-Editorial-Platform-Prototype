@@ -106,18 +106,38 @@ const UEP = (() => {
     setTimeout(() => t.remove(), ms);
   }
 
+  // ----- person logo beside "Signed in as": one look per role -----
+  const ROLE_BADGE = {
+    // pen nib: the author writes and submits the MSC
+    Author: { color: '#12805c', glyph: '<path d="M-3.2 3.2 L1.6 -1.6 L3.2 0 L-1.6 4.8 Z M2.2 -2.2 L3 -3 L4.6 -1.4 L3.8 -0.6 Z" fill="#fff"/>' },
+    // clipboard tick: the editor manages and decides
+    Editor: { color: '#0039a6', glyph: '<rect x="-3.2" y="-3.4" width="6.4" height="7.6" rx="1" fill="none" stroke="#fff" stroke-width="1.2"/><path d="M-1.7 0.6 L-0.4 1.9 L1.9 -0.8" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>' },
+    // magnifier: the reviewer examines the MSC
+    Reviewer: { color: '#6d3fc0', glyph: '<circle cx="-0.8" cy="-0.8" r="2.6" fill="none" stroke="#fff" stroke-width="1.3"/><path d="M1.2 1.2 L3.6 3.6" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>' }
+  };
+  function personIcon(role) {
+    const b = ROLE_BADGE[role] || ROLE_BADGE.Author;
+    return `<span class="person-logo role-${esc(String(role).toLowerCase())}" title="${esc(role)}" aria-label="${esc(role)}" role="img">
+      <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
+        <circle cx="16" cy="16" r="15" fill="#fff"/>
+        <circle cx="16" cy="12.2" r="5.2" fill="${b.color}"/>
+        <path d="M6.2 26.4 C7.4 20.6 11.2 18.6 16 18.6 C20.8 18.6 24.6 20.6 25.8 26.4 C23.2 28.8 19.8 30 16 30 C12.2 30 8.8 28.8 6.2 26.4 Z" fill="${b.color}"/>
+        <g transform="translate(25.4 24.6)"><circle r="6" fill="${b.color}" stroke="#fff" stroke-width="1.4"/>${b.glyph}</g>
+      </svg></span>`;
+  }
+
   async function initTopbar(active) {
     const me = await api('/api/me');
     const bar = document.querySelector('.topbar');
     if (!bar) return me;
-    const nav = me.role === 'Editor'
-      ? `<a href="/dashboard" class="${active === 'dashboard' ? 'active' : ''}">MSC Dashboard</a>`
-      : `<a href="/author" class="${active === 'author' ? 'active' : ''}">MSC Upload</a>`;
+    const nav = me.role === 'Author'
+      ? `<a href="/author" class="${active === 'author' ? 'active' : ''}">MSC Upload</a>`
+      : `<a href="/dashboard" class="${active === 'dashboard' ? 'active' : ''}">${me.role === 'Reviewer' ? 'My assigned MSCs' : 'MSC Dashboard'}</a>`;
     bar.innerHTML = `
       <div class="utility">
         <span class="site active">Unified Editorial Platform</span>
         <span class="spacer"></span>
-        <span class="user">Signed in as&nbsp;<b>${esc(me.displayName)}</b></span>
+        <span class="user">${personIcon(me.role)}Signed in as&nbsp;<b>${esc(me.displayName)}</b></span>
         <span class="sep"></span>
         <a href="/metrics" class="metrics-link ${active === 'metrics' ? 'active' : ''}" title="Usage analytics &amp; audit trail">Usage Metrics</a>
         <span class="sep"></span>
@@ -178,5 +198,5 @@ const UEP = (() => {
     img.closest('.jcover').classList.add('fallback');
   }
 
-  return { api, esc, fmtDate, fmtElapsed, scoreColor, toast, initTopbar, journalCover, coverFallback, busy: UEPBusy.wrap };
+  return { api, esc, fmtDate, fmtElapsed, scoreColor, toast, initTopbar, personIcon, journalCover, coverFallback, busy: UEPBusy.wrap };
 })();

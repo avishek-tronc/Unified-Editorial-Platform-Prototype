@@ -208,6 +208,28 @@ const samples = path.join(__dirname, '..', 'samples');
     assert.ok(Buffer.from(csv.body).toString().startsWith('at,event,user'));
     step(`Usage metrics: sessions, IP, OS, footprint, pages and ${aud.body.total} audit events recorded`);
 
+    // reviewer view: own login, only assigned MSCs, same review flow
+    const profiles = (await call('GET', '/api/login/reviewers')).body;
+    assert.ok(profiles.length > 1 && profiles[0].id);
+    await call('POST', '/api/logout');
+    const rvLogin = await call('POST', '/api/login', { username: 'Admin', password: 'Admin', role: 'Reviewer', reviewerId: profiles[0].id });
+    assert.strictEqual(rvLogin.body.redirect, '/dashboard');
+    assert.strictEqual((await call('GET', '/api/me')).body.reviewerId, profiles[0].id);
+    const rvDash = (await call('GET', '/api/editor/mscs')).body;
+    assert.ok(rvDash.mscs.length > 0 && rvDash.mscs.every(m => m.assignedReviewerId === profiles[0].id));
+    const notMine = (await call('GET', '/api/editor/mscs')).body.mscs.length;
+    assert.ok(notMine === profiles[0].assigned);
+    const mineActive = rvDash.mscs.find(m => m.canReview);
+    if (mineActive) {
+      assert.strictEqual((await call('GET', `/api/mscs/${mineActive.id}`)).status, 200);
+      const an = await call('GET', `/api/mscs/${mineActive.id}/analysis`);
+      assert.ok(an.body.integrity && an.body.fitment && an.body.summary);
+      assert.strictEqual((await call('PUT', `/api/mscs/${mineActive.id}/feedback`, { generalFeedback: 'Point A', append: true })).status, 200);
+    }
+    assert.strictEqual((await call('GET', `/api/mscs/${mscId}`)).status, 404, 'reviewer cannot open an MSC assigned to someone else');
+    assert.strictEqual((await call('GET', `/api/editor/mscs/${mscId}/reviewers`)).status, 403, 'reviewer cannot assign reviewers');
+    step(`Reviewer login (${profiles[0].name}) sees only their ${rvDash.mscs.length} assigned MSCs and can review them`);
+
     console.log('\nAll smoke tests passed.');
   } catch (e) {
     console.error('\n✗ Smoke test failed:', e.message);

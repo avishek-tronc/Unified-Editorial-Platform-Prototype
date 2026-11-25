@@ -53,7 +53,7 @@
     if (f) loadPreview(f);
   }
 
-  // Show the uploaded MSC, organized by section, before any integrity check.
+  // Show the uploaded MSC, organized by section, before any MSC validation.
   async function loadPreview(f) {
     uploadErr.classList.add('hidden');
     result.classList.add('hidden');
@@ -84,13 +84,13 @@
       journalSel.value = msc.journalId;
       journalSel.disabled = true;
       updateJournal();
-      checkBtn.textContent = 'Run integrity check on revision';
+      checkBtn.textContent = 'Run MSC validation on revision';
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       revisionBanner.classList.add('hidden');
       cancelRevision.classList.add('hidden');
       journalSel.disabled = false;
-      checkBtn.textContent = 'Run integrity check';
+      checkBtn.textContent = 'Run MSC validation';
     }
   }
   cancelRevision.addEventListener('click', () => setRevision(null));
@@ -115,7 +115,7 @@
       uploadErr.classList.remove('hidden');
     } finally {
       checkBtn.disabled = false;
-      checkBtn.textContent = revisingMsc ? 'Run integrity check on revision' : 'Run integrity check';
+      checkBtn.textContent = revisingMsc ? 'Run MSC validation on revision' : 'Run MSC validation';
     }
   });
 
@@ -176,7 +176,7 @@
 
       <div style="margin-top:16px">
         ${r.passed
-          ? `<div class="alert ok"><b>The MSC passed the integrity check.</b> You can submit it for editorial review now, or address the remaining suggestions first and re-check.</div>
+          ? `<div class="alert ok"><b>The MSC passed the MSC validation.</b> You can submit it for editorial review now, or address the remaining suggestions first and re-check.</div>
              <button id="submitBtn">${check.revisingMscId ? `Submit revision of ${esc(check.revisingMscId)}` : 'Submit MSC for review →'}</button>`
           : `<div class="alert error"><b>The score is 6 or below.</b> Incorporate the feedback below (start with critical and major items) and re-submit the MSC.</div>
              <button disabled title="Score must be above 6">Submit MSC for review</button> <button class="secondary" id="resubmitBtn">Upload corrected MSC</button>`}
@@ -243,7 +243,7 @@
     if (!pv) { previewCard.classList.add('hidden'); return; }
     previewCard.classList.remove('hidden');
     const f = pv.front;
-    document.getElementById('previewSub').textContent = `${check.fileName} · read-only preview, organized by section${check.report ? '' : ' · integrity check not run yet'}`;
+    document.getElementById('previewSub').textContent = `${check.fileName} · read-only preview, organized by section${check.report ? '' : ' · MSC validation not run yet'}`;
     document.getElementById('previewStats').innerHTML = `
       <span class="pill grey">${pv.sections.length} parts</span>
       <span class="pill grey">${pv.totals.words.toLocaleString()} words</span>
@@ -309,9 +309,9 @@
   async function loadSubs() {
     const subs = await api('/api/author/submissions');
     const el = document.getElementById('subs');
-    if (!subs.length) { el.innerHTML = '<p class="muted">No submissions yet. MSCs that pass the integrity check and are submitted appear here.</p>'; return; }
+    if (!subs.length) { el.innerHTML = '<p class="muted">No submissions yet. MSCs that pass the MSC validation and are submitted appear here.</p>'; return; }
     el.innerHTML = `<div class="table-wrap"><table class="data"><thead><tr>
-      <th class="nosort">MSC ID</th><th class="nosort">Title</th><th class="nosort">Journal</th><th class="nosort">Submitted</th><th class="nosort">Integrity</th>
+      <th class="nosort">MSC ID</th><th class="nosort">Title</th><th class="nosort">Journal</th><th class="nosort">Submitted</th><th class="nosort">MSC validation</th>
       <th class="nosort">Revisions</th><th class="nosort">Review status</th><th class="nosort">Decision</th><th class="nosort">Reviewer feedback</th><th class="nosort"></th></tr></thead><tbody>
       ${subs.map(s => `<tr>
         <td><b>${esc(s.id)}</b></td>

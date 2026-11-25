@@ -6,6 +6,8 @@
  *   Author view : login → MSC upload & integrity check → submit / re-submit
  *   Editor view : login → MSC dashboard (table, filters, KPIs, reviewer modal)
  *                 → MSC review & annotation page (comments, highlight, decision)
+ *   Reviewer    : login as one of the reviewers → dashboard of the MSCs assigned
+ *                 to that reviewer (no KPIs & Metrics) → same review & decision flow
  */
 const path = require('path');
 const express = require('express');
@@ -46,12 +48,29 @@ app.get('/healthz', (req, res) => res.json({ ok: true, mscs: store.load() ? stor
 
 // ---------- auth ----------
 
+const ROLES = ['Author', 'Editor', 'Reviewer'];
+const homeFor = u => (u.role === 'Author' ? '/author' : '/dashboard');
+const isReviewer = req => req.session.user && req.session.user.role === 'Reviewer';
+/** A reviewer only sees and works on the MSCs assigned to them. */
+function canAccessMsc(req, msc) {
+  return !isReviewer(req) || (!!msc && msc.assignedReviewer === req.session.user.reviewerId);
+}
+
+/** Reviewer profiles offered on the login page (the reviewer with most active MSCs first). */
+function reviewerProfiles() {
+  const db = store.get();
+  return db.reviewers.map(r => {
+    const mine = db.mscs.filter(m => m.assignedReviewer === r.id);
+    return { id: r.id, name: r.name, affiliation: r.affiliation, assigned: mine.length, active: mine.filter(m => m.reviewStatus !== 'Complete').length };
+  }).sort((a, b) => b.active - a.active || b.assigned - a.assigned || a.name.localeCompare(b.name));
+}
+
 function requireRole(...roles) {
   return (req, res, next) => {
     const u = req.session.user;
     if (!u) return req.path.startsWith('/api') || req.originalUrl.startsWith('/api') ? res.status(401).json({ error: 'Not logged in' }) : res.redirect('/login');
     if (roles.length && !roles.includes(u.role)) {
-      return req.originalUrl.startsWith('/api') ? res.status(403).json({ error: 'Not permitted for this role' }) : res.redirect(u.role === 'Author' ? '/author' : '/dashboard');
+      return req.originalUrl.startsWith('/api') ? res.status(403).json({ error: 'Not permitted for this role' }) : res.redirect(homeFor(u));
     }
     next();
   };
@@ -63,17 +82,29 @@ app.post('/api/login', (req, res) => {
     usage.audit(req, 'login.failed', { attemptedUser: String(username || '').slice(0, 60) });
     return res.status(401).json({ error: 'Invalid username or password.' });
   }
-  if (!['Author', 'Editor'].includes(role)) {
-    return res.status(400).json({ error: 'Choose the Author or Editor view.' });
+  if (!ROLES.includes(role)) {
+    return res.status(400).json({ error: 'Choose the Author, Editor or Reviewer view.' });
+  }
+  let reviewer = null;
+  if (role === 'Reviewer') {
+    const db = store.get();
+    const wanted = (req.body || {}).reviewerId || (reviewerProfiles()[0] || {}).id;
+    reviewer = db.reviewers.find(r => r.id === wanted);
+    if (!reviewer) return res.status(400).json({ error: 'Choose the reviewer to sign in as.' });
   }
   req.session.regenerate(err => {
     if (err) return res.status(500).json({ error: 'Could not start a session.' });
-    req.session.user = { username, role, displayName: role === 'Editor' ? 'Admin (Editor)' : 'Admin (Author)' };
+    req.session.user = reviewer
+      ? { username, role, reviewerId: reviewer.id, displayName: `${reviewer.name} (Reviewer)` }
+      : { username, role, displayName: role === 'Editor' ? 'Admin (Editor)' : 'Admin (Author)' };
     const s = usage.startSession(req, client || {});
     usage.audit(req, 'login', { footprint: s.footprint, location: s.location.label, browser: s.browser, device: s.device });
-    res.json({ ok: true, redirect: role === 'Editor' ? '/dashboard' : '/author' });
+    res.json({ ok: true, redirect: homeFor(req.session.user) });
   });
 });
+
+// Reviewer profiles for the login page's "Sign in as reviewer" picker (names only).
+app.get('/api/login/reviewers', (req, res) => res.json(reviewerProfiles()));
 
 app.post('/api/logout', (req, res) => {
   const s = usage.endSession(req, 'Logged out');
@@ -88,12 +119,12 @@ app.get('/api/me', requireRole(), (req, res) => res.json(req.session.user));
 const page = name => (req, res) => res.sendFile(path.join(__dirname, 'public', `${name}.html`));
 app.get('/', (req, res) => {
   const u = req.session.user;
-  res.redirect(!u ? '/login' : u.role === 'Editor' ? '/dashboard' : '/author');
+  res.redirect(!u ? '/login' : homeFor(u));
 });
 app.get('/login', page('login'));
 app.get('/author', requireRole('Author'), page('author'));
-app.get('/dashboard', requireRole('Editor'), page('dashboard'));
-app.get('/review/:id', requireRole('Editor'), page('review'));
+app.get('/dashboard', requireRole('Editor', 'Reviewer'), page('dashboard'));
+app.get('/review/:id', requireRole('Editor', 'Reviewer'), page('review'));
 app.get('/metrics', requireRole(), page('metrics'));
 // Reviewer-facing invitation page: reached from the invitation e-mail, no login needed.
 app.get('/invite/:token', page('invite'));
@@ -268,10 +299,10 @@ app.post('/api/author/preview', requireRole('Author'), (req, res, next) => {
 app.post('/api/author/submit', requireRole('Author'), (req, res) => {
   const db = store.get();
   const check = db.checks.find(c => c.id === (req.body || {}).checkId && c.owner === req.session.user.username);
-  if (!check) return res.status(404).json({ error: 'Integrity check not found. Upload the MSC again.' });
+  if (!check) return res.status(404).json({ error: 'MSC validation not found. Upload the MSC again.' });
   if (check.submittedMscId) return res.status(409).json({ error: `Already submitted as ${check.submittedMscId}.` });
   if (!check.report.passed) {
-    return res.status(422).json({ error: `Integrity score ${check.report.score}/10 is not above 6. Incorporate the feedback and re-submit the MSC.` });
+    return res.status(422).json({ error: `MSC validation score ${check.report.score}/10 is not above 6. Incorporate the feedback and re-submit the MSC.` });
   }
   let msc;
   if (check.revisingMscId) {
@@ -297,21 +328,39 @@ app.get('/api/author/submissions', requireRole('Author'), (req, res) => {
 
 // ---------- editor ----------
 
-app.get('/api/editor/mscs', requireRole('Editor'), (req, res) => {
+// Editors see every MSC; a reviewer sees only the MSCs assigned to them.
+app.get('/api/editor/mscs', requireRole('Editor', 'Reviewer'), (req, res) => {
   const db = store.get();
+  const reviewerId = isReviewer(req) ? req.session.user.reviewerId : null;
   res.json({
     now: new Date().toISOString(),
+    role: req.session.user.role,
+    reviewerId,
     editors: db.editors.map(e => ({ id: e.id, name: e.name, activeLoad: service.editorLoad(e.id) })),
-    reviewers: db.reviewers.map(r => ({ id: r.id, name: r.name })),
-    mscs: db.mscs.map(service.dashboardRow).sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt))
+    reviewers: db.reviewers.filter(r => !reviewerId || r.id === reviewerId).map(r => ({ id: r.id, name: r.name })),
+    mscs: db.mscs.filter(m => !reviewerId || m.assignedReviewer === reviewerId)
+      .map(service.dashboardRow).sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt))
   });
+});
+
+// The signed-in reviewer accepts or declines the invitation for an MSC from the dashboard.
+app.post('/api/reviewer/mscs/:id/respond', requireRole('Reviewer'), (req, res) => {
+  const msc = store.get().mscs.find(m => m.id === req.params.id);
+  if (!msc || !canAccessMsc(req, msc)) return res.status(404).json({ error: 'MSC not found' });
+  if (!msc.invitation || msc.invitation.status !== 'Pending') return res.status(409).json({ error: 'There is no pending invitation for this MSC.' });
+  const accept = !!(req.body || {}).accept;
+  const out = service.respondInvitation(msc.invitation.token, accept);
+  if (out.error) return res.status(out.status).json({ error: out.error });
+  store.save();
+  usage.audit(req, accept ? 'invitation.accepted' : 'invitation.declined', { mscId: msc.id, reviewerId: req.session.user.reviewerId, via: 'dashboard' });
+  res.json({ ok: true, accepted: accept, row: accept ? service.dashboardRow(msc) : null });
 });
 
 // Current dashboard row of one MSC: used by the refresh icon beside a pending
 // reviewer to check whether the invitation has been accepted.
-app.get('/api/editor/mscs/:id', requireRole('Editor'), (req, res) => {
+app.get('/api/editor/mscs/:id', requireRole('Editor', 'Reviewer'), (req, res) => {
   const msc = store.get().mscs.find(m => m.id === req.params.id);
-  if (!msc) return res.status(404).json({ error: 'MSC not found' });
+  if (!msc || !canAccessMsc(req, msc)) return res.status(404).json({ error: 'MSC not found' });
   res.json(service.dashboardRow(msc));
 });
 
@@ -363,7 +412,7 @@ const HIGHLIGHT_COLORS = ['yellow', 'green', 'blue', 'pink', 'orange', 'purple']
 
 function findMsc(req, res) {
   const msc = store.get().mscs.find(m => m.id === req.params.id);
-  if (!msc) { res.status(404).json({ error: 'MSC not found' }); return null; }
+  if (!msc || !canAccessMsc(req, msc)) { res.status(404).json({ error: 'MSC not found' }); return null; }
   return msc;
 }
 
@@ -388,14 +437,14 @@ function reviewerName(msc, req) {
   return r ? r.name : req.session.user.displayName;
 }
 
-app.get('/api/mscs/:id', requireRole('Editor'), (req, res) => {
+app.get('/api/mscs/:id', requireRole('Editor', 'Reviewer'), (req, res) => {
   const msc = findMsc(req, res);
   if (msc) res.json(service.reviewPayload(msc));
 });
 
 // MSC analysis for the reviewer: summary, integrity check (same rules as the
 // Author upload check) and fitment with the journal chosen by the author.
-app.get('/api/mscs/:id/analysis', requireRole('Editor'), (req, res, next) => {
+app.get('/api/mscs/:id/analysis', requireRole('Editor', 'Reviewer'), (req, res, next) => {
   try {
     const msc = findMsc(req, res);
     if (!msc) return;
@@ -405,7 +454,7 @@ app.get('/api/mscs/:id/analysis', requireRole('Editor'), (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-app.post('/api/mscs/:id/start', requireRole('Editor'), (req, res) => {
+app.post('/api/mscs/:id/start', requireRole('Editor', 'Reviewer'), (req, res) => {
   const msc = findMsc(req, res);
   if (!msc || !requireReviewable(msc, res)) return;
   if (msc.reviewStatus === 'Open') {
@@ -418,7 +467,7 @@ app.post('/api/mscs/:id/start', requireRole('Editor'), (req, res) => {
   res.json(service.reviewPayload(msc));
 });
 
-app.post('/api/mscs/:id/progress', requireRole('Editor'), (req, res) => {
+app.post('/api/mscs/:id/progress', requireRole('Editor', 'Reviewer'), (req, res) => {
   const msc = findMsc(req, res);
   if (!msc || !requireReviewable(msc, res)) return;
   const pct = Math.round(Number((req.body || {}).percent));
@@ -430,7 +479,7 @@ app.post('/api/mscs/:id/progress', requireRole('Editor'), (req, res) => {
   res.json({ reviewProgress: msc.reviewProgress });
 });
 
-app.post('/api/mscs/:id/annotations', requireRole('Editor'), (req, res) => {
+app.post('/api/mscs/:id/annotations', requireRole('Editor', 'Reviewer'), (req, res) => {
   const msc = findMsc(req, res);
   if (!msc || !requireReviewable(msc, res)) return;
   const { type, start, end, quote, comment, color } = req.body || {};
@@ -458,7 +507,7 @@ app.post('/api/mscs/:id/annotations', requireRole('Editor'), (req, res) => {
   res.json(a);
 });
 
-app.put('/api/mscs/:id/annotations/:aid', requireRole('Editor'), (req, res) => {
+app.put('/api/mscs/:id/annotations/:aid', requireRole('Editor', 'Reviewer'), (req, res) => {
   const msc = findMsc(req, res);
   if (!msc || !requireReviewable(msc, res)) return;
   const a = msc.annotations.find(x => x.id === req.params.aid);
@@ -474,7 +523,7 @@ app.put('/api/mscs/:id/annotations/:aid', requireRole('Editor'), (req, res) => {
   res.json(a);
 });
 
-app.delete('/api/mscs/:id/annotations/:aid', requireRole('Editor'), (req, res) => {
+app.delete('/api/mscs/:id/annotations/:aid', requireRole('Editor', 'Reviewer'), (req, res) => {
   const msc = findMsc(req, res);
   if (!msc || !requireReviewable(msc, res)) return;
   const before = msc.annotations.length;
@@ -484,15 +533,18 @@ app.delete('/api/mscs/:id/annotations/:aid', requireRole('Editor'), (req, res) =
   res.json({ ok: true });
 });
 
-app.put('/api/mscs/:id/feedback', requireRole('Editor'), (req, res) => {
+app.put('/api/mscs/:id/feedback', requireRole('Editor', 'Reviewer'), (req, res) => {
   const msc = findMsc(req, res);
   if (!msc || !requireReviewable(msc, res)) return;
-  msc.generalFeedback = String((req.body || {}).generalFeedback || '').slice(0, 20000);
+  const body = req.body || {};
+  // append: points added from the dashboard's MSC analysis overlay
+  const text = String(body.generalFeedback || '');
+  msc.generalFeedback = (body.append && msc.generalFeedback ? `${msc.generalFeedback.replace(/\s+$/, '')}\n\n${text}` : text).slice(0, 20000);
   store.save();
   res.json({ ok: true });
 });
 
-app.post('/api/mscs/:id/decision', requireRole('Editor'), (req, res) => {
+app.post('/api/mscs/:id/decision', requireRole('Editor', 'Reviewer'), (req, res) => {
   const msc = findMsc(req, res);
   if (!msc || !requireReviewable(msc, res)) return;
   const { type, revisionType, alternateJournalId, publishingEditorId, summary } = req.body || {};
