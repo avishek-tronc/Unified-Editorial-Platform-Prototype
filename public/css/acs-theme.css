@@ -161,3 +161,11 @@ button.danger:hover:not(:disabled) { background: #a33024; border-color: #a33024;
 .journal-meta { display: flex; gap: 12px; align-items: flex-start; margin-top: 10px; }
 .journal-meta #journalInfo { flex: 1; }
 .hero-cover { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+
+/* role logos on the login "Continue as" tiles */
+.role-toggle .role-tile-logo { display: flex; justify-content: center; margin: 0 auto 6px; width: 44px; height: 44px; }
+.role-toggle .role-tile-logo svg { width: 44px; height: 44px; overflow: visible; }
+.role-toggle .role-tile-logo svg > circle:first-child { fill: #f1f4fa; stroke: #d5dcea; stroke-width: .8; }
+.role-toggle input:checked + label .role-tile-logo svg > circle:first-child { fill: #fff; stroke: var(--pubs-blue); }
+.role-toggle label { transition: background .15s, box-shadow .15s; }
+.role-toggle label:hover { background: #f7f9fd; }
