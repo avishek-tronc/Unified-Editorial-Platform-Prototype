@@ -75,7 +75,7 @@
         </div>
         <dl class="kv" style="grid-template-columns:auto auto;min-width:420px">
           <dt>Submitted</dt><dd>${fmtDate(msc.submittedAt)} <span class="pill ${msc.elapsedBand}">${fmtElapsed(msc.elapsedHours)}</span></dd>
-          <dt>Integrity</dt><dd><span class="pill ${msc.integrityPassed ? 'green' : 'red'}">${msc.integrityPassed ? 'PASSED' : 'FAILED'}</span> <b style="color:${scoreColor(msc.integrityScore)}">${msc.integrityScore}</b>/10 · fitment ${msc.fitmentIndex}/100</dd>
+          <dt>MSC validation</dt><dd><span class="pill ${msc.integrityPassed ? 'green' : 'red'}">${msc.integrityPassed ? 'PASSED' : 'FAILED'}</span> <b style="color:${scoreColor(msc.integrityScore)}">${msc.integrityScore}</b>/10${msc.integrityFlags ? ` · <span class="muted small">${msc.integrityFlags.fail} failed, ${msc.integrityFlags.flag} flagged clause(s)</span>` : ''} · fitment ${msc.fitmentIndex}/100</dd>
           <dt>Editor / reviewer</dt><dd>${esc(msc.assignedEditor || '—')} / ${msc.assignedReviewer ? `${esc(msc.assignedReviewer)} <span class="muted small">&lt;${esc(msc.assignedReviewerEmail)}&gt;</span>` : '<span class="pill amber">Unassigned</span>'}</dd>
           <dt>Review</dt><dd><span class="pill ${msc.reviewStatus === 'Complete' ? 'green' : msc.reviewStatus === 'In Progress' ? 'amber' : 'blue'}">${msc.reviewStatus}</span> started ${fmtDate(msc.reviewStartAt)} · <b id="progressLabel">${msc.reviewProgress}%</b></dd>
           <dt>Revisions</dt><dd>${msc.revisions ? `Yes (${msc.revisions}) — version ${msc.versions.length}` : 'No'}</dd>
@@ -389,15 +389,25 @@
   // ---------- integrity report ----------
   function renderIntegrity() {
     const r = msc.integrity;
+    const v = r.validation;
     $('integrityPane').innerHTML = `
-      <div class="row"><b style="font-size:22px;color:${scoreColor(r.score)}">${r.score}/10</b><span class="pill ${r.passed ? 'green' : 'red'}">${r.passed ? 'PASSED' : 'FAILED'}</span></div>
-      <div class="small muted" style="margin:4px 0 10px">${esc(r.summary)}</div>
-      ${r.categories.map(c => `<div class="cat" style="grid-template-columns:1fr 90px 34px"><div class="small">${esc(c.label)}</div><div class="bar"><span style="width:${c.score * 10}%;background:${scoreColor(c.score)}"></span></div><b class="small">${c.score}</b></div>`).join('')}
-      <div class="section-title">Remaining items</div>
-      ${r.issues.filter(i => i.severity !== 'info').map(i => `<div class="issue ${i.severity} small"><b>${i.severity}</b> · ${esc(i.message)}</div>`).join('') || '<p class="muted small">None</p>'}
+      <div class="row"><b style="font-size:22px;color:${scoreColor(r.score)}">${r.score}/10</b><span class="pill ${r.passed ? 'green' : 'red'}">${r.passed ? 'PASSED' : 'FAILED'}</span>
+        <span class="muted small">MSC validation · 21 integrity clauses</span></div>
+      ${v ? `<div class="small muted" style="margin:4px 0 6px">${v.counts.fail} failed and ${v.counts.flag} flagged clause(s); −${v.deductions} point(s) from 10.${r.uploadScore != null && r.uploadScore !== r.score ? ` Score at author upload: ${r.uploadScore}/10 (re-screened for the current editor, reviewer and review activity).` : ''}</div>` : `<div class="small muted" style="margin:4px 0 10px">${esc(r.summary)}</div>`}
+      ${v ? `<div class="section-title">Score by integrity area</div>${ClauseUI.areaBars(v)}` : ''}
+      ${ClauseUI.render(v, { compact: true, openFailed: false, filter: 'open' })}
+      <button type="button" class="ghost small" id="openIntegrityModal" style="margin-top:6px">Open the full MSC Integrity Check →</button>
       <div class="section-title">Version history</div>
       ${msc.versions.map(v => `<div class="small">v${v.version} · ${fmtDate(v.submittedAt)} · score ${v.score}</div>`).join('')}
       ${msc.decisionHistory.length ? `<div class="section-title">Decision history</div>${msc.decisionHistory.map(d => `<div class="small">${fmtDate(d.decidedAt)} · v${d.version} · <b>${d.type}${d.revisionType ? ` (${d.revisionType})` : ''}</b> — ${esc(d.summary)}</div>`).join('')}` : ''}`;
+  }
+
+  function wireIntegrity() {
+    ClauseUI.wire($('integrityPane'));
+    const f = $('integrityPane').querySelector('[data-clfilter="open"]');
+    if (f && (msc.integrity.validation || {}).counts && (msc.integrity.validation.counts.flag + msc.integrity.validation.counts.fail)) f.click();
+    const b = $('openIntegrityModal');
+    if (b) b.addEventListener('click', () => MscAnalysis.open(msc, { tab: 'integrity', readOnly: readOnly(), onAddFeedback: addToGeneralFeedback }));
   }
 
   function showTab(name) {
@@ -412,6 +422,7 @@
     renderAnnList();
     renderDecision();
     renderIntegrity();
+    wireIntegrity();
     const ro = readOnly();
     $('general').disabled = ro;
     $('saveGeneral').classList.toggle('hidden', ro);

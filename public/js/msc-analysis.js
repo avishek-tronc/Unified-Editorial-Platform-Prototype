@@ -10,7 +10,6 @@ const MscAnalysis = (() => {
   let lastFocus = null;
 
   const SEV_PILL = { critical: 'red', major: 'amber', minor: 'blue' };
-  const BAND_PILL = { strong: 'green', adequate: 'blue', weak: 'amber', poor: 'red' };
 
   function background(disabled) {
     ['.topbar', 'main', '.site-footer'].forEach(sel => {
@@ -38,7 +37,7 @@ const MscAnalysis = (() => {
     background(true);
     $('anClose').focus();
     $('anBody').innerHTML = `<div class="an-loading"><div class="spinner"></div><div><b>Analysing the MSC…</b>
-      <div class="muted small">Summarising sections · running integrity rules · checking journal fitment</div></div></div>`;
+      <div class="muted small">Summarising sections · screening the 21 integrity clauses · checking journal fitment</div></div></div>`;
     try {
       state.data = await api(`/api/mscs/${encodeURIComponent(msc.id)}/analysis`);
     } catch (ex) {
@@ -163,13 +162,16 @@ const MscAnalysis = (() => {
       <details class="an-abstract"><summary>Show the full abstract</summary><p>${esc(s.abstract) || '<span class="muted">No abstract found.</span>'}</p></details>`;
   }
 
-  // ---------- Tab 2: integrity ----------
+  // ---------- Tab 2: integrity (MSC validation on clauses I-01 … I-21) ----------
+  const STATUS_PILL = { pass: 'green', flag: 'amber', fail: 'red' };
   function renderIntegrity(body, r) {
     const color = scoreColor(r.score);
     const fbItems = [];
-    r.guidance.forEach(g => g.suggestions.forEach(sg => fbItems.push({ text: sg.text, tag: g.label, tagClass: SEV_PILL[sg.severity] })));
-    fbItems.heading = 'Integrity check';
+    r.guidance.forEach(g => g.suggestions.forEach(sg => fbItems.push({ text: sg.text, tag: `${sg.id} · ${g.label}`, tagClass: STATUS_PILL[sg.status] })));
+    fbItems.heading = 'MSC validation (integrity clauses)';
     state.fb = { ...(state.fb || {}), integrity: fbItems };
+    const areas = r.areas || [];
+    const changed = r.uploadScore != null && r.uploadScore !== r.score;
 
     body.innerHTML = `
       <div class="an-hero">
@@ -178,56 +180,60 @@ const MscAnalysis = (() => {
           <div class="verdict ${r.passed ? 'pass' : 'fail'}">${r.passed ? '✔ PASS' : '✖ FAIL'}</div>
           <div class="an-threshold"><div class="track"><span class="fill" style="width:${r.score * 10}%;background:${color}"></span><span class="mark" style="left:${r.passThreshold * 10}%" title="PASS needs a score above ${r.passThreshold}"></span></div>
             <div class="muted small an-scale"><span>0</span><span style="left:${r.passThreshold * 10}%">PASS &gt; ${r.passThreshold}</span><span style="right:0;left:auto">10</span></div></div>
-          <div class="row small" style="margin-top:6px"><span class="pill red">${r.counts.critical} critical</span><span class="pill amber">${r.counts.major} major</span><span class="pill blue">${r.counts.minor} minor</span></div>
+          <div class="row small" style="margin-top:6px">${r.results.length ? ClauseUI.tally(r) : ''}</div>
           ${r.caps.length ? `<div class="muted small" style="margin-top:4px">${r.caps.map(esc).join(' ')}</div>` : ''}
+          ${changed ? `<div class="muted small" style="margin-top:4px">Score at author upload: ${r.uploadScore}/10 — re-screened for the current editor, reviewer and review activity.</div>` : ''}
         </div>
       </div>
-      <div class="alert ${r.passed ? (r.counts.critical || r.counts.major ? 'warn' : 'ok') : 'error'}"><b>Reviewer guidance:</b> ${esc(r.recommendation)}</div>
-      <div class="muted small" style="margin:-4px 0 8px">Same rules as the Author MSC upload check: 7 weighted categories, severity penalties, similarity and critical-issue caps; the MSC passes when the score is above ${r.passThreshold}.</div>
+      <div class="alert ${r.passed ? (r.counts.fail || r.counts.flag ? 'warn' : 'ok') : 'error'}"><b>Reviewer guidance:</b> ${esc(r.recommendation)}</div>
+      <div class="muted small" style="margin:-4px 0 8px">Same 21 integrity clauses (I-01 to I-21, IA-04 to IA-12) as the Author MSC validation. A failed clause deducts its severity points (critical 3 · major 1.5 · minor 0.75), a flagged clause half; the MSC passes when the score is above ${r.passThreshold}.</div>
 
-      <div class="an-grid">
+      ${areas.length ? `<div class="an-grid">
         <div>
-          <div class="section-title">Score by parameter</div>
-          <div class="an-card"><div style="height:260px"><canvas id="anRadar" aria-label="Integrity score by parameter"></canvas></div></div>
+          <div class="section-title">Score by integrity area</div>
+          <div class="an-card"><div style="height:270px"><canvas id="anRadar" aria-label="MSC validation score by integrity area"></canvas></div></div>
         </div>
         <div>
-          <div class="section-title">Weighted contribution to the score</div>
+          <div class="section-title">Deductions by area</div>
           <div class="an-card">
-            <table class="an-table"><thead><tr><th>Parameter</th><th>Weight</th><th style="width:34%">Score</th><th>Points</th></tr></thead><tbody>
-            ${r.categories.map(c => `<tr><td>${esc(c.label)} <span class="pill ${BAND_PILL[c.band]}">${c.band}</span></td><td>${Math.round(c.weight * 100)}%</td>
-              <td><div class="bar"><span style="width:${c.score * 10}%;background:${scoreColor(c.score)}"></span></div></td><td><b>${c.contribution.toFixed(2)}</b></td></tr>`).join('')}
-            <tr class="total"><td>Weighted total${r.caps.length ? ' (before caps)' : ''}</td><td>100%</td><td></td><td><b>${r.weightedScore}</b></td></tr>
+            <table class="an-table"><thead><tr><th>Area</th><th>Clauses</th><th style="width:30%">Score</th><th>Deduction</th></tr></thead><tbody>
+            ${areas.map(a => `<tr><td>${esc(a.label)} <span class="pill ${STATUS_PILL[a.status]}">${a.status === 'flag' ? 'flagged' : a.status}</span></td><td class="muted">${a.ids[0]}${a.ids.length > 1 ? `–${a.ids[a.ids.length - 1].slice(2)}` : ''}</td>
+              <td><div class="bar"><span style="width:${a.score * 10}%;background:${scoreColor(a.score)}"></span></div></td><td><b>${a.deduction ? `−${a.deduction}` : '0'}</b></td></tr>`).join('')}
+            <tr class="total"><td>Score</td><td></td><td class="muted">10 − ${r.deductions}${r.caps.length ? ' (capped)' : ''}</td><td><b>${r.score}</b></td></tr>
             </tbody></table>
           </div>
         </div>
-      </div>
+      </div>` : ''}
 
-      <div class="section-title">Guide for your review — weakest parameters first</div>
+      <div class="an-card" style="margin-top:12px">${ClauseUI.render(r.results.length ? r : null, { openFailed: true })}</div>
+
+      <div class="section-title">Guide for your review — weakest areas first</div>
       <div class="an-guide">
-        ${r.guidance.map((g, i) => `<details ${i < 2 ? 'open' : ''}>
-          <summary><span class="dot" style="background:${scoreColor(g.score)}"></span><b>${esc(g.label)}</b> <span class="muted">${g.score}/10</span> <span class="pill ${BAND_PILL[g.band]}">${g.band}</span>
+        ${r.guidance.map((g, i) => `<details ${i < 2 && g.suggestions.length ? 'open' : ''}>
+          <summary><span class="dot" style="background:${scoreColor(g.score)}"></span><b>${esc(g.label)}</b> <span class="muted">${g.score}/10</span> <span class="pill ${STATUS_PILL[g.status]}">${g.status === 'flag' ? 'flagged' : g.status}</span>
             ${g.suggestions.length ? `<span class="pill grey">${g.suggestions.length} finding(s)</span>` : ''}</summary>
           <div class="g-focus">${esc(g.focus)}</div>
           <ul class="g-prompts">${g.prompts.map(p => `<li>${esc(p)}</li>`).join('')}</ul>
-          ${g.suggestions.map(sg => `<div class="issue ${sg.severity} small"><b>${sg.severity}</b> · ${esc(sg.text)}</div>`).join('')}
+          ${g.suggestions.map(sg => `<div class="issue ${sg.status === 'fail' ? 'critical' : 'major'} small"><b>${sg.id} · ${sg.status === 'flag' ? 'flagged' : 'fail'}</b> · ${esc(sg.text)}</div>`).join('')}
         </details>`).join('')}
       </div>
       ${feedbackBox('integrity', 'Turn findings into feedback for the author', fbItems)}`;
+    ClauseUI.wire(body);
 
-    if (window.Chart) {
+    if (window.Chart && areas.length) {
       state.charts.push(new Chart($('anRadar'), {
         type: 'radar',
         data: {
-          labels: r.categories.map(c => c.label.replace(' & authorship integrity', '').replace('Graphs, figures & equations', 'Figures & equations')),
+          labels: areas.map(a => a.label.replace('AI-use disclosure & content signals', 'AI-use & content').replace('Citation & reference integrity', 'Citations & references').replace('Text similarity & plagiarism', 'Similarity & plagiarism').replace('Sanctions & restricted parties', 'Sanctions')),
           datasets: [
-            { label: 'Score', data: r.categories.map(c => c.score), borderColor: BRAND, backgroundColor: 'rgba(47,111,222,.18)', borderWidth: 2, pointRadius: 4, pointBackgroundColor: r.categories.map(c => scoreHex(c.score)), pointBorderColor: '#fff', pointBorderWidth: 2 },
-            { label: 'PASS threshold', data: r.categories.map(() => r.passThreshold), borderColor: '#9aa4b8', borderDash: [4, 4], borderWidth: 1.5, pointRadius: 0, fill: false }
+            { label: 'Area score', data: areas.map(a => a.score), borderColor: BRAND, backgroundColor: 'rgba(47,111,222,.18)', borderWidth: 2, pointRadius: 4, pointBackgroundColor: areas.map(a => scoreHex(a.score)), pointBorderColor: '#fff', pointBorderWidth: 2 },
+            { label: 'PASS threshold', data: areas.map(() => r.passThreshold), borderColor: '#9aa4b8', borderDash: [4, 4], borderWidth: 1.5, pointRadius: 0, fill: false }
           ]
         },
         options: {
           maintainAspectRatio: false,
-          scales: { r: { min: 0, max: 10, ticks: { stepSize: 2, backdropColor: 'transparent', font: { size: 10 } }, pointLabels: { font: { size: 11 } }, grid: { color: '#e3e7ef' }, angleLines: { color: '#e3e7ef' } } },
-          plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }, tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}/10` } } }
+          scales: { r: { min: 0, max: 10, ticks: { stepSize: 2, backdropColor: 'transparent', font: { size: 10 } }, pointLabels: { font: { size: 10 } }, grid: { color: '#e3e7ef' }, angleLines: { color: '#e3e7ef' } } },
+          plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }, tooltip: { callbacks: { title: items => areas[items[0].dataIndex].label, label: ctx => `${ctx.dataset.label}: ${ctx.raw}/10`, afterLabel: ctx => ctx.datasetIndex ? '' : `Clauses ${areas[ctx.dataIndex].ids.join(', ')} · −${areas[ctx.dataIndex].deduction}` } } }
         }
       }));
     }

@@ -217,3 +217,21 @@ docs/screenshots/     Screenshots of the prototype
 | ![MSC Summary](docs/screenshots/msc-analysis-summary.png) | ![Integrity check](docs/screenshots/msc-analysis-integrity.png) |
 | **MSC Analysis · Journal fitment** | **Highlight colour palette** |
 | ![Journal fitment](docs/screenshots/msc-analysis-fitment.png) | ![Highlight palette](docs/screenshots/highlight-palette.png) |
+
+## MSC validation on the integrity clauses (I-01 … I-21)
+
+The MSC validation score (1–10, PASS above 6) is computed from the 21 integrity clauses of the Integrity Assurance requirements (IA-04 … IA-12), implemented in `src/clauses.js` with demo reference lists in `src/integrity-lists.js`:
+
+| Area | Clauses |
+|---|---|
+| IA-04 Text similarity & plagiarism | I-01 similarity (>25% overall / >10% one source), I-02 duplicate submission |
+| IA-05 Image & figure integrity | I-03 duplicated panels, I-04 figure reuse, I-05 manipulation, I-06 AI-generated images |
+| IA-06 Citation & reference integrity | I-07 retracted citations, I-08 self-citation / stacking / predatory venues, I-09 citation support |
+| IA-07 Data & supporting materials | I-10 data availability and text-to-table consistency |
+| IA-08 AI-use & content signals | I-11 chatbot text, tortured phrases, AI-text score |
+| IA-09 Identity & affiliation | I-12 ORCID / ROR match, I-13 duplicate accounts |
+| IA-10 Conflict of interest | I-14 shared affiliation, I-15 co-authorship, I-16 opposed / conflicted reviewers |
+| IA-11 Sanctions | I-17 restricted-party screening |
+| IA-12 Suspicious behaviour | I-18 shared contact details, I-19 reviewer e-mail domains, I-20 shared IP / device, I-21 review timing and submission bursts |
+
+Each clause passes, is flagged (half deduction) or fails (critical 3 · major 1.5 · minor 0.75 points). Score = 10 − deductions (min 1), capped at 4 for >25% similarity or a duplicate submission and at 5 for two or more critical failures. Evidence is extracted once at upload; the workflow clauses (I-13 … I-21) are re-evaluated live when the editor, reviewer or review activity changes, so the Dashboard and Review pages may show a different score from the one at upload. External services (iThenticate, Proofig/ImageTwin, Crossref, ORCID, ROR, OpenAlex, sanctions feeds) are simulated with local data. The earlier category checks remain as non-scored "Readiness feedback" on the upload page.

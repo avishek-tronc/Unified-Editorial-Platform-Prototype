@@ -4,13 +4,18 @@
  * Two demo manuscripts:
  *  - GOOD: a well-formed JACS submission that should PASS (> 6).
  *  - WEAK: a drug-discovery MSC with missing sections, typos, copied text,
- *          figure/table problems and an invalid ORCID that should FAIL.
+ *          figure/table problems and an invalid ORCID that should FAIL; it
+ *          also trips the integrity clauses (duplicated figure, chatbot text,
+ *          tortured phrases, retracted / predatory references, suggested
+ *          reviewer using the author's e-mail, look-alike domain, sanctioned
+ *          funder) so every clause type can be demonstrated.
  */
 
 const refs = n => Array.from({ length: n }, (_, i) => {
   const authors = ['Alvarez, M.; Chen, L.', 'Brennan, K. P.; Osei, A.', 'Dubois, C.; Kim, H.', 'Fischer, T.; Nakamura, Y.', 'Gupta, R.; Larsen, E.'][i % 5];
   const topics = ['Copper Catalysis in Modern Synthesis', 'Visible-Light Photoredox Strategies', 'Ligand Design for Base Metals', 'Mechanistic Studies of C–N Bond Formation', 'Sustainable Amination Methods', 'Kinetic Isotope Effects in Catalysis', 'Radical Cross-Coupling Reactions', 'Computational Insights into Copper Intermediates'][i % 8];
-  return `${authors} ${topics} ${i + 1}. J. Am. Chem. Soc. ${2012 + (i % 12)}, ${130 + i}, ${1000 + i * 37}–${1010 + i * 37}.`;
+  const venue = ['J. Am. Chem. Soc.', 'Angew. Chem. Int. Ed.', 'Org. Lett.', 'ACS Catal.', 'Nat. Chem.', 'Chem. Sci.'][i % 6];
+  return `${authors} ${topics} ${i + 1}. ${venue} ${2012 + (i % 12)}, ${130 + i}, ${1000 + i * 37}–${1010 + i * 37}.`;
 });
 
 const GOOD = {
@@ -64,17 +69,24 @@ const WEAK = {
   corresponding: { name: 'R. Sharma', email: 'rsharma.lab@gmail.com' },
   orcid: '0000-0002-1825-0098',
   creator: 'Ghost Writer Services',
+  frontLines: [
+    ['Suggested reviewers: ', 'Dr. A. Mehta (rsharma.lab@gmail.com); Prof. L. Novak (l.novak@harvrad.edu)'],
+    ['Opposed reviewers: ', 'Prof. Anna Kowalski']
+  ],
   abstract: 'We made new compounds that inhibit kinase with IC50 of 12 nM and 85% oral bioavailabilty. These are good.',
   keywords: null,
   introduction: [
     'Kinases are important targets.  Many drugs have been made but more are needed [1]. The the problem is selectivity , wich is difficult to acheive.',
     'Protein kinases regulate a wide range of cellular processes and their dysregulation is associated with cancer and inflammatory diseases. The development of selective kinase inhibitors is complicated by the high structural similarity of the adenosine triphosphate binding site across the kinome. Structure based drug design has enabled the identification of inhibitors that exploit subtle differences in the binding pocket.'
   ],
-  methods: ['Compounds were synthesised using standard proceedures and tested in a kinase assay (see Figure 3). Cell line data were recieved from a collaborator.'],
+  methods: ['Compounds were synthesised using standard proceedures and tested in a kinase assay (see Figure 3). Cell line data were recieved from a collaborator.',
+    'Hits were ranked with counterfeit consciousness and profound learning models; an irregular woodland classifier predicted selectivity.'],
   results: [
     'The results are shown in Table 1 and Figure 1. Compound 7 was the most potent with good selectivity and potency in the in vitro assay (',
     { figure: { n: 1, caption: 'Dose-response curves for compounds 1-8.', values: [10, 30, 55, 72, 85, 90], kind: 'line' } },
     { figure: { n: 2, caption: 'Docking pose of compound 7 in the binding pocket.', noImage: true } },
+    { figure: { n: 3, caption: 'Kinase assay read-out for compounds 1-8.', values: [10, 30, 55, 72, 85, 90], kind: 'line' } },
+    'Compound 5 reached 85% inhibition at 1 µM (Table 1). As an AI language model, I cannot verify these values, but they indicate strong potency.',
     { table: { n: 1, caption: 'Inhibitory activity', rows: [
       ['Compound', 'IC50 (nM)', 'Selectivity', 'Solubility'],
       ['1', '450', '', ''],
@@ -89,12 +101,14 @@ const WEAK = {
   conclusions: null,
   coi: null,
   data: null,
-  acknowledgments: null,
+  acknowledgments: 'This work was supported by the Northgate Defence Materials Institute (grant ND-2291).',
   omit: ['keywords', 'conclusions', 'coi', 'data', 'contributions'],
   references: [
     'Smith, J. Kinase inhibitors. J. Med. Chem. 2015, 58, 1-10.',
     'Doe, A. Selectivity of drugs. Nature 2018, 550, 100-105.',
-    'Lee, B. Docking studies. J. Chem. Inf. Model. 2019, 59, 200-210.'
+    'Lee, B. Docking studies. J. Chem. Inf. Model. 2019, 59, 200-210.',
+    'Wang, Q. Ultrasensitive kinase profiling by quantum dot FRET. Anal. Chem. 2019, 91, 100-108. DOI: 10.5555/retracted.2019.0042',
+    'Kumar, S. Kinase scaffolds revisited. International Journal of Advanced Chemical Research Letters 2021, 3, 1-9.'
   ]
 };
 

@@ -5,6 +5,7 @@
  */
 const store = require('./store');
 const { getJournal, proposeAlternates, JOURNALS } = require('./journals');
+const clauses = require('./clauses');
 
 const ACTIVE = s => s !== 'Complete';
 
@@ -161,9 +162,122 @@ function corpusFor(excludeMscId) {
     .filter(m => m.id !== excludeMscId)
     .map(m => ({
       id: m.id,
+      seed: !!m.seed,
+      contentHash: m.contentHash,
       source: `Prior submission ${m.id}: "${m.title}"`,
       text: m.seed ? `${m.title}. ${m.abstract || ''}` : getContent(m).text
     }));
+}
+
+// ---------- MSC validation on the integrity clauses I-01 … I-21 ----------
+
+/** Image hashes of other (non-demo) submissions, for the figure-reuse check (I-04). */
+function imageIndexFor(excludeMscId) {
+  return store.get().mscs
+    .filter(m => !m.seed && m.id !== excludeMscId && m.integrity && m.integrity.evidence)
+    .flatMap(m => clauses.imageHashes(m.integrity.evidence).map(hash => ({ mscId: m.id, hash })));
+}
+
+function personRecord(p, role) {
+  return p ? { id: p.id, name: p.name, affiliation: p.affiliation || '', email: (p.email || (role === 'Reviewer' ? reviewerEmail(p) : '')).toLowerCase(), declaredConflicts: p.declaredConflicts || [], role } : null;
+}
+
+function accountsFor(excludeMscId) {
+  const db = store.get();
+  const out = [];
+  const seen = new Set();
+  const add = (name, email, role) => {
+    const key = `${(name || '').toLowerCase()}|${(email || '').toLowerCase()}`;
+    if (!name || seen.has(key)) return;
+    seen.add(key);
+    out.push({ name, email: (email || '').toLowerCase(), role });
+  };
+  db.editors.forEach(e => add(e.name, e.email, 'Editor'));
+  db.reviewers.forEach(r => add(r.name, reviewerEmail(r), 'Reviewer'));
+  db.mscs.filter(m => m.id !== excludeMscId).forEach(m => add(m.authorName, m.authorEmail, 'Author'));
+  return out;
+}
+
+/**
+ * Workflow context for the participant clauses (I-13 … I-21). Before a
+ * reviewer is assigned, conflicts are screened against the journal's
+ * candidate reviewers and the editor who would handle the MSC.
+ */
+function screeningEnv({ msc, journalId, owner, telemetry }) {
+  const db = store.get();
+  const jid = msc ? msc.journalId : journalId;
+  const editorId = msc && msc.assignedEditor ? msc.assignedEditor : pickEditor(jid);
+  const editor = personRecord(db.editors.find(e => e.id === editorId), 'Editor');
+  const assigned = msc && msc.assignedReviewer && invitationStatus(msc) !== 'Declined' ? db.reviewers.find(r => r.id === msc.assignedReviewer) : null;
+  const reviewers = assigned ? [personRecord(assigned, 'Reviewer')] : db.reviewers.filter(r => r.journals.includes(jid)).map(r => personRecord(r, 'Reviewer'));
+  const own = msc ? msc.owner : owner;
+  const ownerSeed = !own || own === 'seed';
+  const ownerSubmissions = ownerSeed ? [] : db.mscs.filter(m => m.owner === own && !m.seed).map(m => m.submittedAt).concat(msc ? [] : [new Date().toISOString()]);
+  const done = msc && msc.reviewStatus === 'Complete' && msc.completedAt && msc.reviewStartAt && msc.reviewStartAt !== msc.completedAt;
+  return {
+    stage: !msc ? 'upload' : assigned ? (msc.reviewStatus === 'Complete' ? 'review complete' : 'reviewer assigned') : 'awaiting reviewer',
+    editor,
+    editorMode: msc && msc.assignedEditor ? 'assigned' : 'proposed',
+    reviewers,
+    reviewerMode: assigned ? 'assigned' : 'pool',
+    allReviewers: db.reviewers,
+    opposed: (msc && msc.opposedReviewers) || [],
+    accounts: accountsFor(msc ? msc.id : null),
+    telemetry: msc ? (msc.telemetry || {}) : { author: telemetry || null, reviewers: {} },
+    timing: done ? { reviewStartAt: msc.reviewStartAt, acceptedAt: msc.invitation ? msc.invitation.respondedAt : null, completedAt: msc.completedAt } : {},
+    ownerSubmissions,
+    ownerSeed
+  };
+}
+
+const validationCache = new Map();
+
+/** Re-evaluates the clauses for an MSC in its current workflow state. */
+function liveValidation(m) {
+  const ev = m.integrity && m.integrity.evidence;
+  if (!ev) return null;
+  const db = store.get();
+  const key = [m.id, m.contentHash, m.assignedEditor, m.assignedReviewer, invitationStatus(m), m.reviewStatus, m.reviewStartAt, m.completedAt,
+    JSON.stringify(m.telemetry || {}), JSON.stringify(m.opposedReviewers || []), db.mscs.length].join('|');
+  const hit = validationCache.get(m.id);
+  if (hit && hit.key === key) return hit.value;
+  const value = clauses.evaluateClauses(ev, screeningEnv({ msc: m }));
+  validationCache.set(m.id, { key, value });
+  return value;
+}
+
+/** The MSC's integrity report with the live clause results (evidence stripped). */
+function integrityView(m) {
+  const { evidence, ...rest } = m.integrity || {};
+  const v = liveValidation(m);
+  if (!v) return rest;
+  return {
+    ...rest,
+    score: v.score,
+    passed: v.passed,
+    caps: v.caps,
+    validation: v,
+    uploadScore: rest.score,
+    counts: { ...(rest.counts || {}), critical: v.counts.critical, major: v.counts.major, minor: v.counts.minor, fail: v.counts.fail, flag: v.counts.flag }
+  };
+}
+
+/** Logs the IP and device of a reviewer action on an MSC (I-20). */
+function recordReviewerTelemetry(msc, reviewerId, tel) {
+  if (!msc || !reviewerId || !tel) return;
+  msc.telemetry = msc.telemetry || { author: null, reviewers: {} };
+  msc.telemetry.reviewers = msc.telemetry.reviewers || {};
+  const prev = msc.telemetry.reviewers[reviewerId];
+  if (prev && prev.device === tel.device && prev.ipHash === tel.ipHash) return;
+  msc.telemetry.reviewers[reviewerId] = tel;
+}
+
+/** Conflict-of-interest notes for a candidate reviewer (I-14, I-15, I-16). */
+function reviewerConflicts(msc, r) {
+  const ev = msc.integrity && msc.integrity.evidence;
+  if (!ev) return [];
+  const v = clauses.evaluateClauses(ev, { ...screeningEnv({ msc }), reviewers: [personRecord(r, 'Reviewer')], reviewerMode: 'assigned' });
+  return v.results.filter(x => ['I-14', 'I-15', 'I-16'].includes(x.id) && x.status !== 'pass').map(x => `${x.id}: ${x.finding}`);
 }
 
 function editorLoad(editorId) {
@@ -204,7 +318,10 @@ function suggestReviewers(msc) {
     if (onLeave) reason = `Unavailable until ${new Date(r.unavailableUntil).toLocaleDateString('en-GB')}`;
     else if (!free) reason = `At capacity (${load}/${r.capacity} active reviews)`;
     else reason = `${free} free slot(s)${expertiseMatch ? ` · expert in ${journal ? journal.shortName : msc.journalId} scope` : ''} · avg turnaround ${r.avgTurnaroundDays} d`;
+    const conflicts = reviewerConflicts(msc, r);
+    if (conflicts.length) { score = Math.max(0, score - 100); reason += ` · ⚠ Conflict of interest — ${conflicts.join('; ')}`; }
     return {
+      conflicts,
       id: r.id, name: r.name, email: reviewerEmail(r), affiliation: r.affiliation, expertise: r.expertise,
       capacity: r.capacity, activeReviews: load, freeSlots: free, onLeave: !!onLeave,
       available, expertiseMatch, avgTurnaroundDays: r.avgTurnaroundDays, score, reason,
@@ -215,7 +332,7 @@ function suggestReviewers(msc) {
     .map((r, i) => ({ ...r, recommended: i === 0 && r.available }));
 }
 
-function createMsc({ report, fileName, owner, seed, submittedAt }) {
+function createMsc({ report, fileName, owner, seed, submittedAt, telemetry }) {
   const db = store.get();
   const now = submittedAt || new Date().toISOString();
   const msc = {
@@ -246,7 +363,8 @@ function createMsc({ report, fileName, owner, seed, submittedAt }) {
     decision: null,
     decisionHistory: [],
     feedbackStatus: null,
-    completedAt: null
+    completedAt: null,
+    telemetry: { author: telemetry || null, reviewers: {} }
   };
   putContent(report);
   db.mscs.push(msc);
@@ -254,7 +372,7 @@ function createMsc({ report, fileName, owner, seed, submittedAt }) {
 }
 
 /** Author re-submits a revised MSC after a "Revise" decision. */
-function reviseMsc(msc, { report, fileName }) {
+function reviseMsc(msc, { report, fileName, telemetry }) {
   const now = new Date().toISOString();
   msc.versions.push({ version: msc.versions.length + 1, submittedAt: now, fileName, score: report.score, contentHash: report.contentHash });
   msc.revisions += 1;
@@ -265,6 +383,7 @@ function reviseMsc(msc, { report, fileName }) {
   msc.contentHash = report.contentHash;
   msc.fileName = fileName;
   msc.integrity = compactReport(report);
+  if (telemetry) msc.telemetry = { author: telemetry, reviewers: {} };
   msc.submittedAt = now;
   msc.reviewStatus = 'Open';
   msc.reviewStartAt = null;
@@ -283,6 +402,7 @@ function reviseMsc(msc, { report, fileName }) {
 /** Shape of a row on the editor dashboard (no manuscript body). */
 function dashboardRow(m) {
   const db = store.get();
+  const iv = integrityView(m);
   const editor = db.editors.find(e => e.id === m.assignedEditor);
   const reviewer = db.reviewers.find(r => r.id === m.assignedReviewer);
   const journal = getJournal(m.journalId);
@@ -296,8 +416,9 @@ function dashboardRow(m) {
     submittedAt: m.submittedAt,
     journalId: m.journalId,
     journalName: journal ? journal.shortName : m.journalId,
-    integrityPassed: m.integrity.passed,
-    integrityScore: m.integrity.score,
+    integrityPassed: iv.passed,
+    integrityScore: iv.score,
+    integrityFlags: iv.validation ? { fail: iv.validation.counts.fail, flag: iv.validation.counts.flag } : null,
     fitmentIndex: m.integrity.fitment ? m.integrity.fitment.index : null,
     recommendedJournal: m.integrity.fitment ? m.integrity.fitment.recommended : null,
     revisions: m.revisions,
@@ -337,7 +458,7 @@ function reviewPayload(m) {
     contentHash: m.contentHash,
     fileName: m.fileName,
     versions: m.versions,
-    integrity: m.integrity,
+    integrity: integrityView(m),
     annotations: m.annotations,
     generalFeedback: m.generalFeedback,
     decision: m.decision,
@@ -357,8 +478,8 @@ function authorView(m) {
     journalId: m.journalId,
     journalName: journal ? journal.name : m.journalId,
     submittedAt: m.submittedAt,
-    integrityScore: m.integrity.score,
-    integrityPassed: m.integrity.passed,
+    integrityScore: integrityView(m).score,
+    integrityPassed: integrityView(m).passed,
     revisions: m.revisions,
     reviewStatus: m.reviewStatus,
     decision: m.decision ? { ...m.decision, publishingEditor: m.decision.publishingEditorId ? peName(m.decision.publishingEditorId) : null } : null,
@@ -375,6 +496,6 @@ function authorView(m) {
 module.exports = {
   reviewerEmail, invitationStatus, inviteReviewer, findInvitation, respondInvitation, latestInvitationEmail,
   DECISIONS, PUBLISHING_EDITORS, publishingEditors, peName, canReview,
-  compactReport, corpusFor, pickEditor, suggestReviewers, createMsc, reviseMsc,
+  compactReport, corpusFor, imageIndexFor, screeningEnv, liveValidation, integrityView, recordReviewerTelemetry, reviewerConflicts, pickEditor, suggestReviewers, createMsc, reviseMsc,
   dashboardRow, reviewPayload, authorView, getContent, reviewerLoad, editorLoad, JOURNALS
 };

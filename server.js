@@ -15,7 +15,7 @@ const session = require('express-session');
 const multer = require('multer');
 
 const store = require('./src/store');
-const { buildSeed } = require('./src/seed');
+const { buildSeed, SEED_VERSION } = require('./src/seed');
 const { analyzeManuscript, parseForPreview } = require('./src/integrity');
 const { buildTemplate } = require('./src/template');
 const { JOURNALS, getJournal } = require('./src/journals');
@@ -23,6 +23,23 @@ const service = require('./src/service');
 const { buildOutline } = require('./src/outline');
 const usage = require('./src/usage');
 const analysis = require('./src/analysis');
+const crypto = require('crypto');
+
+/** IP and device fingerprint of the current request, logged for the I-20 integrity clause. */
+function telemetryOf(req) {
+  const ip = usage.clientIp(req);
+  const ua = req.get('user-agent') || '';
+  const h = s => crypto.createHash('sha256').update(s).digest('hex').slice(0, 16);
+  const masked = /^\d+\.\d+\.\d+\.\d+$/.test(ip) ? ip.replace(/\.\d+$/, '.x') : ip.replace(/:[^:]*$/, ':x');
+  return { ip: masked, ipHash: h(ip), device: h(`${ip}|${ua}`), at: new Date().toISOString() };
+}
+
+/** Logs a reviewer's IP/device against the MSC when the reviewer acts on it. */
+function logReviewer(req, msc) {
+  if (req.session && req.session.user && req.session.user.role === 'Reviewer' && msc && msc.assignedReviewer === req.session.user.reviewerId) {
+    service.recordReviewerTelemetry(msc, req.session.user.reviewerId, telemetryOf(req));
+  }
+}
 
 const PORT = Number(process.env.PORT) || 3000;
 const POC_USER = 'Admin';
@@ -218,6 +235,7 @@ app.post('/api/invitations/:token/respond', (req, res) => {
   const accept = !!(req.body || {}).accept;
   const out = service.respondInvitation(req.params.token, accept);
   if (out.error) return res.status(out.status).json({ error: out.error });
+  if (accept) service.recordReviewerTelemetry(out.msc, out.invitation.reviewerId, telemetryOf(req));
   store.save();
   usage.audit(req, accept ? 'invitation.accepted' : 'invitation.declined', { mscId: out.msc.id, reviewerId: out.invitation.reviewerId });
   res.json(invitationView(out));
@@ -247,11 +265,17 @@ app.post('/api/author/check', requireRole('Author'), (req, res, next) => {
         return res.status(409).json({ error: 'This MSC is not awaiting a revision.' });
       }
     }
+    const telemetry = telemetryOf(req);
+    const env = revising
+      ? { ...service.screeningEnv({ msc: revising }), stage: 'revision upload', timing: {}, telemetry: { author: telemetry, reviewers: {} } }
+      : service.screeningEnv({ journalId, owner: req.session.user.username, telemetry });
     const report = await analyzeManuscript({
       buffer: req.file.buffer,
       originalName: req.file.originalname,
       journalId,
-      corpus: service.corpusFor(revising ? revising.id : null)
+      corpus: service.corpusFor(revising ? revising.id : null),
+      imageIndex: service.imageIndexFor(revising ? revising.id : null),
+      env
     });
     const previous = db.checks.filter(c => c.owner === req.session.user.username && c.fileTitle === (report.meta.title || req.file.originalname)).length;
     const check = {
@@ -263,6 +287,7 @@ app.post('/api/author/check', requireRole('Author'), (req, res, next) => {
       journalId,
       revisingMscId: revising ? revising.id : null,
       attempt: previous + 1,
+      telemetry,
       report
     };
     db.checks.push(check);
@@ -307,9 +332,9 @@ app.post('/api/author/submit', requireRole('Author'), (req, res) => {
   let msc;
   if (check.revisingMscId) {
     msc = db.mscs.find(m => m.id === check.revisingMscId);
-    service.reviseMsc(msc, { report: check.report, fileName: check.fileName });
+    service.reviseMsc(msc, { report: check.report, fileName: check.fileName, telemetry: check.telemetry });
   } else {
-    msc = service.createMsc({ report: check.report, fileName: check.fileName, owner: check.owner });
+    msc = service.createMsc({ report: check.report, fileName: check.fileName, owner: check.owner, telemetry: check.telemetry });
   }
   check.submittedMscId = msc.id;
   delete check.report.html;
@@ -351,6 +376,7 @@ app.post('/api/reviewer/mscs/:id/respond', requireRole('Reviewer'), (req, res) =
   const accept = !!(req.body || {}).accept;
   const out = service.respondInvitation(msc.invitation.token, accept);
   if (out.error) return res.status(out.status).json({ error: out.error });
+  if (accept) logReviewer(req, msc);
   store.save();
   usage.audit(req, accept ? 'invitation.accepted' : 'invitation.declined', { mscId: msc.id, reviewerId: req.session.user.reviewerId, via: 'dashboard' });
   res.json({ ok: true, accepted: accept, row: accept ? service.dashboardRow(msc) : null });
@@ -413,6 +439,7 @@ const HIGHLIGHT_COLORS = ['yellow', 'green', 'blue', 'pink', 'orange', 'purple']
 function findMsc(req, res) {
   const msc = store.get().mscs.find(m => m.id === req.params.id);
   if (!msc || !canAccessMsc(req, msc)) { res.status(404).json({ error: 'MSC not found' }); return null; }
+  if (req.method !== 'GET') logReviewer(req, msc);
   return msc;
 }
 
@@ -592,8 +619,13 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
 });
 
 async function init() {
-  if (!store.load()) {
+  const existing = store.load();
+  if (!existing) {
     console.log('No data found — seeding the prototype database…');
+    await buildSeed();
+  } else if (!existing.meta || (existing.meta.version || 0) < SEED_VERSION) {
+    console.log('Data is from an older prototype version — re-seeding for the clause-based MSC validation…');
+    if (store.clearContents) store.clearContents();
     await buildSeed();
   }
 }

@@ -167,7 +167,7 @@
         <td>${fmtDateShort(m.submittedAt)}</td>
         <td><button type="button" class="btn small analysis-launch" data-analysis="${esc(m.id)}" title="MSC summary, integrity check and journal fitment">🔍 Analyse</button></td>
         <td><span class="pill ${m.integrityPassed ? 'green' : 'red'}">${m.integrityPassed ? 'PASSED' : 'FAILED'}</span></td>
-        <td><b>${m.integrityScore}</b> / 10</td>
+        <td title="${m.integrityFlags ? `${m.integrityFlags.fail} failed · ${m.integrityFlags.flag} flagged of 21 integrity clauses` : ''}"><b>${m.integrityScore}</b> / 10${m.integrityFlags && (m.integrityFlags.fail || m.integrityFlags.flag) ? `<div class="muted small">${m.integrityFlags.fail ? `${m.integrityFlags.fail} fail` : ''}${m.integrityFlags.fail && m.integrityFlags.flag ? ' · ' : ''}${m.integrityFlags.flag ? `${m.integrityFlags.flag} flag` : ''}</div>` : ''}</td>
         <td><b>${m.fitmentIndex ?? '—'}</b> <span class="muted small">${esc(j ? j.shortName : m.journalId)}</span>
           ${m.recommendedJournal && m.recommendedJournal.journalId !== m.journalId && m.recommendedJournal.fitmentIndex >= m.fitmentIndex + 15 ? `<div class="small" style="color:var(--violet)">Better fit: ${esc(m.recommendedJournal.journalId)} (${m.recommendedJournal.fitmentIndex})</div>` : ''}</td>
         <td>${m.revisions ? `<span class="pill violet">Yes (${m.revisions})</span>` : '<span class="pill grey">No</span>'}</td>
