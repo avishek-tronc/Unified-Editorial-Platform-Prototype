@@ -38,6 +38,11 @@
   </div>
   <script src="/js/common.js"></script>
   <script>
+    // Role logos on the "Continue as" tiles (same person logo as beside "Signed in as")
+    document.querySelectorAll('.role-toggle input[name=role]').forEach(inp => {
+      const lab = document.querySelector(`label[for=${inp.id}]`);
+      lab.insertAdjacentHTML('afterbegin', UEP.personIcon(inp.value).replace('class="person-logo', 'class="person-logo role-tile-logo'));
+    });
     const pick = document.getElementById('reviewerPick');
     let reviewersLoaded = false;
     async function syncRole() {
