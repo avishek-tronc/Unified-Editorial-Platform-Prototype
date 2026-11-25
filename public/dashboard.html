@@ -17,6 +17,7 @@
         <div class="journal-pick">
           <label for="fJournalTop">Journal</label>
           <select id="fJournalTop" title="Show the MSCs of one journal"></select>
+          <span class="journal-home" id="journalHome"></span>
           <span class="muted small" id="journalPickNote"></span>
         </div>
         <div class="row small" style="margin-top:8px">
@@ -27,11 +28,12 @@
       <section class="day-status card" aria-labelledby="dayStatusTitle">
         <div class="row" style="margin-bottom:8px"><h3 id="dayStatusTitle" style="margin:0">Today's MSC processing status</h3><span class="spacer"></span><span class="muted small" id="dayStatusDate"></span></div>
         <div class="day-legends">
-          <div class="day-legend total"><i></i><div><b id="dayTotal">0</b><span>Total MSCs received today</span></div></div>
-          <div class="day-legend pending"><i></i><div><b id="dayPending">0</b><span>Pending<small>Open &amp; In Progress</small></span></div></div>
-          <div class="day-legend complete"><i></i><div><b id="dayComplete">0</b><span>Complete<small>Processing complete &amp; decision made</small></span></div></div>
+          <button type="button" class="day-legend total" data-day="total" title="Show today's MSCs"><i></i><div><b id="dayTotal">0</b><span>Total MSCs received today</span></div></button>
+          <button type="button" class="day-legend pending" data-day="pending" title="Show today's pending MSCs"><i></i><div><b id="dayPending">0</b><span>Pending<small>Open &amp; In Progress</small></span></div></button>
+          <button type="button" class="day-legend complete" data-day="complete" title="Show today's completed MSCs"><i></i><div><b id="dayComplete">0</b><span>Complete<small>Processing complete &amp; decision made</small></span></div></button>
         </div>
         <div class="stackbar day-bar" id="dayBar"></div>
+        <div class="day-decisions" id="dayDecisions" aria-label="Today's review decisions"></div>
         <div class="muted small" id="dayScope"></div>
       </section>
     </div>
@@ -88,6 +90,7 @@
         <button type="button" class="active" data-tab="active">Open &amp; In Progress <span class="pill blue" id="tabActiveCount">0</span></button>
         <button type="button" data-tab="complete">Complete <span class="pill green" id="tabCompleteCount">0</span></button>
       </div>
+      <div class="alert info small day-filter-note hidden" id="dayFilterNote"></div>
       <div class="row" style="margin-bottom:10px"><span class="muted" id="countLabel"></span><div class="spacer"></div>
         <label for="pageSize" class="small" style="margin:0;font-weight:600">Records per page</label>
         <select id="pageSize" style="width:auto"><option>20</option><option>50</option><option>100</option></select></div>

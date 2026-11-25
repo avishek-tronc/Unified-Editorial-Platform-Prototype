@@ -398,3 +398,21 @@ html.is-busy, html.is-busy * { cursor: progress; }
 .rv-respond { gap: 6px; margin-top: 4px; }
 .analysis-launch.small { white-space: nowrap; }
 @media (max-width: 720px) { .day-legends { grid-template-columns: 1fr; } }
+
+/* today's status: clickable numbers and decision legend */
+button.day-legend { font: inherit; color: inherit; text-align: left; cursor: pointer; border-radius: 0; transition: box-shadow .15s, border-color .15s, transform .1s; }
+button.day-legend:hover { border-color: var(--brand-2, #2f6fde); box-shadow: 0 2px 8px rgba(0,57,166,.15); background: #fff; }
+button.day-legend.on { border-color: var(--brand, #0039a6); box-shadow: 0 0 0 2px var(--brand, #0039a6) inset; background: #f3f6fd; }
+.day-decisions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 2px 0 6px; font-size: 12px; }
+.day-decisions .dd-title { font-weight: 600; flex-basis: 100%; }
+.day-decisions .dd { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border: 1px solid #dfe5ef; background: #fff; color: inherit; font-size: 12px; font-weight: 400; border-radius: 99px; cursor: pointer; }
+.day-decisions .dd:hover { border-color: var(--brand-2, #2f6fde); background: #fff; }
+.day-decisions .dd.on { border-color: var(--brand, #0039a6); background: #eef3fd; }
+.pill-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.pill-dot.green { background: var(--green); } .pill-dot.red { background: var(--red); } .pill-dot.violet { background: #6d3fc0; }
+.pill-dot.amber { background: var(--amber); } .pill-dot.teal { background: #0e6a7d; }
+.day-filter-note { margin-bottom: 10px; }
+/* journal homepage icon beside the dashboard Journal dropdown */
+.journal-home { display: inline-flex; align-items: center; gap: 8px; }
+.jcover-xs { width: 34px; }
+.jcover.acs-home { width: 34px; aspect-ratio: 520 / 691; display: inline-flex; align-items: center; justify-content: center; background: #0039a6; border-top: 3px solid #fdc82f; color: #fff; font-weight: 700; font-size: 10px; text-decoration: none; line-height: 1; }

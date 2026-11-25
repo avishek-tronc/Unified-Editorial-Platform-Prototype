@@ -38,11 +38,54 @@
     $('fAuthor').innerHTML = '<option value="">All authors</option>' + authors.map(a => `<option>${esc(a)}</option>`).join('');
     $('fReviewer').innerHTML = '<option value="">All reviewers</option>' + data.reviewers.map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('');
     $('fAuthor').value = keepA; $('fReviewer').value = keepR;
+    if (REVIEWER) {
+      // A reviewer only sees the journals that have MSCs in their queue (Open / In Progress).
+      const queued = new Set(data.mscs.filter(m => m.reviewStatus !== 'Complete').map(m => m.journalId));
+      const list = journals.filter(j => queued.has(j.id));
+      const keepJ = $('fJournal').value;
+      $('fJournal').innerHTML = '<option value="">All my journals</option>' + list.map(j => `<option value="${j.id}">${esc(j.shortName)}</option>`).join('');
+      $('fJournalTop').innerHTML = '<option value="">All my journals</option>' + list.map(j => `<option value="${j.id}">${esc(j.name)} (${data.mscs.filter(m => m.journalId === j.id && m.reviewStatus !== 'Complete').length} in queue)</option>`).join('');
+      $('fJournal').value = list.some(j => j.id === keepJ) ? keepJ : '';
+    }
     $('updatedAt').textContent = `Updated ${new Date().toLocaleTimeString()}`;
     render();
   }
 
-  function filtered() {
+  // Selection made by clicking a number in "Today's MSC processing status":
+  // 'total' | 'pending' | 'complete' | a decision ('Accept', 'Reject', …) | null
+  let dayView = null;
+  const isToday = m => new Date(m.submittedAt).toDateString() === new Date().toDateString();
+  const DAY_VIEWS = {
+    total: { label: 'received today', test: () => true },
+    pending: { label: 'received today and pending (Open & In Progress)', test: m => m.reviewStatus === 'Open' || m.reviewStatus === 'In Progress', tab: 'active' },
+    complete: { label: 'received today and complete (decision made)', test: m => m.reviewStatus === 'Complete' && !!m.finalDecision, tab: 'complete' }
+  };
+  const DAY_DECISIONS = [['Accept', 'Accepted', 'green'], ['Reject', 'Rejected', 'red'], ['Transfer', 'Transferred', 'violet'], ['Revise', 'Revised', 'amber'], ['Assign to PE', 'Assigned to PE', 'teal']];
+  function dayViewDef(v) {
+    if (DAY_VIEWS[v]) return DAY_VIEWS[v];
+    const d = DAY_DECISIONS.find(x => x[0] === v);
+    return d ? { label: `received today and ${d[1].toLowerCase()}`, test: m => m.reviewStatus === 'Complete' && m.finalDecision === v, tab: 'complete' } : null;
+  }
+  function setDayView(v) {
+    dayView = dayView === v ? null : v;
+    const def = dayViewDef(dayView);
+    if (def && def.tab) {
+      tab = def.tab;
+      document.querySelectorAll('#mscTabs button').forEach(x => x.classList.toggle('active', x.dataset.tab === tab));
+    }
+    page = 1;
+    render();
+    if (dayView) $('mscTable').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  document.querySelectorAll('[data-day]').forEach(b => b.addEventListener('click', () => setDayView(b.dataset.day)));
+
+  function filtered(opts = {}) {
+    const rows = filteredBase();
+    const def = !opts.skipDay && dayViewDef(dayView);
+    return def ? rows.filter(m => isToday(m) && def.test(m)) : rows;
+  }
+
+  function filteredBase() {
     const f = {
       from: $('fFrom').value, to: $('fTo').value, author: $('fAuthor').value, reviewer: $('fReviewer').value,
       assigned: $('fAssigned').value, elapsed: $('fElapsed').value, journal: $('fJournal').value,
@@ -371,8 +414,7 @@
 
   // ----- today's MSC processing status (top-right panel) -----
   function renderDayStatus(rows) {
-    const today = new Date().toDateString();
-    const list = rows.filter(m => new Date(m.submittedAt).toDateString() === today);
+    const list = rows.filter(isToday);
     const pending = list.filter(m => m.reviewStatus === 'Open' || m.reviewStatus === 'In Progress').length;
     const complete = list.filter(m => m.reviewStatus === 'Complete' && m.finalDecision).length;
     $('dayStatusDate').textContent = new Date().toLocaleDateString(undefined, { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
@@ -382,16 +424,39 @@
     $('dayBar').innerHTML = list.length
       ? [[pending, 'var(--amber)', 'Pending'], [complete, 'var(--green)', 'Complete']].map(([n, c, l]) => n ? `<span title="${l}: ${n}" style="width:${(n / list.length) * 100}%;background:${c}"></span>` : '').join('')
       : '';
+    // Review decisions among today's MSCs (each one is clickable too)
+    $('dayDecisions').innerHTML = '<span class="dd-title">Decisions today:</span>' + DAY_DECISIONS
+      .filter(([d]) => d !== 'Assign to PE' || list.some(m => m.finalDecision === d))
+      .map(([d, label, cls]) => {
+        const n = list.filter(m => m.reviewStatus === 'Complete' && m.finalDecision === d).length;
+        return `<button type="button" class="dd ${dayView === d ? 'on' : ''}" data-dayd="${esc(d)}" title="Show today's ${label.toLowerCase()} MSCs"><i class="pill-dot ${cls}"></i>${label} <b>${n}</b></button>`;
+      }).join('');
+    $('dayDecisions').querySelectorAll('[data-dayd]').forEach(b => b.addEventListener('click', () => setDayView(b.dataset.dayd)));
+    document.querySelectorAll('.day-legend[data-day]').forEach(b => { b.classList.toggle('on', dayView === b.dataset.day); b.setAttribute('aria-pressed', dayView === b.dataset.day); });
+    const def = dayViewDef(dayView);
+    $('dayFilterNote').classList.toggle('hidden', !def);
+    if (def) {
+      $('dayFilterNote').innerHTML = `Showing only MSCs <b>${esc(def.label)}</b> (from Today's MSC processing status). <a href="#" id="clearDay">Show all MSCs</a>`;
+      $('clearDay').addEventListener('click', e => { e.preventDefault(); setDayView(dayView); });
+    }
     const j = journals.find(x => x.id === $('fJournal').value);
     $('dayScope').textContent = `${j ? j.shortName : 'All journals'}${REVIEWER ? ' · assigned to you' : ''} · follows the active filters`;
   }
 
+  function renderJournalHome() {
+    const j = journals.find(x => x.id === $('fJournal').value);
+    $('journalHome').innerHTML = j
+      ? `${UEP.journalCover(j, 'xs')}<a class="small" href="${esc(j.homepage)}" target="_blank" rel="noopener">Journal homepage ↗</a>`
+      : `<a class="jcover jcover-xs acs-home" href="https://pubs.acs.org/" target="_blank" rel="noopener" title="ACS Publications — all journals"><span>ACS</span></a><a class="small" href="https://pubs.acs.org/" target="_blank" rel="noopener">ACS Publications ↗</a>`;
+  }
+
   function render() {
+    renderDayStatus(filtered({ skipDay: true }));
     const rows = filtered();
     $('fJournalTop').value = $('fJournal').value;
+    renderJournalHome();
     const j = journals.find(x => x.id === $('fJournal').value);
     $('journalPickNote').textContent = j ? `${rows.length} MSC${rows.length === 1 ? '' : 's'} for ${j.shortName}` : `${rows.length} MSCs across all journals`;
-    renderDayStatus(rows);
     renderKpis(rows);
     if (!REVIEWER) {
       renderCharts(rows);
@@ -403,6 +468,7 @@
 
   function clearFilters() {
     document.querySelectorAll('#filters input, #filters select').forEach(el => { el.value = ''; });
+    dayView = null;
   }
 
   document.querySelectorAll('#filters input, #filters select').forEach(el => el.addEventListener(el.tagName === 'INPUT' && el.type === 'text' ? 'input' : 'change', () => { page = 1; render(); }));
