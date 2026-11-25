@@ -1,4 +1,4 @@
-/* MSC analysis overlay for the Review & Feedback page.
+/* MSC analysis overlay for the Review & Feedback page and the MSC Dashboard.
  * Three tabs: MSC Summary · MSC Integrity Check · Journal Fitment.
  * The overlay disables the page behind it (inert + scroll lock) until closed. */
 const MscAnalysis = (() => {
@@ -29,7 +29,7 @@ const MscAnalysis = (() => {
 
   async function open(msc, opts = {}) {
     lastFocus = document.activeElement;
-    state = { msc, data: null, tab: opts.tab || 'summary', onAddFeedback: opts.onAddFeedback, readOnly: !!opts.readOnly, charts: [] };
+    state = { msc, data: null, tab: opts.tab || 'summary', onAddFeedback: opts.onAddFeedback, readOnly: !!opts.readOnly, readOnlyNote: opts.readOnlyNote, charts: [] };
     $('anSub').textContent = `${msc.id} · MSC analysis for the reviewer`;
     $('anTitle').textContent = msc.title;
     $('anIntBadge').textContent = ''; $('anFitBadge').textContent = '';
@@ -98,7 +98,7 @@ const MscAnalysis = (() => {
     const ro = state.readOnly || !state.onAddFeedback;
     return `<div class="an-feedback" data-fb="${id}">
       <div class="row" style="justify-content:space-between"><b>${title}</b>
-        ${ro ? '<span class="muted small">Review is complete (read-only)</span>' : `<span class="row small"><a href="#" data-all>Select all</a><button class="small" data-add disabled>Add selected to General feedback</button></span>`}</div>
+        ${ro ? `<span class="muted small">${esc(state.readOnlyNote || 'Review is complete (read-only)')}</span>` : `<span class="row small"><a href="#" data-all>Select all</a><button class="small" data-add disabled>Add selected to General feedback</button></span>`}</div>
       ${items.map((it, i) => `<label class="an-check"><input type="checkbox" ${ro ? 'disabled' : ''} value="${i}"><span>${it.tag ? `<span class="pill ${it.tagClass || 'grey'}">${esc(it.tag)}</span> ` : ''}${esc(it.text)}</span></label>`).join('')}
     </div>`;
   }

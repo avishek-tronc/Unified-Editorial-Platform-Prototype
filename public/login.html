@@ -23,6 +23,13 @@
         <label for="roleAuthor">Author<small>Upload &amp; check MSC</small></label>
         <input type="radio" name="role" id="roleEditor" value="Editor">
         <label for="roleEditor">Editor<small>Dashboard &amp; review</small></label>
+        <input type="radio" name="role" id="roleReviewer" value="Reviewer">
+        <label for="roleReviewer">Reviewer<small>Assigned MSCs</small></label>
+      </div>
+      <div id="reviewerPick" class="hidden">
+        <label for="reviewerId">Sign in as reviewer</label>
+        <select id="reviewerId"></select>
+        <div class="muted small" style="margin-top:4px">The dashboard lists only the MSCs assigned to this reviewer.</div>
       </div>
       <div id="err" class="alert error hidden"></div>
       <button type="submit" style="width:100%;margin-top:16px">Log in</button>
@@ -31,6 +38,20 @@
   </div>
   <script src="/js/common.js"></script>
   <script>
+    const pick = document.getElementById('reviewerPick');
+    let reviewersLoaded = false;
+    async function syncRole() {
+      const isRev = document.querySelector('input[name=role]:checked').value === 'Reviewer';
+      pick.classList.toggle('hidden', !isRev);
+      if (isRev && !reviewersLoaded) {
+        reviewersLoaded = true;
+        const list = await fetch('/api/login/reviewers').then(r => r.json()).catch(() => []);
+        document.getElementById('reviewerId').innerHTML = list.map(r =>
+          `<option value="${UEP.esc(r.id)}">${UEP.esc(r.name)} · ${UEP.esc(r.affiliation)} (${r.active} active)</option>`).join('');
+      }
+    }
+    document.querySelectorAll('input[name=role]').forEach(r => r.addEventListener('change', syncRole));
+    syncRole();
     document.getElementById('loginForm').addEventListener('submit', async e => {
       e.preventDefault();
       const err = document.getElementById('err');
@@ -39,6 +60,7 @@
         username: document.getElementById('username').value.trim(),
         password: document.getElementById('password').value,
         role: document.querySelector('input[name=role]:checked').value,
+        reviewerId: document.getElementById('reviewerId').value || undefined,
         // client context for the usage-metrics audit trail
         client: {
           tz: (Intl.DateTimeFormat().resolvedOptions() || {}).timeZone || '',

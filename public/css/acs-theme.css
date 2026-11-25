@@ -56,6 +56,8 @@ main { padding-top: 28px; }
 .topbar .utility .site.active { border-bottom-color: var(--pubs-gold); font-weight: 500; }
 .topbar .utility .user { color: #fff; font-size: 12px; padding: 0 10px; }
 .topbar .utility .user b { font-weight: 500; }
+.topbar .utility .person-logo { display: inline-flex; width: 26px; height: 26px; margin-right: 7px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(255,255,255,.7); overflow: visible; }
+.topbar .utility .person-logo svg { overflow: visible; }
 .topbar .utility .sep { width: 1px; height: 12px; align-self: center; background: rgba(255,255,255,.6); }
 .topbar .utility .metrics-link { background: none; padding: 0 10px; border-radius: 0; color: #fff; font-size: 12px; }
 .topbar .utility .metrics-link:hover, .topbar .utility .metrics-link.active { background: none; color: #fff; text-decoration: underline; }

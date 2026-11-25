@@ -84,7 +84,7 @@ button.small, .btn.small { padding: 5px 10px; font-size: 12px; }
 .login-wrap { min-height: 100vh; display: grid; place-items: center; background: linear-gradient(135deg, #17346b, #2f6fde); }
 .login-card { width: 400px; max-width: calc(100vw - 32px); }
 .login-card h1 { color: var(--brand); }
-.role-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+.role-toggle { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 6px; }
 .role-toggle input { display: none; }
 .role-toggle label { margin: 0; text-align: center; padding: 12px; border: 1px solid #cfd6e4; border-radius: 8px; cursor: pointer; font-weight: 600; }
 .role-toggle label small { display: block; font-weight: 400; color: var(--muted); }
@@ -377,3 +377,24 @@ html.is-busy, html.is-busy * { cursor: progress; }
 .rv-refresh:disabled { opacity: .7; }
 .rv-cell .rv-name { display: flex; align-items: center; gap: 2px; }
 .rv-cell .rv-name .rv-refresh { flex: none; }
+
+/* dashboard header: journal selector (left) + today's processing status (right) */
+.dash-head { display: flex; gap: 18px; align-items: stretch; justify-content: space-between; flex-wrap: wrap; margin-bottom: 16px; }
+.dash-head-main { flex: 1 1 360px; min-width: 0; }
+.journal-pick { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.journal-pick label { margin: 0; font-weight: 700; }
+.journal-pick select { width: auto; min-width: 280px; max-width: 100%; font-weight: 600; }
+.day-status { flex: 0 1 520px; margin: 0; padding: 14px 16px; }
+.day-legends { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+.day-legend { display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px; border: 1px solid #dfe5ef; background: #fff; }
+.day-legend i { width: 10px; height: 10px; border-radius: 50%; margin-top: 8px; flex: none; }
+.day-legend b { display: block; font-size: 26px; line-height: 1.1; }
+.day-legend span { display: block; font-size: 12px; font-weight: 600; }
+.day-legend small { display: block; font-weight: 400; color: var(--muted); }
+.day-legend.total i { background: var(--brand-2, #2f6fde); } .day-legend.total b { color: var(--brand, #0039a6); }
+.day-legend.pending i { background: var(--amber); } .day-legend.pending b { color: #b45309; }
+.day-legend.complete i { background: var(--green); } .day-legend.complete b { color: var(--green); }
+.day-bar { height: 8px; margin-bottom: 6px; }
+.rv-respond { gap: 6px; margin-top: 4px; }
+.analysis-launch.small { white-space: nowrap; }
+@media (max-width: 720px) { .day-legends { grid-template-columns: 1fr; } }

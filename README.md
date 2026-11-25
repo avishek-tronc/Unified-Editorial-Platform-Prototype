@@ -68,7 +68,8 @@ To start a demo from a clean slate at any time, use **Manual Deploy → Restart 
 ## How the spec maps to the prototype
 
 ### Login
-* Single prototype account **Admin / Admin**, with a role toggle for the Author and Editor views (`POST /api/login`). Pages and APIs are protected by role.
+* Single prototype account **Admin / Admin**, with a role toggle for the **Author**, **Editor** and **Reviewer** views (`POST /api/login`). Choosing Reviewer shows a **Sign in as reviewer** picker (reviewers with the most active MSCs first). Pages and APIs are protected by role.
+* A **person logo** beside *Signed in as* shows the role: green with a pen (Author), blue with a clipboard tick (Editor), violet with a magnifier (Reviewer).
 
 ### Author view: MSC upload page (`/author`)
 | Spec item | Implementation |
@@ -112,6 +113,15 @@ Two or more critical issues cap the score at 5.
   * While an invitation is pending, a **⟳ refresh icon** appears beside the reviewer's name (dashboard table, reviewer modal and the locked review page). Click it to check whether the reviewer has accepted; if so, Review is enabled straight away. The icon disappears once the invitation is accepted.
   * **Decline** frees the MSC for another reviewer. Re-sending or choosing another reviewer replaces the old link, which then stops working.
 
+* **Journal selector** at the top left (full journal names) shows only the MSCs of the chosen journal; it mirrors the Journal filter below.
+* **Today's MSC processing status** panel at the top right: total MSCs received today, pending (Open & In Progress) and complete (processing complete & decision made). It follows the active filters.
+* **MSC analysis** column: **🔍 Analyse** opens a modal overlay (background disabled) with three tabs: **MSC Summary**, **MSC Integrity Check** (same rules as the Author upload page, 1–10 score with PASS/FAIL and reviewer guidance) and **Journal Fitment** (% compatibility with the journal the author chose, plus feedback). Picked points are appended to the MSC's general feedback once the review is open with an accepted reviewer.
+
+### Reviewer view (`/dashboard`, `/review/:id`)
+* After login the reviewer lands on **My assigned MSCs**: the same dashboard, listing **only the MSCs assigned to that reviewer** (unassigned MSCs and other reviewers' MSCs are hidden, also at API level).
+* The **KPIs & Metrics** panel and the reviewer lookup column are Editor-only; the reviewer keeps the KPI tiles, today's status panel, journal selector, filters and MSC analysis.
+* A pending invitation can be **accepted or declined** straight from the dashboard. Once accepted, the reviewer opens **Review →** and follows the same review, annotation, feedback and decision flow as before.
+
 ### MSC review & annotation page (`/review/:id`)
 * All MSC details are shown: header metadata, integrity report, version and decision history.
 * The **MSC is immutable.** It is rendered read-only from the uploaded .docx and identified by its SHA-256 fingerprint. Annotations are stored separately and anchored by text offset and quote.
@@ -143,7 +153,7 @@ Every page shows a small **Processing… / Loading… / Uploading and processing
 The UI follows the **pubs.acs.org** look (`public/css/acs-theme.css`, loaded after `app.css` on every page). The values were measured from the live site: the blue `#0039A6` top bar with white 12 px links and a gold `#FDC82F` underline on the active item, a white masthead with a hairline `#D7D7D9` rule and dark `#151515` navigation, the indigo `#412BFD` wordmark colour, **Roboto** type on white with `#1A1A1A` text and weight-600 black headings, underlined `#3361B8` links, square `#0039A6` buttons, flat square-cornered panels, and a `#0039A6` footer with `#E6EBF6` text. Usage Metrics and Log out sit in the top bar. Roboto is self-hosted from `@fontsource/roboto`, so there are no external font requests. All colours are CSS variables at the top of the file. The wordmark is text; the official ACS Publications logo is not used.
 
 ### Journal cover thumbnails
-The current issue cover of the selected journal is shown on the author's **MSC Upload & Integrity Check** page (next to the journal selector and beside the integrity score) and on the **MSC Review & Annotation** page header. Clicking a cover opens the journal's home page on pubs.acs.org. Cover URLs (ACS Publications CDN, November 2026 issues) are set per journal in `src/journals.js` (`cover`); update them there for newer issues. If a cover can't load (offline or CDN blocked), a plain journal-style placeholder with the journal's short name is drawn instead.
+The current issue cover of the selected journal is shown on the author's **MSC Upload & Validation** page (next to the journal selector and beside the integrity score) and on the **MSC Review & Annotation** page header. Clicking a cover opens the journal's home page on pubs.acs.org. Cover URLs (ACS Publications CDN, November 2026 issues) are set per journal in `src/journals.js` (`cover`); update them there for newer issues. If a cover can't load (offline or CDN blocked), a plain journal-style placeholder with the journal's short name is drawn instead.
 
 ## Project structure
 

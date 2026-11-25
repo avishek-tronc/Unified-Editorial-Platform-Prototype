@@ -12,8 +12,8 @@
   <main>
     <div class="row" style="margin-bottom:16px">
       <div>
-        <h1>MSC Upload &amp; Integrity Check</h1>
-        <div class="muted">Upload your manuscript (Word .docx), get an integrity score from 1 to 10 and actionable feedback. A score above 6 is a PASS.</div>
+        <h1>MSC Upload &amp; Validation</h1>
+        <div class="muted">Upload your manuscript (Word .docx), get an MSC validation score from 1 to 10 and actionable feedback. A score above 6 is a PASS.</div>
       </div>
     </div>
 
@@ -41,7 +41,7 @@
 
           <div id="uploadErr" class="alert error hidden"></div>
           <div class="row" style="margin-top:16px">
-            <button type="submit" id="checkBtn">Run integrity check</button>
+            <button type="submit" id="checkBtn">Run MSC validation</button>
             <button type="button" class="secondary hidden" id="cancelRevision">Cancel revision</button>
           </div>
         </form>
@@ -61,7 +61,7 @@
           <div class="row" style="margin-bottom:12px">
             <div><h2 style="margin:0">Uploaded MSC</h2><div class="muted small" id="previewSub"></div></div>
             <div class="spacer"></div>
-            <button type="button" id="previewCheckBtn">Run integrity check →</button>
+            <button type="button" id="previewCheckBtn">Run MSC validation →</button>
           </div>
           <div class="row small" id="previewStats" style="margin-bottom:12px"></div>
           <div class="preview-layout">
@@ -71,7 +71,7 @@
         </div>
         <div class="card" id="resultEmpty">
           <h2>Evaluation</h2>
-          <p class="muted">Choose your MSC file: it is shown here, organized by section, so you can review it first. Then select the journal and run the integrity check. The evaluation covers:</p>
+          <p class="muted">Choose your MSC file: it is shown here, organized by section, so you can review it first. Then select the journal and run the MSC validation. The evaluation covers:</p>
           <ul class="muted">
             <li>Accuracy and completeness of the content</li>
             <li>Typos and language</li>

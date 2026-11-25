@@ -1,6 +1,8 @@
 (async () => {
   const { api, esc, fmtDate, fmtElapsed, toast } = UEP;
-  await UEP.initTopbar('dashboard');
+  const me = await UEP.initTopbar('dashboard');
+  // Reviewer view: only the MSCs assigned to the reviewer, and no KPIs & Metrics section.
+  const REVIEWER = me.role === 'Reviewer';
 
   const COLORS = { green: '#12805c', amber: '#e19a17', red: '#c0392b', blue: '#0039a6', violet: '#6d3fc0', grey: '#9aa4b8', teal: '#16a085' };
   const DECISION_COLORS = { Accept: COLORS.green, Reject: COLORS.red, Transfer: COLORS.violet, Revise: COLORS.amber, 'Assign to PE': '#0e6a7d', Pending: COLORS.grey };
@@ -15,6 +17,19 @@
 
   journals = await api('/api/journals');
   $('fJournal').innerHTML = '<option value="">All journals</option>' + journals.map(j => `<option value="${j.id}">${esc(j.shortName)}</option>`).join('');
+  // Prominent journal selector at the top of the page; mirrors the Journal filter below.
+  $('fJournalTop').innerHTML = '<option value="">All journals</option>' + journals.map(j => `<option value="${j.id}">${esc(j.name)}</option>`).join('');
+  $('fJournalTop').addEventListener('change', () => { $('fJournal').value = $('fJournalTop').value; page = 1; render(); });
+
+  if (REVIEWER) {
+    const panelEl = $('chartsPanel');
+    if (panelEl) panelEl.remove();
+    document.querySelectorAll('#mscTable .col-lookup').forEach(th => th.remove());
+    $('dashTitle').textContent = 'My assigned MSCs';
+    $('dashSub').textContent = `Manuscripts assigned to ${me.displayName.replace(/ \(Reviewer\)$/, '')} for review. Unassigned MSCs are not shown.`;
+    document.title = 'My assigned MSCs · Unified Editorial Platform';
+  }
+  const COLS = REVIEWER ? 17 : 18;
 
   async function load() {
     data = await api('/api/editor/mscs');
@@ -95,7 +110,7 @@
       : `No ${tab === 'active' ? 'open or in-progress' : 'complete'} MSCs match the filters`;
     renderPager(pages);
     const tb = document.querySelector('#mscTable tbody');
-    if (!rows.length) { tb.innerHTML = '<tr><td colspan="17" class="muted" style="text-align:center;padding:30px">No manuscripts in this tab match the filters.</td></tr>'; return; }
+    if (!rows.length) { tb.innerHTML = `<tr><td colspan="${COLS}" class="muted" style="text-align:center;padding:30px">No manuscripts in this tab match the filters.</td></tr>`; return; }
     tb.innerHTML = pageRows.map(m => {
       const active = m.reviewStatus === 'Open' || m.reviewStatus === 'In Progress';
       const blockedTip = !active ? 'Review is complete'
@@ -107,6 +122,7 @@
         <td class="title-cell" title="${esc(m.intro)}">${esc(m.title)}</td>
         <td>${esc(m.authorName)}</td>
         <td>${fmtDateShort(m.submittedAt)}</td>
+        <td><button type="button" class="btn small analysis-launch" data-analysis="${esc(m.id)}" title="MSC summary, integrity check and journal fitment">🔍 Analyse</button></td>
         <td><span class="pill ${m.integrityPassed ? 'green' : 'red'}">${m.integrityPassed ? 'PASSED' : 'FAILED'}</span></td>
         <td><b>${m.integrityScore}</b> / 10</td>
         <td><b>${m.fitmentIndex ?? '—'}</b> <span class="muted small">${esc(j ? j.shortName : m.journalId)}</span>
@@ -114,7 +130,7 @@
         <td>${m.revisions ? `<span class="pill violet">Yes (${m.revisions})</span>` : '<span class="pill grey">No</span>'}</td>
         <td>${esc(m.assignedEditor || '—')}</td>
         <td>${reviewerCell(m)}</td>
-        <td>${active ? `<a href="#" data-lookup="${esc(m.id)}">🔍 ${m.assignedReviewer ? 'Change' : 'Look up'}</a>` : '<span class="muted">—</span>'}</td>
+        ${REVIEWER ? '' : `<td>${active ? `<a href="#" data-lookup="${esc(m.id)}">🔍 ${m.assignedReviewer ? 'Change' : 'Look up'}</a>` : '<span class="muted">—</span>'}</td>`}
         <td>${statusPill(m.reviewStatus)}</td>
         <td><span class="pill ${m.elapsedBand}" title="${m.reviewStatus === 'Complete' ? 'Time from receipt to decision' : 'Time since receipt'}">${fmtElapsed(m.elapsedHours)}</span></td>
         <td>${fmtDateShort(m.reviewStartAt)}</td>
@@ -126,6 +142,42 @@
     tb.querySelectorAll('[data-lookup]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); openModal(a.dataset.lookup); }));
     tb.querySelectorAll('[data-invite]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); openInvitation(a.dataset.invite); }));
     tb.querySelectorAll('[data-refresh]').forEach(b => b.addEventListener('click', () => refreshInvitation(b)));
+    tb.querySelectorAll('[data-respond]').forEach(b => b.addEventListener('click', () => respondInvitation(b.dataset.respond, b.dataset.accept === '1')));
+    tb.querySelectorAll('[data-analysis]').forEach(b => b.addEventListener('click', () => openAnalysis(b.dataset.analysis)));
+  }
+
+  // ----- MSC analysis overlay (Summary · Integrity check · Journal fitment) -----
+  function openAnalysis(id) {
+    const m = data.mscs.find(x => x.id === id);
+    if (!m) return;
+    const note = m.reviewStatus === 'Complete' ? 'Review is complete (read-only)'
+      : !m.assignedReviewerId ? 'Assign a reviewer to add feedback'
+      : !m.canReview ? 'Feedback opens once the reviewer accepts the invitation' : '';
+    MscAnalysis.open(m, {
+      readOnly: !m.canReview,
+      readOnlyNote: note,
+      // Picked points are appended to the MSC's general feedback (shown on the review page).
+      onAddFeedback: async (points, heading) => {
+        const block = `${heading ? `${heading}:\n` : ''}${points.map(p => `• ${p}`).join('\n')}`;
+        await api(`/api/mscs/${encodeURIComponent(m.id)}/feedback`, { method: 'PUT', body: { generalFeedback: block, append: true } });
+      }
+    });
+  }
+
+  // ----- reviewer: accept / decline an invitation from the dashboard -----
+  async function respondInvitation(id, accept) {
+    try {
+      const out = await api(`/api/reviewer/mscs/${encodeURIComponent(id)}/respond`, { method: 'POST', body: { accept } });
+      if (accept) {
+        const i = data.mscs.findIndex(m => m.id === id);
+        if (i >= 0) data.mscs[i] = out.row;
+        toast(`✓ Invitation accepted. ${id} is ready to review.`, 4000);
+      } else {
+        data.mscs = data.mscs.filter(m => m.id !== id);
+        toast(`Invitation declined. ${id} has been returned to the editor.`, 4000);
+      }
+      render();
+    } catch (ex) { toast(ex.message); }
   }
 
   // Re-checks one pending invitation; when accepted, the row unlocks Review.
@@ -147,6 +199,13 @@
 
   function reviewerCell(m) {
     if (!m.assignedReviewer) return '<span class="pill amber">Unassigned</span>';
+    if (REVIEWER) {
+      return `<div class="rv-cell"><div class="rv-name"><b>${esc(m.assignedReviewer)}</b></div>
+        ${m.invitationStatus === 'Pending'
+          ? `<div><span class="pill amber" title="Invitation received ${esc(UEP.fmtDate(m.invitationSentAt))}">✉ Invitation pending</span></div>
+             <div class="row small rv-respond"><button type="button" class="small" data-respond="${esc(m.id)}" data-accept="1">✓ Accept</button><button type="button" class="small secondary" data-respond="${esc(m.id)}" data-accept="0">Decline</button></div>`
+          : '<div><span class="pill green">✓ Accepted</span></div>'}</div>`;
+    }
     const pill = m.invitationStatus === 'Pending'
       ? `<span class="pill amber" title="Invitation sent ${esc(UEP.fmtDate(m.invitationSentAt))}">✉ Invited</span>`
       : '<span class="pill green" title="Reviewer accepted the invitation">✓ Accepted</span>';
@@ -307,15 +366,38 @@
   document.querySelectorAll('#periodSeg button').forEach(b => b.addEventListener('click', () => {
     period = b.dataset.period;
     document.querySelectorAll('#periodSeg button').forEach(x => x.classList.toggle('active', x === b));
-    renderPeriod(filtered());
+    if (!REVIEWER) renderPeriod(filtered());
   }));
+
+  // ----- today's MSC processing status (top-right panel) -----
+  function renderDayStatus(rows) {
+    const today = new Date().toDateString();
+    const list = rows.filter(m => new Date(m.submittedAt).toDateString() === today);
+    const pending = list.filter(m => m.reviewStatus === 'Open' || m.reviewStatus === 'In Progress').length;
+    const complete = list.filter(m => m.reviewStatus === 'Complete' && m.finalDecision).length;
+    $('dayStatusDate').textContent = new Date().toLocaleDateString(undefined, { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+    $('dayTotal').textContent = list.length;
+    $('dayPending').textContent = pending;
+    $('dayComplete').textContent = complete;
+    $('dayBar').innerHTML = list.length
+      ? [[pending, 'var(--amber)', 'Pending'], [complete, 'var(--green)', 'Complete']].map(([n, c, l]) => n ? `<span title="${l}: ${n}" style="width:${(n / list.length) * 100}%;background:${c}"></span>` : '').join('')
+      : '';
+    const j = journals.find(x => x.id === $('fJournal').value);
+    $('dayScope').textContent = `${j ? j.shortName : 'All journals'}${REVIEWER ? ' · assigned to you' : ''} · follows the active filters`;
+  }
 
   function render() {
     const rows = filtered();
+    $('fJournalTop').value = $('fJournal').value;
+    const j = journals.find(x => x.id === $('fJournal').value);
+    $('journalPickNote').textContent = j ? `${rows.length} MSC${rows.length === 1 ? '' : 's'} for ${j.shortName}` : `${rows.length} MSCs across all journals`;
+    renderDayStatus(rows);
     renderKpis(rows);
-    renderCharts(rows);
-    renderToday(rows);
-    renderPeriod(rows);
+    if (!REVIEWER) {
+      renderCharts(rows);
+      renderToday(rows);
+      renderPeriod(rows);
+    }
     renderTable(rows);
   }
 
@@ -339,7 +421,7 @@
   });
   // KPIs & Metrics panel: collapsed by default; resize charts when expanded.
   const panel = $('chartsPanel');
-  panel.addEventListener('toggle', () => {
+  if (panel) panel.addEventListener('toggle', () => {
     if (panel.open) Object.values(charts).forEach(c => c.resize());
   });
   $('resetFilters').addEventListener('click', () => { clearFilters(); page = 1; render(); });
