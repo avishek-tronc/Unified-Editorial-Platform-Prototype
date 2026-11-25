@@ -65,7 +65,13 @@ const samples = path.join(__dirname, '..', 'samples');
     assert.strictEqual(fail.body.report.passed, false);
     assert.ok(fail.body.report.score <= 6);
     assert.strictEqual((await call('POST', '/api/author/submit', { checkId: fail.body.checkId })).status, 422);
-    step(`Weak MSC fails (score ${fail.body.report.score}) and cannot be submitted`);
+    const fv = fail.body.report.validation;
+    assert.strictEqual(fv.results.length, 21, '21 integrity clauses evaluated');
+    assert.deepStrictEqual(fv.results.map(r => r.id), Array.from({ length: 21 }, (_, i) => `I-${String(i + 1).padStart(2, '0')}`));
+    for (const id of ['I-03', 'I-07', 'I-11', 'I-17', 'I-18', 'I-19']) assert.strictEqual(fv.results.find(r => r.id === id).status, 'fail', `${id} fails on the weak sample`);
+    assert.ok(fv.results.every(r => r.evidence.length), 'every clause carries evidence');
+    assert.strictEqual(fv.areas.length, 9);
+    step(`Weak MSC fails (score ${fail.body.report.score}; ${fv.counts.fail} clauses failed, ${fv.counts.flag} flagged) and cannot be submitted`);
 
     // passing MSC
     const pass = await upload('sample-msc-pass-JACS.docx', 'JACS');
@@ -73,7 +79,8 @@ const samples = path.join(__dirname, '..', 'samples');
     const sub = await call('POST', '/api/author/submit', { checkId: pass.body.checkId });
     assert.strictEqual(sub.status, 200);
     const mscId = sub.body.mscId;
-    step(`Good MSC passes (score ${pass.body.report.score}) and is submitted as ${mscId}`);
+    assert.strictEqual(pass.body.report.validation.counts.fail, 0, 'good sample fails no clause');
+    step(`Good MSC passes (score ${pass.body.report.score}, ${pass.body.report.validation.counts.pass}/21 clauses pass) and is submitted as ${mscId}`);
 
     // author cannot reach editor API
     assert.strictEqual((await call('GET', '/api/editor/mscs')).status, 403);
@@ -149,6 +156,9 @@ const samples = path.join(__dirname, '..', 'samples');
     const reviewMsc = (await call('GET', `/api/mscs/${mscId}`)).body;
     assert.strictEqual(an.body.integrity.score, reviewMsc.integrity.score, 'reviewer integrity score matches the Author upload check');
     assert.strictEqual(an.body.integrity.passed, an.body.integrity.score > 6);
+    assert.strictEqual(an.body.integrity.results.length, 21, 'dashboard/review modal shows the 21-clause breakdown');
+    assert.strictEqual(reviewMsc.integrity.validation.results.length, 21, 'review page payload carries the clause breakdown');
+    assert.ok(!reviewMsc.integrity.evidence, 'raw evidence is not sent to the browser');
     assert.strictEqual(an.body.fitment.journal.id, reviewMsc.journalId);
     assert.strictEqual(an.body.fitment.index, reviewMsc.fitmentIndex);
     step(`MSC analysis: summary, integrity ${an.body.integrity.score}/10 (same rules), fitment ${an.body.fitment.index}% with ${an.body.fitment.journal.shortName}`);

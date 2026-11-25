@@ -67,6 +67,7 @@ async function buildManuscriptDocx(spec) {
     bold('Corresponding author: ', `${spec.corresponding.name}, ${spec.corresponding.email}`)
   ];
   if (spec.orcid) children.push(bold('ORCID: ', spec.orcid));
+  (spec.frontLines || []).forEach(([label, text]) => children.push(bold(label, text)));
 
   const section = (key, title, items) => {
     if (omit.has(key) || !items || (Array.isArray(items) && !items.length)) return;

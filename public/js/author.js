@@ -166,8 +166,8 @@
           <div class="verdict ${r.passed ? 'pass' : 'fail'}">${r.passed ? 'PASS' : 'FAIL — REVISION NEEDED'}</div>
           <div>${esc(r.summary)}</div>
           <div class="row small" style="margin-top:6px">
-            <span class="pill red">${counts.critical} critical</span><span class="pill amber">${counts.major} major</span><span class="pill blue">${counts.minor} minor</span>
-            <span class="muted">Attempt #${check.attempt} · ${esc(journal ? journal.shortName : r.journalId)}</span>
+            ${r.validation ? ClauseUI.tally(r.validation) : `<span class="pill red">${counts.critical} critical</span><span class="pill amber">${counts.major} major</span><span class="pill blue">${counts.minor} minor</span>`}
+            <span class="muted">Attempt #${check.attempt} · ${esc(journal ? journal.shortName : r.journalId)} · 21 integrity clauses (I-01 to I-21)</span>
           </div>
           ${r.caps && r.caps.length ? `<div class="muted small" style="margin-top:4px">${r.caps.map(esc).join(' ')}</div>` : ''}
         </div>
@@ -178,21 +178,22 @@
         ${r.passed
           ? `<div class="alert ok"><b>The MSC passed the MSC validation.</b> You can submit it for editorial review now, or address the remaining suggestions first and re-check.</div>
              <button id="submitBtn">${check.revisingMscId ? `Submit revision of ${esc(check.revisingMscId)}` : 'Submit MSC for review →'}</button>`
-          : `<div class="alert error"><b>The score is 6 or below.</b> Incorporate the feedback below (start with critical and major items) and re-submit the MSC.</div>
+          : `<div class="alert error"><b>The score is 6 or below.</b> Fix the failed and flagged clauses below (start with the largest deductions) and re-submit the MSC.</div>
              <button disabled title="Score must be above 6">Submit MSC for review</button> <button class="secondary" id="resubmitBtn">Upload corrected MSC</button>`}
       </div>
 
-      <div class="section-title">Score breakdown</div>
-      ${r.categories.map(c => `<div class="cat"><div>${esc(c.label)} <span class="muted small">(${Math.round(c.weight * 100)}%)</span></div>
-        <div class="bar"><span style="width:${c.score * 10}%;background:${scoreColor(c.score)}"></span></div><b>${c.score}</b></div>`).join('')}
-
       <div class="tabs" style="margin-top:18px">
-        <button class="active" data-tab="issues">Feedback (${r.issues.filter(i => i.severity !== 'info').length})</button>
+        <button class="active" data-tab="clauses">MSC validation breakdown (${r.validation ? r.validation.counts.flag + r.validation.counts.fail : 0} to fix)</button>
+        <button data-tab="issues">Readiness feedback (${r.issues.filter(i => i.severity !== 'info').length})</button>
         <button data-tab="scope">Journal fit</button>
         <button data-tab="details">MSC details</button>
         <button type="button" id="jumpPreview" style="margin-left:auto">↑ View uploaded MSC</button>
       </div>
-      <div data-pane="issues">
+      <div data-pane="clauses">
+        ${ClauseUI.render(r.validation, { openFailed: true })}
+      </div>
+      <div data-pane="issues" class="hidden">
+        <div class="alert info small">Guidance on completeness, language, figures, tables and conformance. These items help the editor and reviewers but are <b>not</b> part of the MSC validation score, which is computed from the 21 integrity clauses.</div>
         ${r.issues.length ? r.issues.map(issueHtml).join('') : '<div class="alert ok">No issues found.</div>'}
       </div>
       <div data-pane="scope" class="hidden">
@@ -227,6 +228,7 @@
       result.querySelectorAll('.tabs button[data-tab]').forEach(x => x.classList.toggle('active', x === b));
       result.querySelectorAll('[data-pane]').forEach(p => p.classList.toggle('hidden', p.dataset.pane !== b.dataset.tab));
     }));
+    ClauseUI.wire(result);
     const jump = document.getElementById('jumpPreview');
     if (jump) jump.addEventListener('click', e => { e.stopPropagation(); previewCard.scrollIntoView({ behavior: 'smooth' }); });
     const submitBtn = document.getElementById('submitBtn');

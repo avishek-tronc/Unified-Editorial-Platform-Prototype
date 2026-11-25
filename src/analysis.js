@@ -12,8 +12,7 @@
  * Everything is deterministic and runs offline, like the integrity engine.
  */
 const {
-  WEIGHTS, CATEGORY_LABELS, PASS_THRESHOLD, finalScore,
-  parseStructure, detectCommunication, countTerm, words
+  PASS_THRESHOLD, parseStructure, detectCommunication, countTerm, words
 } = require('./integrity');
 const { JOURNALS, getJournal } = require('./journals');
 
@@ -158,95 +157,60 @@ function summarize(msc, content) {
   };
 }
 
-// ---------- integrity (same rules as the Author upload page) ----------
+// ---------- integrity (same 21 clauses as the Author MSC validation) ----------
 
-const GUIDANCE = {
-  completeness: {
-    focus: 'Is the MSC complete and does each section do its job?',
-    prompts: [
-      'Does the abstract state the problem, the approach and the key quantitative result?',
-      'Are the experimental / methods details sufficient for another lab to reproduce the work?',
-      'Do the conclusions follow from the data presented, without over-claiming?'
-    ]
-  },
-  typos: {
-    focus: 'Is the language clear enough for the readership?',
-    prompts: ['Flag passages where unclear wording changes the scientific meaning.', 'Note recurring spelling or terminology inconsistencies (units, compound names).']
-  },
-  plagiarism: {
-    focus: 'Is the text original and are prior works properly cited?',
-    prompts: ['Check that overlapping passages are quoted or cited.', 'Confirm the novelty claim against the cited prior work.']
-  },
-  figures: {
-    focus: 'Do figures, schemes and equations support the claims?',
-    prompts: ['Are all figures cited in the text in order and legible (axes, units, scale bars)?', 'Do figure captions explain the experiment without referring to the main text?', 'Are equations numbered and their symbols defined?']
-  },
-  tables: {
-    focus: 'Is the tabulated data consistent and complete?',
-    prompts: ['Do table values match the values quoted in the text?', 'Are units, uncertainties and sample sizes reported?']
-  },
-  conformance: {
-    focus: 'Does the MSC meet the journal requirements and authorship integrity?',
-    prompts: ['Are author contributions, conflict-of-interest and data availability statements present?', 'Are author identities / ORCID iDs and affiliations consistent?']
-  },
-  scope: {
-    focus: 'Is the work a good fit for the selected journal?',
-    prompts: ['Will the journal\'s readership find the advance significant?', 'If the fit is weak, would a transfer to a better-fitting journal serve the authors?']
-  }
+// What the reviewer should look at for each integrity area (IA-04 … IA-12).
+const AREA_GUIDANCE = {
+  'IA-04': { focus: 'Is the text original and not a duplicate submission?', prompts: ['Check that overlapping passages are quoted and cited.', 'Confirm the novelty claim against the matched sources.'] },
+  'IA-05': { focus: 'Are the figures, spectra and blots genuine and used once?', prompts: ['Look for repeated panels, unexplained splices or uniform backgrounds.', 'Ask for raw images where a panel looks processed.'] },
+  'IA-06': { focus: 'Do the citations support the claims and are they sound?', prompts: ['Spot-check that key claims are backed by the cited work.', 'Question self-citation or same-venue citation that is not needed.'] },
+  'IA-07': { focus: 'Are the data available and consistent?', prompts: ['Do the values in the text match the tables and SI?', 'Is the data deposited where the policy requires it?'] },
+  'IA-08': { focus: 'Is any AI-generated content disclosed and acceptable?', prompts: ['Note unusual phrasing that may hide copied or generated text.', 'Check whether AI use is disclosed where it appears to have been used.'] },
+  'IA-09': { focus: 'Are the authors who they say they are?', prompts: ['Do the e-mail domains and ORCID records match the stated affiliations?'] },
+  'IA-10': { focus: 'Are editor and reviewers independent of the authors?', prompts: ['Declare to the editor any shared affiliation or recent co-authorship with the authors.'] },
+  'IA-11': { focus: 'Are any parties on a sanctions list?', prompts: ['Matches are resolved by compliance; do not proceed until cleared.'] },
+  'IA-12': { focus: 'Are there signs of coordinated or manipulated review?', prompts: ['Flag shared contact details, look-alike e-mail domains or implausibly fast reviews to the editor.'] }
 };
 
-function band(score) {
-  return score >= 8 ? 'strong' : score > PASS_THRESHOLD ? 'adequate' : score >= 4 ? 'weak' : 'poor';
-}
-
 function integrity(msc) {
+  const service = require('./service');
   const r = msc.integrity;
-  const categories = Object.keys(WEIGHTS).map(key => {
-    const c = (r.categories || []).find(x => x.key === key) || { score: 0, issues: [] };
-    return { key, label: CATEGORY_LABELS[key], weight: WEIGHTS[key], score: c.score, issues: c.issues || [], contribution: Math.round(WEIGHTS[key] * c.score * 100) / 100, band: band(c.score) };
-  });
-  const sim = (r.stats && r.stats.similarity) || 0;
-  const result = finalScore(categories, sim);
-  const issues = categories.flatMap(c => c.issues).filter(i => i.severity !== 'info');
-  const sevOrder = { critical: 0, major: 1, minor: 2 };
-  issues.sort((a, b) => sevOrder[a.severity] - sevOrder[b.severity]);
-
-  // Reviewer guidance: weakest categories first, each with prompts and
-  // ready-to-use feedback points drawn from the detected issues.
-  const guidance = categories.slice().sort((a, b) => a.score - b.score).map(c => ({
-    key: c.key,
-    label: c.label,
-    score: c.score,
-    band: c.band,
-    focus: GUIDANCE[c.key].focus,
-    prompts: GUIDANCE[c.key].prompts,
-    suggestions: c.issues.filter(i => i.severity !== 'info').slice(0, 4).map(i => ({
-      severity: i.severity,
-      text: `${i.message} Suggested action for the author: ${i.remediation}`
+  const v = service.liveValidation(msc);
+  if (!v) {
+    return { score: r.score, passed: r.passed, passThreshold: PASS_THRESHOLD, caps: r.caps || [], counts: { pass: 0, flag: 0, fail: 0, critical: 0, major: 0, minor: 0 }, results: [], areas: [], guidance: [], recommendation: 'This MSC was screened before the clause-based validation was introduced; re-upload it to see the clause breakdown.', stats: r.stats || {} };
+  }
+  const open = v.results.filter(x => x.status !== 'pass');
+  const guidance = v.areas.slice().sort((a, b) => a.score - b.score).map(a => ({
+    clause: a.clause,
+    label: a.label,
+    score: a.score,
+    status: a.status,
+    focus: AREA_GUIDANCE[a.clause].focus,
+    prompts: AREA_GUIDANCE[a.clause].prompts,
+    suggestions: v.results.filter(x => x.clause === a.clause && x.status !== 'pass').map(x => ({
+      id: x.id,
+      status: x.status,
+      severity: x.severity,
+      text: `${x.id} (${x.clause}) ${x.finding}${x.remediation ? ` Suggested action for the author: ${x.remediation}` : ''}`
     }))
   }));
-
-  const counts = {
-    critical: issues.filter(i => i.severity === 'critical').length,
-    major: issues.filter(i => i.severity === 'major').length,
-    minor: issues.filter(i => i.severity === 'minor').length
-  };
-  const recommendation = !result.passed
-    ? 'The MSC does not meet the integrity threshold. Focus the review on the critical and major items; a Revise or Reject decision is likely.'
-    : counts.critical || counts.major
-      ? 'The MSC passes the integrity threshold but has open major items. Ask the author to address them (likely a Minor/Major revision).'
-      : 'The MSC passes with only minor items. Concentrate the review on scientific merit and novelty.';
-
+  const recommendation = !v.passed
+    ? `The MSC does not meet the validation threshold (${v.counts.fail} failed, ${v.counts.flag} flagged clause(s)). Focus the review on the failed clauses; a Revise or Reject decision is likely.`
+    : open.length
+      ? `The MSC passes the validation threshold with ${open.length} clause(s) needing attention. Confirm them during the review.`
+      : 'All 21 integrity clauses pass. Concentrate the review on scientific merit and novelty.';
   return {
-    score: result.score,
-    passed: result.passed,
+    score: v.score,
+    passed: v.passed,
     passThreshold: PASS_THRESHOLD,
-    weightedScore: result.weighted,
-    caps: result.caps,
-    storedScore: r.score,
-    categories,
-    issues,
-    counts,
+    deductions: v.deductions,
+    caps: v.caps,
+    counts: v.counts,
+    results: v.results,
+    areas: v.areas,
+    context: v.context,
+    method: v.method,
+    uploadScore: r.score,
     guidance,
     recommendation,
     stats: r.stats || {},

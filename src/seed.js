@@ -18,6 +18,8 @@ const { analyzeManuscript } = require('./integrity');
 const service = require('./service');
 
 const H = 36e5;
+// Bump when the record shape changes; the server re-seeds older databases.
+const SEED_VERSION = 3;
 const SEED_DIR = path.join(__dirname, '..', 'samples', 'seed');
 
 const CONTENT = [
@@ -27,20 +29,20 @@ const CONTENT = [
 ];
 
 const EDITORS = [
-  { id: 'ED-1', name: 'Dr. Helen Carter', email: 'h.carter@editorial.example', journals: ['JACS', 'INORGCHEM'] },
-  { id: 'ED-2', name: 'Dr. Rajesh Menon', email: 'r.menon@editorial.example', journals: ['JACS', 'ORGLETT', 'JMEDCHEM'] },
-  { id: 'ED-3', name: 'Dr. Sofia Lindqvist', email: 's.lindqvist@editorial.example', journals: ['ACSNANO', 'JPCC', 'JACS'] },
-  { id: 'ED-4', name: 'Dr. Kwame Asante', email: 'k.asante@editorial.example', journals: ['ESTECH', 'ANALCHEM', 'JPCC'] }
+  { id: 'ED-1', name: 'Dr. Helen Carter', email: 'h.carter@editorial.example', affiliation: 'University of Cambridge', journals: ['JACS', 'INORGCHEM'] },
+  { id: 'ED-2', name: 'Dr. Rajesh Menon', email: 'r.menon@editorial.example', affiliation: 'Indian Institute of Technology Bombay', journals: ['JACS', 'ORGLETT', 'JMEDCHEM'] },
+  { id: 'ED-3', name: 'Dr. Sofia Lindqvist', email: 's.lindqvist@editorial.example', affiliation: 'University of Antwerp', journals: ['ACSNANO', 'JPCC', 'JACS'] },
+  { id: 'ED-4', name: 'Dr. Kwame Asante', email: 'k.asante@editorial.example', affiliation: 'University of Ghana', journals: ['ESTECH', 'ANALCHEM', 'JPCC'] }
 ];
 
 const REVIEWERS = [
   { id: 'RV-1', name: 'Prof. Anna Kowalski', affiliation: 'University of Warsaw', expertise: ['Organometallic catalysis', 'Nickel catalysis'], journals: ['JACS', 'ORGLETT', 'INORGCHEM'], capacity: 4, avgTurnaroundDays: 6 },
   { id: 'RV-2', name: 'Dr. Liam O\'Connor', affiliation: 'Trinity College Dublin', expertise: ['Synthetic methodology', 'Cross-coupling'], journals: ['ORGLETT', 'JACS'], capacity: 4, avgTurnaroundDays: 9 },
-  { id: 'RV-3', name: 'Prof. Hiroshi Tanaka', affiliation: 'Kyoto University', expertise: ['Inorganic materials', 'Halide perovskites'], journals: ['INORGCHEM', 'JACS'], capacity: 3, avgTurnaroundDays: 5 },
+  { id: 'RV-3', name: 'Prof. Hiroshi Tanaka', affiliation: 'Kyoto University', expertise: ['Inorganic materials', 'Halide perovskites'], journals: ['INORGCHEM', 'JACS'], capacity: 3, avgTurnaroundDays: 5, declaredConflicts: ['Istituto Italiano di Tecnologia'] },
   { id: 'RV-4', name: 'Dr. Fatima Al-Sayed', affiliation: 'KAUST', expertise: ['Nanocrystals', 'Ion exchange'], journals: ['ACSNANO', 'INORGCHEM', 'JACS'], capacity: 4, avgTurnaroundDays: 7 },
   { id: 'RV-5', name: 'Prof. Carlos Mendes', affiliation: 'University of São Paulo', expertise: ['2D materials', 'Nanodevices'], journals: ['ACSNANO', 'JPCC'], capacity: 3, avgTurnaroundDays: 8, unavailableInDays: 10 },
-  { id: 'RV-6', name: 'Dr. Emily Zhang', affiliation: 'ETH Zürich', expertise: ['Electrochemistry', 'Energy conversion'], journals: ['JPCC', 'ACSNANO', 'JACS'], capacity: 5, avgTurnaroundDays: 4 },
-  { id: 'RV-7', name: 'Prof. David Levi', affiliation: 'Weizmann Institute of Science', expertise: ['Physical organic chemistry', 'Mechanism'], journals: ['JACS', 'JPCC'], capacity: 3, avgTurnaroundDays: 12 },
+  { id: 'RV-6', name: 'Dr. Emily Zhang', affiliation: 'ETH Zürich', expertise: ['Electrochemistry', 'Energy conversion'], journals: ['JPCC', 'ACSNANO', 'JACS'], capacity: 5, avgTurnaroundDays: 4, declaredConflicts: ['Hong Kong University of Science and Technology'] },
+  { id: 'RV-7', name: 'Prof. David Levi', affiliation: 'Weizmann Institute of Science', expertise: ['Physical organic chemistry', 'Mechanism'], journals: ['JACS', 'JPCC'], capacity: 3, avgTurnaroundDays: 12, declaredConflicts: ['Shanghai Institute of Organic Chemistry'] },
   { id: 'RV-8', name: 'Dr. Ingrid Svensson', affiliation: 'Karolinska Institutet', expertise: ['Spectroscopy', 'Electron microscopy'], journals: ['ACSNANO', 'INORGCHEM', 'JACS'], capacity: 4, avgTurnaroundDays: 6 },
   { id: 'RV-9', name: 'Prof. Wei Chen', affiliation: 'Peking University', expertise: ['Thermoelectrics', 'Ionic conductors'], journals: ['JPCC', 'JACS'], capacity: 4, avgTurnaroundDays: 5 },
   { id: 'RV-10', name: 'Dr. Laura Rossi', affiliation: 'Politecnico di Milano', expertise: ['Perovskite optoelectronics', 'Photophysics'], journals: ['ACSNANO', 'JPCC', 'JACS'], capacity: 4, avgTurnaroundDays: 7 },
@@ -92,7 +94,7 @@ async function buildSeed() {
   const between = (a, b) => a + rand() * (b - a);
 
   const db = {
-    meta: { seededAt: new Date(now).toISOString(), version: 2 },
+    meta: { seededAt: new Date(now).toISOString(), version: SEED_VERSION },
     counters: { msc: 1000 },
     editors: EDITORS,
     reviewers: REVIEWERS.map(({ unavailableInDays, ...r }) => ({
@@ -238,8 +240,35 @@ async function buildSeed() {
     }
   });
 
+  addIntegritySignals(db, rand);
   store.save();
   return store.get();
 }
 
-module.exports = { buildSeed };
+/**
+ * Workflow-side integrity signals for the demo records, so the clause-based
+ * MSC validation (I-16, I-20, I-21) has realistic variety on the dashboard:
+ * logged IP/device per author and reviewer, a few reviewers the authors had
+ * opposed, a shared device and some implausibly fast reviews.
+ */
+function addIntegritySignals(db, rand) {
+  const h = s => require('crypto').createHash('sha256').update(s).digest('hex').slice(0, 16);
+  const tel = (ip, at) => ({ ip: ip.replace(/\.\d+$/, '.x'), ipHash: h(ip), device: h(`${ip}|seed-device`), at });
+  db.mscs.forEach((m, i) => {
+    const authorIp = `198.51.100.${10 + (i % 200)}`;
+    m.telemetry = { author: tel(authorIp, m.submittedAt), reviewers: {} };
+    const accepted = m.assignedReviewer && (!m.invitation || m.invitation.status === 'Accepted');
+    if (!accepted) return;
+    const sharedDevice = i % 9 === 4;
+    m.telemetry.reviewers[m.assignedReviewer] = tel(sharedDevice ? authorIp : `203.0.113.${20 + (i % 180)}`, m.reviewStartAt || m.assignedAt);
+    if (i % 6 === 1) {
+      const r = db.reviewers.find(x => x.id === m.assignedReviewer);
+      m.opposedReviewers = [{ name: r.name, email: null, source: 'Submission form: opposed reviewers' }];
+    }
+    if (m.reviewStatus === 'Complete' && i % 5 === 2 && m.completedAt) {
+      m.reviewStartAt = new Date(new Date(m.completedAt).getTime() - (0.4 + rand()) * H).toISOString();
+    }
+  });
+}
+
+module.exports = { buildSeed, SEED_VERSION };

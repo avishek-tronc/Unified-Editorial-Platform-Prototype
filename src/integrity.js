@@ -25,6 +25,7 @@ const JSZip = require('jszip');
 const mammoth = require('mammoth');
 const { JOURNALS, getJournal } = require('./journals');
 const REFERENCE_CORPUS = require('./corpus');
+const clauses = require('./clauses');
 
 const PASS_THRESHOLD = 6; // score must be ABOVE this to pass
 
@@ -743,7 +744,7 @@ async function validateFormat(buffer, originalName) {
  * @param {string} opts.journalId     selected journal id
  * @param {Array}  [opts.corpus]      [{id, source, text}] prior submissions for similarity
  */
-async function analyzeManuscript({ buffer, originalName, journalId, corpus }) {
+async function analyzeManuscript({ buffer, originalName, journalId, corpus, env, imageIndex }) {
   const journal = getJournal(journalId);
   if (!journal) throw new Error(`Unknown journal: ${journalId}`);
   const contentHash = crypto.createHash('sha256').update(buffer || Buffer.alloc(0)).digest('hex');
@@ -811,15 +812,22 @@ async function analyzeManuscript({ buffer, originalName, journalId, corpus }) {
   }));
 
   const allIssues = categories.flatMap(c => c.issues);
-  const criticalCount = allIssues.filter(i => i.severity === 'critical').length;
-  const { score, caps, passed } = finalScore(categories, plagiarism.stats.similarity);
-
   const sevOrder = { critical: 0, major: 1, minor: 2, info: 3 };
   allIssues.sort((a, b) => sevOrder[a.severity] - sevOrder[b.severity]);
+  const readiness = finalScore(categories, plagiarism.stats.similarity);
+
+  // MSC validation score: the 21 integrity clauses I-01 … I-21 (src/clauses.js)
+  const evidence = await clauses.extractEvidence({
+    zip, docXml, html, text, paragraphs, structure, meta, emails: meta.emails, corpus, contentHash,
+    referenceCorpus: REFERENCE_CORPUS, imageIndex, validOrcid
+  });
+  const validation = clauses.evaluateClauses(evidence, env || {});
+  const { score, passed, caps } = validation;
+  const open = validation.results.filter(r => r.status !== 'pass');
 
   const summary = passed
-    ? `PASS — integrity score ${score}/10 for ${journal.shortName}. ${allIssues.filter(i => i.severity !== 'info').length} item(s) can still be improved, but the MSC may proceed to submission.`
-    : `FAIL — integrity score ${score}/10 for ${journal.shortName}. Address the critical and major items below and re-submit the MSC.`;
+    ? `PASS — MSC validation score ${score}/10 for ${journal.shortName} on the 21 integrity clauses (I-01 to I-21). ${open.length ? `${open.length} clause(s) flagged for attention, but the MSC may proceed to submission.` : 'All clauses passed.'}`
+    : `FAIL — MSC validation score ${score}/10 for ${journal.shortName}. ${validation.counts.fail} clause(s) failed and ${validation.counts.flag} flagged: address them and re-submit the MSC.`;
 
   return {
     valid: true,
@@ -830,12 +838,17 @@ async function analyzeManuscript({ buffer, originalName, journalId, corpus }) {
     contentHash,
     summary,
     caps,
+    validation,
+    evidence,
     categories,
     issues: allIssues,
+    readiness: { score: readiness.score, note: 'Manuscript readiness feedback (completeness, language, figures, tables, conformance, scope) — guidance only, not part of the validation score.' },
     counts: {
-      critical: criticalCount,
-      major: allIssues.filter(i => i.severity === 'major').length,
-      minor: allIssues.filter(i => i.severity === 'minor').length
+      critical: validation.counts.critical,
+      major: validation.counts.major,
+      minor: validation.counts.minor,
+      fail: validation.counts.fail,
+      flag: validation.counts.flag
     },
     meta: {
       title: meta.title,
@@ -844,6 +857,7 @@ async function analyzeManuscript({ buffer, originalName, journalId, corpus }) {
       correspondingAuthor: meta.correspondingAuthor || '',
       correspondingEmail: meta.correspondingEmail,
       orcids: meta.orcids,
+      emails: meta.emails,
       abstract: structure.sections.abstract ? structure.sections.abstract.paragraphs.join(' ') : '',
       keywords: completeness.stats.keywords,
       articleType: structure.articleType || 'Article',
