@@ -54,24 +54,44 @@
   }
 
   // Show the uploaded MSC, organized by section, before any MSC validation.
+  // While the preview loads, a spinner is shown and MSC validation is disabled.
+  const previewLoading = document.getElementById('previewLoading');
+  let previewBusy = false;
+  let previewSeq = 0;
+  function setPreviewBusy(busy, name) {
+    previewBusy = busy;
+    previewLoading.classList.toggle('hidden', !busy);
+    if (busy) previewLoading.querySelector('.pl-name').textContent = name || '';
+    [checkBtn, document.getElementById('previewCheckBtn')].forEach(b => {
+      b.disabled = busy;
+      b.title = busy ? 'Available once the MSC preview has loaded' : '';
+    });
+  }
   async function loadPreview(f) {
+    const seq = ++previewSeq;
     uploadErr.classList.add('hidden');
     result.classList.add('hidden');
-    resultEmpty.classList.remove('hidden');
+    previewCard.classList.add('hidden');
+    resultEmpty.classList.add('hidden');
     const fd = new FormData();
     fd.append('msc', f);
     fileName.textContent = `${f.name} — loading preview…`;
+    setPreviewBusy(true, f.name);
     try {
       const res = await api('/api/author/preview', { method: 'POST', body: fd });
+      if (seq !== previewSeq) return;
       fileName.textContent = `${f.name} (${(f.size / 1024).toFixed(0)} KB)`;
       renderPreview(res);
-      resultEmpty.classList.add('hidden');
       previewCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (ex) {
+      if (seq !== previewSeq) return;
       fileName.textContent = `${f.name} (${(f.size / 1024).toFixed(0)} KB)`;
       previewCard.classList.add('hidden');
+      resultEmpty.classList.remove('hidden');
       uploadErr.textContent = ex.message;
       uploadErr.classList.remove('hidden');
+    } finally {
+      if (seq === previewSeq) setPreviewBusy(false);
     }
   }
 
@@ -97,6 +117,7 @@
 
   form.addEventListener('submit', async e => {
     e.preventDefault();
+    if (previewBusy) return; // wait until the MSC preview has loaded
     uploadErr.classList.add('hidden');
     const f = fileInput.files[0];
     if (!f) { uploadErr.textContent = 'Choose an MSC file (.docx) to upload.'; uploadErr.classList.remove('hidden'); return; }
