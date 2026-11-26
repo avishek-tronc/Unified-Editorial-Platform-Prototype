@@ -20,13 +20,12 @@ const ClauseUI = (() => {
     return `<span class="pill green">${v.counts.pass} pass</span><span class="pill amber">${v.counts.flag} flagged</span><span class="pill red">${v.counts.fail} fail</span>`;
   }
 
-  /** One bar per integrity area (IA-04 … IA-12). */
+  /** One bar per integrity area (V-1 … V-9). */
   function areaBars(v) {
     return `<div class="cl-areas">${v.areas.map(a => `
       <div class="cat cl-area" title="${esc(a.ids.join(', '))} · −${a.deduction} point(s)">
-        <div><span class="muted small">${esc(a.clause)}</span> ${esc(a.label)} <span class="muted small">(${a.ids[0]}${a.ids.length > 1 ? `–${a.ids[a.ids.length - 1].slice(2)}` : ''})</span></div>
+        <div><span class="muted small">${esc(a.code)}</span> ${esc(a.label)}</div>
         <div class="bar"><span style="width:${a.score * 10}%;background:${scoreColor(a.score)}"></span></div>
-        <b style="color:${scoreColor(a.score)}">${a.score}</b>
       </div>`).join('')}</div>`;
   }
 
@@ -43,7 +42,7 @@ const ClauseUI = (() => {
         <div class="cl-finding"><b>Result:</b> ${esc(r.finding)}</div>
         ${r.evidence.length ? `<div class="cl-ev-h">Evidence</div><ul class="cl-evidence">${r.evidence.map(e => `<li>${esc(e)}</li>`).join('')}</ul>` : ''}
         ${r.remediation && r.status !== 'pass' ? `<div class="fix">${esc(r.remediation)}</div>` : ''}
-        <div class="cl-meta muted small">Clause ${esc(r.clause)} · ${esc(r.area)} · severity <span class="pill ${SEV[r.severity]}">${esc(r.severity)}</span> (fail −${r.maxPenalty}, flag −${r.maxPenalty / 2}) · automation: ${esc(r.feasibility)}<br>Method: ${esc(r.tool)}</div>
+        <div class="cl-meta muted small">${esc(r.code)} · ${esc(r.area)} · severity <span class="pill ${SEV[r.severity]}">${esc(r.severity)}</span> (fail −${r.maxPenalty}, flag −${r.maxPenalty / 2}) · automation: ${esc(r.feasibility)}<br>Method: ${esc(r.tool)}</div>
       </div>
     </details>`;
   }
@@ -65,7 +64,7 @@ const ClauseUI = (() => {
       ${ctx.stage ? `<div class="muted small cl-context">Screening stage: <b>${esc(ctx.stage)}</b>${ctx.editor ? ` · editor ${esc(ctx.editor)}` : ''}${ctx.reviewers ? ` · reviewers: ${esc(ctx.reviewers)}` : ''}</div>` : ''}
       <div class="cl-list">
         ${groups.map(g => `<div class="cl-group" data-status="${g.a.status}">
-          <div class="cl-group-h"><span>${esc(g.a.clause)} · ${esc(g.a.label)}</span>${statusPill(g.a.status)}</div>
+          <div class="cl-group-h"><span>${esc(g.a.code)} · ${esc(g.a.label)}</span>${statusPill(g.a.status)}</div>
           ${g.rows.map(r => clauseRow(r, opts)).join('')}
         </div>`).join('')}
       </div>

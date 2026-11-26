@@ -419,7 +419,7 @@ button.day-legend.on { border-color: var(--brand, #0039a6); box-shadow: 0 0 0 2p
 
 /* ---------- MSC validation: clause breakdown (I-01 … I-21) ---------- */
 .cl-tally { gap: 6px; margin: 6px 0 2px; }
-.cl-areas .cat { grid-template-columns: 1fr 140px 36px; font-size: 13px; }
+.cl-areas .cat { grid-template-columns: 1fr 160px; font-size: 13px; }
 .cl-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .cl-filter { margin-left: auto; display: inline-flex; gap: 4px; text-transform: none; letter-spacing: 0; }
 .cl-filter button { font-size: 12px; padding: 3px 10px; }
@@ -448,4 +448,4 @@ button.day-legend.on { border-color: var(--brand, #0039a6); box-shadow: 0 0 0 2p
 .cl-wrap.compact .cl-status { min-width: 0; }
 .cl-wrap.compact .cl-filter button { font-size: 11px; padding: 2px 6px; }
 @media (max-width: 640px) { .cl-row > summary { grid-template-columns: 40px 1fr auto; } .cl-ded { display: none; } .cl-body { padding-left: 14px; } }
-#integrityPane .cl-areas .cat { grid-template-columns: 1fr 70px 30px; font-size: 12px; padding: 3px 0; gap: 6px; }
+#integrityPane .cl-areas .cat { grid-template-columns: 1fr 80px; font-size: 12px; padding: 3px 0; gap: 6px; }

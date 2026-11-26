@@ -41,6 +41,9 @@ const AREAS = {
   'IA-12': 'Suspicious behaviour'
 };
 
+// Display codes for the integrity areas: V-1 … V-9.
+const CODES = Object.fromEntries(Object.keys(AREAS).map((k, i) => [k, `V-${i + 1}`]));
+
 const CLAUSES = [
   { id: 'I-01', clause: 'IA-04', severity: 'critical', feasibility: 'Fully (screening)', check: 'iThenticate similarity: over 25% overall or over 10% from one source is flagged', tool: 'Crossref Similarity Check (iThenticate) — prototype: 8-word shingle index of published sources' },
   { id: 'I-02', clause: 'IA-04', severity: 'critical', feasibility: 'Fully', check: 'The text doesn\'t overlap with other ACS submissions (duplicate submission)', tool: 'Internal submission index (MinHash / shingling)' },
@@ -386,7 +389,7 @@ function result(def, status, finding, evidence, extra) {
   const points = SEVERITY_POINTS[def.severity];
   const penalty = status === 'fail' ? points : status === 'flag' ? points / 2 : 0;
   return {
-    id: def.id, clause: def.clause, area: AREAS[def.clause], check: def.check, feasibility: def.feasibility, severity: def.severity,
+    id: def.id, clause: def.clause, code: CODES[def.clause], area: AREAS[def.clause], check: def.check, feasibility: def.feasibility, severity: def.severity,
     tool: def.tool, status, finding, evidence: (evidence || []).filter(Boolean), penalty: Math.round(penalty * 1000) / 1000, maxPenalty: points, ...(extra || {})
   };
 }
@@ -721,7 +724,7 @@ function evaluateClauses(ev, env = {}) {
     const rs = results.filter(r => r.clause === key);
     const max = rs.reduce((s, r) => s + r.maxPenalty, 0);
     const lost = rs.reduce((s, r) => s + r.penalty, 0);
-    return { clause: key, label: AREAS[key], ids: rs.map(r => r.id), score: round1(10 * (1 - lost / max)), deduction: Math.round(lost * 100) / 100, status: rs.some(r => r.status === 'fail') ? 'fail' : rs.some(r => r.status === 'flag') ? 'flag' : 'pass' };
+    return { clause: key, code: CODES[key], label: AREAS[key], ids: rs.map(r => r.id), score: round1(10 * (1 - lost / max)), deduction: Math.round(lost * 100) / 100, status: rs.some(r => r.status === 'fail') ? 'fail' : rs.some(r => r.status === 'flag') ? 'flag' : 'pass' };
   });
   return {
     score, passed: score > PASS_THRESHOLD, passThreshold: PASS_THRESHOLD, deductions: Math.round(deductions * 100) / 100, caps, counts, results, areas,
@@ -735,4 +738,4 @@ function evaluateClauses(ev, env = {}) {
   };
 }
 
-module.exports = { CLAUSES, AREAS, SEVERITY_POINTS, PASS_THRESHOLD, extractEvidence, evaluateClauses, imageHashes: ev => (ev && ev.images || []).map(i => i.hash), samePerson, institutionsOf };
+module.exports = { CLAUSES, AREAS, CODES, SEVERITY_POINTS, PASS_THRESHOLD, extractEvidence, evaluateClauses, imageHashes: ev => (ev && ev.images || []).map(i => i.hash), samePerson, institutionsOf };

@@ -182,6 +182,7 @@ function integrity(msc) {
   const open = v.results.filter(x => x.status !== 'pass');
   const guidance = v.areas.slice().sort((a, b) => a.score - b.score).map(a => ({
     clause: a.clause,
+    code: a.code,
     label: a.label,
     score: a.score,
     status: a.status,
@@ -191,7 +192,7 @@ function integrity(msc) {
       id: x.id,
       status: x.status,
       severity: x.severity,
-      text: `${x.id} (${x.clause}) ${x.finding}${x.remediation ? ` Suggested action for the author: ${x.remediation}` : ''}`
+      text: `${x.id} (${x.code}) ${x.finding}${x.remediation ? ` Suggested action for the author: ${x.remediation}` : ''}`
     }))
   }));
   const recommendation = !v.passed
