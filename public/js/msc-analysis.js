@@ -186,7 +186,7 @@ const MscAnalysis = (() => {
         </div>
       </div>
       <div class="alert ${r.passed ? (r.counts.fail || r.counts.flag ? 'warn' : 'ok') : 'error'}"><b>Reviewer guidance:</b> ${esc(r.recommendation)}</div>
-      <div class="muted small" style="margin:-4px 0 8px">Same 21 integrity clauses (I-01 to I-21, IA-04 to IA-12) as the Author MSC validation. A failed clause deducts its severity points (critical 3 · major 1.5 · minor 0.75), a flagged clause half; the MSC passes when the score is above ${r.passThreshold}.</div>
+      <div class="muted small" style="margin:-4px 0 8px">Same 21 integrity clauses (I-01 to I-21, V-1 to V-9) as the Author MSC validation. A failed clause deducts its severity points (critical 3 · major 1.5 · minor 0.75), a flagged clause half; the MSC passes when the score is above ${r.passThreshold}.</div>
 
       ${areas.length ? `<div class="an-grid">
         <div>
