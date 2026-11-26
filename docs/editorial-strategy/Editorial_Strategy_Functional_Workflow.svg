@@ -1,0 +1,546 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3200" height="1640" viewBox="0 0 3200 1640" font-family="Segoe UI, Helvetica, Arial, sans-serif" xmlns:c2pa="http://c2pa.org/manifest">
+<defs><marker id="ah" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#374151"/></marker><marker id="ahs" markerWidth="10" markerHeight="10" refX="1" refY="5" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="#374151"/></marker></defs>
+<rect x="0" y="0" width="3200" height="1640" rx="0" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="2"/>
+<text x="60" y="52" font-size="30" fill="#111827" font-weight="bold" text-anchor="start">Unified Editorial Platform: Editorial Strategy functional workflow (8 modules)</text>
+<text x="60" y="82" font-size="15" fill="#4B5563" font-weight="normal" text-anchor="start">Schematic view of the primary use cases per module and how they hand off to each other. Source: GR v1, SIC v1, IA v1, TR v4, RD v1, OI v1. Contextual Workspaces and Workflow Coordination: requirement docs not available (TBD).</text>
+<rect x="60" y="110" width="3080" height="96" rx="10" fill="#F9FAFB" stroke="#6B7280" stroke-width="2" stroke-dasharray="10 6"/>
+<text x="80" y="142" font-size="17" fill="#374151" font-weight="bold" text-anchor="start">CONTEXTUAL WORKSPACES (CW)  ·  TBD, requirement doc not available</text>
+<text x="80" y="170" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start" font-style="italic">Participant-facing layer: each module's output is presented in role-specific workspaces (presentation, reading/annotation, context).</text>
+<rect x="1300" y="124" width="332" height="66" rx="8" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="1.2"/>
+<text x="1466" y="151" font-size="15" fill="#111827" font-weight="bold" text-anchor="middle">Author workspace</text>
+<text x="1466" y="174" font-size="13" fill="#6B7280" font-weight="normal" text-anchor="middle">guidance, readiness, intent</text>
+<rect x="1670" y="124" width="332" height="66" rx="8" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="1.2"/>
+<text x="1836" y="151" font-size="15" fill="#111827" font-weight="bold" text-anchor="middle">Editor workspace</text>
+<text x="1836" y="174" font-size="13" fill="#6B7280" font-weight="normal" text-anchor="middle">queue, context, integrity report</text>
+<rect x="2040" y="124" width="332" height="66" rx="8" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="1.2"/>
+<text x="2206" y="151" font-size="15" fill="#111827" font-weight="bold" text-anchor="middle">Reviewer workspace</text>
+<text x="2206" y="174" font-size="13" fill="#6B7280" font-weight="normal" text-anchor="middle">manuscript version, review</text>
+<rect x="2410" y="124" width="332" height="66" rx="8" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="1.2"/>
+<text x="2576" y="151" font-size="15" fill="#111827" font-weight="bold" text-anchor="middle">Staff / Ops workspace</text>
+<text x="2576" y="174" font-size="13" fill="#6B7280" font-weight="normal" text-anchor="middle">exceptions, escalations</text>
+<rect x="2780" y="124" width="332" height="66" rx="8" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="1.2"/>
+<text x="2946" y="151" font-size="15" fill="#111827" font-weight="bold" text-anchor="middle">Product / GTS</text>
+<text x="2946" y="174" font-size="13" fill="#6B7280" font-weight="normal" text-anchor="middle">insight &amp; experiments</text>
+<rect x="60" y="400" width="450" height="640" rx="10" fill="#ECFDF5" stroke="#0F766E" stroke-width="2"/>
+<path d="M60 410 a10 10 0 0 1 10 -10 h430 a10 10 0 0 1 10 10 v62 h-450 z" fill="#0F766E"/>
+<circle cx="94" cy="436" r="20" fill="#FFFFFF"/>
+<text x="94" y="443" font-size="20" fill="#0F766E" font-weight="bold" text-anchor="middle">1</text>
+<text x="126" y="432" font-size="19" fill="#FFFFFF" font-weight="bold" text-anchor="start">Guidance &amp; Readiness (GR)</text>
+<text x="126" y="456" font-size="14" fill="#E5E7EB" font-weight="normal" text-anchor="start">Author prepares &amp; submits</text>
+<circle cx="84" cy="499" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="98" y="504" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Contextual guidance</text>
+<rect x="464" y="488" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="476" y="503" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="84" cy="526" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="98" y="531" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Pre-submission feedback</text>
+<rect x="464" y="515" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="476" y="530" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="84" cy="553" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="98" y="558" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Completeness check</text>
+<rect x="464" y="542" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="476" y="557" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="84" cy="580" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="98" y="585" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Metadata readiness</text>
+<rect x="464" y="569" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="476" y="584" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="84" cy="607" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="98" y="612" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Explainable findings</text>
+<rect x="464" y="596" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="476" y="611" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="84" cy="634" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="98" y="639" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Author challenge / false positive</text>
+<rect x="464" y="623" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="476" y="638" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="84" cy="661" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="98" y="666" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Feedback prioritisation</text>
+<rect x="464" y="650" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="476" y="665" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="84" cy="688" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="98" y="693" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Focused correction &amp; reassessment</text>
+<rect x="464" y="677" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="476" y="692" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="84" cy="715" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="98" y="720" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Destination / scope guidance</text>
+<rect x="464" y="704" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="476" y="719" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="84" cy="742" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="98" y="747" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Author intent -&gt; TR</text>
+<rect x="464" y="731" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="476" y="746" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="84" cy="769" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="98" y="774" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Policy guidance</text>
+<rect x="464" y="758" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="476" y="773" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="84" cy="796" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="98" y="801" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Use IA determinations</text>
+<rect x="464" y="785" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="476" y="800" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="84" cy="823" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="98" y="828" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Readiness status record</text>
+<rect x="464" y="812" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="476" y="827" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="84" cy="850" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="98" y="855" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Configurable rules</text>
+<rect x="464" y="839" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="476" y="854" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="84" cy="877" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="98" y="882" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Readiness evidence -&gt; OI</text>
+<rect x="464" y="866" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="476" y="881" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<rect x="620" y="400" width="450" height="640" rx="10" fill="#FFFBEB" stroke="#B45309" stroke-width="2"/>
+<path d="M620 410 a10 10 0 0 1 10 -10 h430 a10 10 0 0 1 10 10 v62 h-450 z" fill="#B45309"/>
+<circle cx="654" cy="436" r="20" fill="#FFFFFF"/>
+<text x="654" y="443" font-size="20" fill="#B45309" font-weight="bold" text-anchor="middle">2</text>
+<text x="686" y="432" font-size="19" fill="#FFFFFF" font-weight="bold" text-anchor="start">Integrity Assurance (IA)</text>
+<text x="686" y="456" font-size="14" fill="#E5E7EB" font-weight="normal" text-anchor="start">Screen manuscript &amp; people</text>
+<circle cx="644" cy="499" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="658" y="504" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Screening profiles</text>
+<rect x="1024" y="488" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1036" y="503" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="644" cy="526" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="658" y="531" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Lifecycle screening &amp; re-screen</text>
+<rect x="1024" y="515" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1036" y="530" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="644" cy="553" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="658" y="558" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Provider-neutral integration</text>
+<rect x="1024" y="542" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1036" y="557" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="644" cy="580" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="658" y="585" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Similarity / plagiarism</text>
+<rect x="1024" y="569" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1036" y="584" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="644" cy="607" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="658" y="612" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Image integrity</text>
+<rect x="1024" y="596" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="1036" y="611" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="644" cy="634" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="658" y="639" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Citation integrity</text>
+<rect x="1024" y="623" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="1036" y="638" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="644" cy="661" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="658" y="666" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Data &amp; SI checks</text>
+<rect x="1024" y="650" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="1036" y="665" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="644" cy="688" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="658" y="693" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">AI-use disclosure</text>
+<rect x="1024" y="677" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="1036" y="692" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="644" cy="715" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="658" y="720" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Identity &amp; affiliation</text>
+<rect x="1024" y="704" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="1036" y="719" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="644" cy="742" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="658" y="747" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Conflict of interest</text>
+<rect x="1024" y="731" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1036" y="746" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="644" cy="769" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="658" y="774" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Sanctions screening</text>
+<rect x="1024" y="758" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="1036" y="773" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="644" cy="796" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="658" y="801" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Suspicious behaviour signals</text>
+<rect x="1024" y="785" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#6B7280" stroke-width="1.5"/>
+<text x="1036" y="800" font-size="12" fill="#6B7280" font-weight="bold" text-anchor="middle">N</text>
+<circle cx="644" cy="823" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="658" y="828" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Consolidated integrity report</text>
+<rect x="1024" y="812" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1036" y="827" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="644" cy="850" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="658" y="855" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Human review &amp; override</text>
+<rect x="1024" y="839" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1036" y="854" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="644" cy="877" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="658" y="882" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Risk-based escalation</text>
+<rect x="1024" y="866" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1036" y="881" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="644" cy="904" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="658" y="909" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Integrity continuity &amp; audit</text>
+<rect x="1024" y="893" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1036" y="908" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<rect x="1180" y="400" width="450" height="640" rx="10" fill="#EFF6FF" stroke="#1D4ED8" stroke-width="2"/>
+<path d="M1180 410 a10 10 0 0 1 10 -10 h430 a10 10 0 0 1 10 10 v62 h-450 z" fill="#1D4ED8"/>
+<circle cx="1214" cy="436" r="20" fill="#FFFFFF"/>
+<text x="1214" y="443" font-size="20" fill="#1D4ED8" font-weight="bold" text-anchor="middle">3</text>
+<text x="1246" y="432" font-size="19" fill="#FFFFFF" font-weight="bold" text-anchor="start">Triage &amp; Routing (TR)</text>
+<text x="1246" y="456" font-size="14" fill="#E5E7EB" font-weight="normal" text-anchor="start">Assign, assess, transfer</text>
+<circle cx="1204" cy="499" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1218" y="504" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Prioritised work queue</text>
+<rect x="1584" y="488" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1596" y="503" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1204" cy="526" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1218" y="531" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Decision-ready context</text>
+<rect x="1584" y="515" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1596" y="530" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1204" cy="553" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1218" y="558" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Scope / fit evidence</text>
+<rect x="1584" y="542" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="1596" y="557" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="1204" cy="580" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1218" y="585" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Special-status flags</text>
+<rect x="1584" y="569" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1596" y="584" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1204" cy="607" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1218" y="612" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Configurable editorial model</text>
+<rect x="1584" y="596" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1596" y="611" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1204" cy="634" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1218" y="639" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Explicit responsibility</text>
+<rect x="1584" y="623" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1596" y="638" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1204" cy="661" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1218" y="666" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Editor expertise</text>
+<rect x="1584" y="650" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1596" y="665" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1204" cy="688" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1218" y="693" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Editor capacity</text>
+<rect x="1584" y="677" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1596" y="692" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1204" cy="715" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1218" y="720" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Assignment constraints</text>
+<rect x="1584" y="704" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1596" y="719" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1204" cy="742" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1218" y="747" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Assignment modes</text>
+<rect x="1584" y="731" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1596" y="746" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1204" cy="769" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1218" y="774" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Reassignment</text>
+<rect x="1584" y="758" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1596" y="773" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1204" cy="796" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1218" y="801" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Author intent &amp; authorisation</text>
+<rect x="1584" y="785" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1596" y="800" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1204" cy="823" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1218" y="828" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Transfer destination assessment</text>
+<rect x="1584" y="812" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="1596" y="827" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="1204" cy="850" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="1218" y="855" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Portfolio routing models</text>
+<rect x="1584" y="839" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="1596" y="854" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="1204" cy="877" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1218" y="882" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Routing continuity</text>
+<rect x="1584" y="866" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1596" y="881" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1204" cy="904" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1218" y="909" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Receiving-journal authority</text>
+<rect x="1584" y="893" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1596" y="908" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1204" cy="931" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1218" y="936" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Routing recovery</text>
+<rect x="1584" y="920" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1596" y="935" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1204" cy="958" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1218" y="963" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Audit &amp; history visibility</text>
+<rect x="1584" y="947" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1596" y="962" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1204" cy="985" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1218" y="990" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Routing evidence -&gt; OI</text>
+<rect x="1584" y="974" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="1596" y="989" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<rect x="1740" y="400" width="450" height="640" rx="10" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2"/>
+<path d="M1740 410 a10 10 0 0 1 10 -10 h430 a10 10 0 0 1 10 10 v62 h-450 z" fill="#7C3AED"/>
+<circle cx="1774" cy="436" r="20" fill="#FFFFFF"/>
+<text x="1774" y="443" font-size="20" fill="#7C3AED" font-weight="bold" text-anchor="middle">4</text>
+<text x="1806" y="432" font-size="19" fill="#FFFFFF" font-weight="bold" text-anchor="start">Reviewer Discovery (RD)</text>
+<text x="1806" y="456" font-size="14" fill="#E5E7EB" font-weight="normal" text-anchor="start">Find &amp; select reviewers</text>
+<circle cx="1764" cy="499" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1778" y="504" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Expertise-based discovery</text>
+<rect x="2144" y="488" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="2156" y="503" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1764" cy="526" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="1778" y="531" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Expertise evidence &amp; uncertainty</text>
+<rect x="2144" y="515" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="2156" y="530" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="1764" cy="553" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="1778" y="558" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Beyond-known reviewers</text>
+<rect x="2144" y="542" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="2156" y="557" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="1764" cy="580" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="1778" y="585" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Broad / complementary sets</text>
+<rect x="2144" y="569" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="2156" y="584" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="1764" cy="607" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1778" y="612" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Candidate provenance</text>
+<rect x="2144" y="596" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="2156" y="611" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1764" cy="634" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1778" y="639" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Prior reviewer history</text>
+<rect x="2144" y="623" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="2156" y="638" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="1764" cy="661" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1778" y="666" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Separate assessment dimensions</text>
+<rect x="2144" y="650" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="2156" y="665" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1764" cy="688" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1778" y="693" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Ranked recommendations</text>
+<rect x="2144" y="677" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="2156" y="692" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1764" cy="715" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1778" y="720" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Explainable candidates</text>
+<rect x="2144" y="704" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="2156" y="719" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1764" cy="742" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1778" y="747" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Eligibility from IA</text>
+<rect x="2144" y="731" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="2156" y="746" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1764" cy="769" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="1778" y="774" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Identity disambiguation</text>
+<rect x="2144" y="758" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="2156" y="773" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="1764" cy="796" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1778" y="801" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Reviewer workload context</text>
+<rect x="2144" y="785" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="2156" y="800" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="1764" cy="823" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1778" y="828" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Editor control &amp; override</text>
+<rect x="2144" y="812" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="2156" y="827" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1764" cy="850" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1778" y="855" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Primary / alternates &amp; replenish</text>
+<rect x="2144" y="839" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="2156" y="854" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1764" cy="877" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="1778" y="882" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Configurable selection criteria</text>
+<rect x="2144" y="866" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="2156" y="881" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="1764" cy="904" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1778" y="909" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Selection evidence &amp; continuity</text>
+<rect x="2144" y="893" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="2156" y="908" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<rect x="2300" y="550" width="300" height="300" rx="10" fill="#FFFFFF" stroke="#111827" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="2450.0" y="590" font-size="18" fill="#111827" font-weight="bold" text-anchor="middle">Peer review &amp;</text>
+<text x="2450.0" y="614" font-size="18" fill="#111827" font-weight="bold" text-anchor="middle">editorial decision</text>
+<text x="2450.0" y="650" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="middle">Invitations, reviews, decision</text>
+<text x="2450.0" y="672" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="middle">executed via WC + CW</text>
+<text x="2450.0" y="694" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="middle"></text>
+<text x="2450.0" y="716" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="middle">Revision  →  back to GR / IA</text>
+<text x="2450.0" y="738" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="middle">(re-check affected items)</text>
+<text x="2450.0" y="760" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="middle"></text>
+<text x="2450.0" y="782" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="middle">Accept  →  Production</text>
+<text x="2450.0" y="804" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="middle">(SIC production continuity)</text>
+<line x1="514" y1="550" x2="616" y2="550" stroke="#374151" stroke-width="2.2" marker-end="url(#ah)"/>
+<rect x="509.0" y="575.0" width="112" height="54" rx="6" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1"/>
+<text x="565.0" y="590.0" font-size="12" fill="#111827" font-weight="normal" text-anchor="middle">Submission +</text>
+<text x="565.0" y="606.0" font-size="12" fill="#111827" font-weight="normal" text-anchor="middle">readiness</text>
+<text x="565.0" y="622.0" font-size="12" fill="#111827" font-weight="normal" text-anchor="middle">status</text>
+<line x1="1074" y1="550" x2="1176" y2="550" stroke="#374151" stroke-width="2.2" marker-end="url(#ah)"/>
+<rect x="1069.0" y="575.0" width="112" height="54" rx="6" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1"/>
+<text x="1125.0" y="590.0" font-size="12" fill="#111827" font-weight="normal" text-anchor="middle">Consolidated</text>
+<text x="1125.0" y="606.0" font-size="12" fill="#111827" font-weight="normal" text-anchor="middle">integrity</text>
+<text x="1125.0" y="622.0" font-size="12" fill="#111827" font-weight="normal" text-anchor="middle">report/status</text>
+<line x1="1634" y1="550" x2="1736" y2="550" stroke="#374151" stroke-width="2.2" marker-end="url(#ah)"/>
+<rect x="1629.0" y="575.0" width="112" height="54" rx="6" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1"/>
+<text x="1685.0" y="590.0" font-size="12" fill="#111827" font-weight="normal" text-anchor="middle">Handling Editor</text>
+<text x="1685.0" y="606.0" font-size="12" fill="#111827" font-weight="normal" text-anchor="middle">+ advance to</text>
+<text x="1685.0" y="622.0" font-size="12" fill="#111827" font-weight="normal" text-anchor="middle">peer review</text>
+<line x1="2194" y1="550" x2="2296" y2="550" stroke="#374151" stroke-width="2.2" marker-end="url(#ah)"/>
+<rect x="2189.0" y="575.0" width="112" height="54" rx="6" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1"/>
+<text x="2245.0" y="590.0" font-size="12" fill="#111827" font-weight="normal" text-anchor="middle">Primary +</text>
+<text x="2245.0" y="606.0" font-size="12" fill="#111827" font-weight="normal" text-anchor="middle">alternate</text>
+<text x="2245.0" y="622.0" font-size="12" fill="#111827" font-weight="normal" text-anchor="middle">reviewers</text>
+<path d="M375.0 398 C 375.0 250, 1315.0 250, 1315.0 396" fill="none" stroke="#374151" stroke-width="2.2" marker-end="url(#ah)"/>
+<rect x="627.88" y="260.5" width="434.24000000000007" height="23" rx="6" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1"/>
+<text x="845.0" y="276.5" font-size="13" fill="#111827" font-weight="normal" text-anchor="middle">Author intent, acceptable journals &amp; routing authorisation</text>
+<path d="M935.0 398 C 935.0 300, 1875.0 300, 1875.0 396" fill="none" stroke="#374151" stroke-width="2.2" marker-end="url(#ah)"/>
+<rect x="1036.52" y="310.5" width="426.96000000000004" height="23" rx="6" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1"/>
+<text x="1250" y="326.5" font-size="13" fill="#111827" font-weight="normal" text-anchor="middle">COI / sanctions / identity results → reviewer eligibility</text>
+<path d="M1600 398 C 1600 330, 1690 330, 1670 460" fill="none" stroke="#1D4ED8" stroke-width="2.2" marker-end="url(#ah)"/>
+<rect x="1653.44" y="281.0" width="153.12" height="38" rx="6" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1"/>
+<text x="1730" y="296.0" font-size="12" fill="#1D4ED8" font-weight="normal" text-anchor="middle">Transfer / reroute to</text>
+<text x="1730" y="312.0" font-size="12" fill="#1D4ED8" font-weight="normal" text-anchor="middle">another ACS journal</text>
+<path d="M1292.5 1042 C 1292.5 1100, 262.5 1100, 262.5 1044" fill="none" stroke="#B91C1C" stroke-width="2.2" stroke-dasharray="7 5" marker-end="url(#ah)"/>
+<rect x="596.78" y="1091.0" width="361.44000000000005" height="22" rx="6" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1"/>
+<text x="777.5" y="1106.0" font-size="12" fill="#B91C1C" font-weight="normal" text-anchor="middle">Return to author: readiness fix (focused correction)</text>
+<path d="M957.5 1042 C 957.5 1070, 339.0 1070, 339.0 1044" fill="none" stroke="#B45309" stroke-width="2.2" stroke-dasharray="7 5" marker-end="url(#ah)"/>
+<text x="695" y="1080" font-size="12" fill="#B45309" font-weight="normal" text-anchor="start">Determinations → readiness impact</text>
+<rect x="60" y="1170" width="2560" height="92" rx="10" fill="#F9FAFB" stroke="#6B7280" stroke-width="2" stroke-dasharray="10 6"/>
+<text x="80" y="1202" font-size="17" fill="#374151" font-weight="bold" text-anchor="start">WORKFLOW COORDINATION (WC)  ·  TBD, requirement doc not available</text>
+<text x="80" y="1230" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start" font-style="italic">Orchestration layer owning scheduling, reminders, handoffs, SLAs, escalation and process execution (as assigned by the other docs).</text>
+<line x1="120" y1="1044" x2="120" y2="1166" stroke="#374151" stroke-width="2.2" marker-end="url(#ah)"/>
+<text x="130" y="1156" font-size="12" fill="#374151" font-weight="normal" text-anchor="start">readiness actions / reviews</text>
+<line x1="680" y1="1044" x2="680" y2="1166" stroke="#374151" stroke-width="2.2" marker-end="url(#ah)"/>
+<text x="690" y="1156" font-size="12" fill="#374151" font-weight="normal" text-anchor="start">risk-based escalation (IA-16)</text>
+<line x1="1240" y1="1044" x2="1240" y2="1166" stroke="#374151" stroke-width="2.2" marker-end="url(#ah)"/>
+<text x="1250" y="1156" font-size="12" fill="#374151" font-weight="normal" text-anchor="start">handoffs, reassignment</text>
+<line x1="1800" y1="1044" x2="1800" y2="1166" stroke="#374151" stroke-width="2.2" marker-end="url(#ah)"/>
+<text x="1810" y="1156" font-size="12" fill="#374151" font-weight="normal" text-anchor="start">invite sequencing, timeouts</text>
+<rect x="60" y="1290" width="2560" height="170" rx="10" fill="#F1F5F9" stroke="#334155" stroke-width="2"/>
+<path d="M60 1300 a10 10 0 0 1 10 -10 h2540 a10 10 0 0 1 10 10 v40 h-2560 z" fill="#334155"/>
+<text x="80" y="1323" font-size="18" fill="#FFFFFF" font-weight="bold" text-anchor="start">STRUCTURED INFORMATION &amp; CONTINUITY (SIC)  ·  information foundation used by every module</text>
+<text x="2600" y="1323" font-size="14" fill="#E5E7EB" font-weight="normal" text-anchor="end">▲ authoritative content, versions, change signals, provenance      ▼ findings, decisions, history</text>
+<circle cx="88.0" cy="1369" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="102.0" y="1374" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Manuscript information model</text>
+<rect x="474.0" y="1358" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="486.0" y="1373" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="88.0" cy="1399" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="102.0" y="1404" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Metadata &amp; identifiers</text>
+<rect x="474.0" y="1388" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="486.0" y="1403" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="88.0" cy="1429" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="102.0" y="1434" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Persistent manuscript ID</text>
+<rect x="474.0" y="1418" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="486.0" y="1433" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="592.0" cy="1369" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="606.0" y="1374" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Related-record links</text>
+<rect x="978.0" y="1358" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="990.0" y="1373" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="592.0" cy="1399" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="606.0" y="1404" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Lifecycle history</text>
+<rect x="978.0" y="1388" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="990.0" y="1403" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="592.0" cy="1429" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="606.0" y="1434" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Component versioning</text>
+<rect x="978.0" y="1418" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="990.0" y="1433" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1096.0" cy="1369" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1110.0" y="1374" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Authoritative state</text>
+<rect x="1482.0" y="1358" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1494.0" y="1373" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1096.0" cy="1399" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1110.0" y="1404" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Change detection / compare</text>
+<rect x="1482.0" y="1388" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1494.0" y="1403" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1096.0" cy="1429" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="1110.0" y="1434" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Correction &amp; reconciliation</text>
+<rect x="1482.0" y="1418" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="1494.0" y="1433" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="1600.0" cy="1369" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1614.0" y="1374" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Transfer continuity</text>
+<rect x="1986.0" y="1358" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1998.0" y="1373" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1600.0" cy="1399" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="1614.0" y="1404" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Data service to modules &amp; providers</text>
+<rect x="1986.0" y="1388" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="1998.0" y="1403" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="1600.0" cy="1429" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="1614.0" y="1434" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Provider-independent portability</text>
+<rect x="1986.0" y="1418" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="1998.0" y="1433" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="2104.0" cy="1369" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="2118.0" y="1374" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Provenance &amp; derived data</text>
+<rect x="2490.0" y="1358" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="2502.0" y="1373" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="2104.0" cy="1399" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="2118.0" y="1404" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Preserve vs. present (access)</text>
+<rect x="2490.0" y="1388" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="2502.0" y="1403" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="2104.0" cy="1429" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="2118.0" y="1434" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Production continuity</text>
+<rect x="2490.0" y="1418" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="2502.0" y="1433" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<line x1="450" y1="1044" x2="450" y2="1286" stroke="#334155" stroke-width="2.2" stroke-dasharray="5 4" marker-end="url(#ah)" marker-start="url(#ahs)"/>
+<line x1="1010" y1="1044" x2="1010" y2="1286" stroke="#334155" stroke-width="2.2" stroke-dasharray="5 4" marker-end="url(#ah)" marker-start="url(#ahs)"/>
+<line x1="1570" y1="1044" x2="1570" y2="1286" stroke="#334155" stroke-width="2.2" stroke-dasharray="5 4" marker-end="url(#ah)" marker-start="url(#ahs)"/>
+<line x1="2130" y1="1044" x2="2130" y2="1286" stroke="#334155" stroke-width="2.2" stroke-dasharray="5 4" marker-end="url(#ah)" marker-start="url(#ahs)"/>
+<rect x="2650" y="220" width="490" height="1240" rx="10" fill="#F0FDF4" stroke="#15803D" stroke-width="2"/>
+<path d="M2650 230 a10 10 0 0 1 10 -10 h470 a10 10 0 0 1 10 10 v62 h-490 z" fill="#15803D"/>
+<text x="2666" y="252" font-size="19" fill="#FFFFFF" font-weight="bold" text-anchor="start">Operational Intelligence (OI)</text>
+<text x="2666" y="276" font-size="14" fill="#E5E7EB" font-weight="normal" text-anchor="start">Observes the whole flow</text>
+<circle cx="2672" cy="325" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="2686" y="330" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">End-to-end flow view</text>
+<rect x="3096" y="314" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="3108" y="329" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="2672" cy="352" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="2686" y="357" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Flow metrics</text>
+<rect x="3096" y="341" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="3108" y="356" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="2672" cy="379" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="2686" y="384" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Work state &amp; dependencies</text>
+<rect x="3096" y="368" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="3108" y="383" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="2672" cy="406" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="2686" y="411" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Trends &amp; history</text>
+<rect x="3096" y="395" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="3108" y="410" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="2672" cy="433" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="2686" y="438" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Bottleneck detection</text>
+<rect x="3096" y="422" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="3108" y="437" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="2672" cy="460" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="2686" y="465" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">SLA / threshold monitoring</text>
+<rect x="3096" y="449" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="3108" y="464" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="2672" cy="487" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="2686" y="492" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Exception intelligence</text>
+<rect x="3096" y="476" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="3108" y="491" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="2672" cy="514" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="2686" y="519" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Capacity intelligence</text>
+<rect x="3096" y="503" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="3108" y="518" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<circle cx="2672" cy="541" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="2686" y="546" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Admin effort &amp; rework</text>
+<rect x="3096" y="530" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#6B7280" stroke-width="1.5"/>
+<text x="3108" y="545" font-size="12" fill="#6B7280" font-weight="bold" text-anchor="middle">N</text>
+<circle cx="2672" cy="568" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="2686" y="573" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Scalability</text>
+<rect x="3096" y="557" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#6B7280" stroke-width="1.5"/>
+<text x="3108" y="572" font-size="12" fill="#6B7280" font-weight="bold" text-anchor="middle">N</text>
+<circle cx="2672" cy="595" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="2686" y="600" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Reviewer funnel</text>
+<rect x="3096" y="584" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="3108" y="599" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="2672" cy="622" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="2686" y="627" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Adoption &amp; experience</text>
+<rect x="3096" y="611" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#6B7280" stroke-width="1.5"/>
+<text x="3108" y="626" font-size="12" fill="#6B7280" font-weight="bold" text-anchor="middle">N</text>
+<circle cx="2672" cy="649" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="2686" y="654" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Recommendation &amp; automation outcomes</text>
+<rect x="3096" y="638" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="3108" y="653" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="2672" cy="676" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="2686" y="681" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Cross-journal comparison</text>
+<rect x="3096" y="665" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="3108" y="680" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<circle cx="2672" cy="703" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="2686" y="708" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Experimentation</text>
+<rect x="3096" y="692" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#6B7280" stroke-width="1.5"/>
+<text x="3108" y="707" font-size="12" fill="#6B7280" font-weight="bold" text-anchor="middle">N</text>
+<circle cx="2672" cy="730" r="6" fill="#FFFFFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="2686" y="735" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Provider &amp; cost intelligence</text>
+<rect x="3096" y="719" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#6B7280" stroke-width="1.5"/>
+<text x="3108" y="734" font-size="12" fill="#6B7280" font-weight="bold" text-anchor="middle">N</text>
+<circle cx="2672" cy="757" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="2686" y="762" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Trusted, scoped evidence</text>
+<rect x="3096" y="746" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="3108" y="761" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<text x="2666" y="820" font-size="13" fill="#15803D" font-weight="bold" text-anchor="start">Inputs: events &amp; evidence from</text>
+<text x="2666" y="840" font-size="13" fill="#15803D" font-weight="normal" text-anchor="start">GR, IA, TR, RD, WC, SIC</text>
+<text x="2666" y="872" font-size="13" fill="#15803D" font-weight="bold" text-anchor="start">Outputs: capacity &amp; workload</text>
+<text x="2666" y="892" font-size="13" fill="#15803D" font-weight="normal" text-anchor="start">context to TR + RD; insight</text>
+<text x="2666" y="912" font-size="13" fill="#15803D" font-weight="normal" text-anchor="start">and experiment results</text>
+<line x1="80" y1="386" x2="2646" y2="386" stroke="#15803D" stroke-width="2.2" stroke-dasharray="5 4" marker-end="url(#ah)"/>
+<text x="90" y="378" font-size="12" fill="#15803D" font-weight="bold" text-anchor="start">evidence →  OI</text>
+<line x1="80" y1="400" x2="80" y2="386" stroke="#15803D" stroke-width="2.2" stroke-dasharray="5 4"/>
+<line x1="640" y1="400" x2="640" y2="386" stroke="#15803D" stroke-width="2.2" stroke-dasharray="5 4"/>
+<line x1="1200" y1="400" x2="1200" y2="386" stroke="#15803D" stroke-width="2.2" stroke-dasharray="5 4"/>
+<line x1="1760" y1="400" x2="1760" y2="386" stroke="#15803D" stroke-width="2.2" stroke-dasharray="5 4"/>
+<rect x="60" y="1490" width="3080" height="120" rx="10" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1"/>
+<text x="80" y="1522" font-size="16" fill="#111827" font-weight="bold" text-anchor="start">Legend</text>
+<circle cx="88" cy="1552" r="6" fill="#16A34A" stroke="#16A34A" stroke-width="2"/>
+<text x="102" y="1557" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Needed for MVP</text>
+<circle cx="288" cy="1552" r="6" fill="#FFF" stroke="#9CA3AF" stroke-width="2"/>
+<text x="302" y="1557" font-size="14" fill="#4B5563" font-weight="normal" text-anchor="start">Post-MVP</text>
+<rect x="460" y="1537" width="24" height="20" rx="4" fill="#FFF" stroke="#B91C1C" stroke-width="1.5"/>
+<text x="472" y="1552" font-size="12" fill="#B91C1C" font-weight="bold" text-anchor="middle">M</text>
+<text x="494" y="1553" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Must have</text>
+<rect x="650" y="1537" width="24" height="20" rx="4" fill="#FFF" stroke="#D97706" stroke-width="1.5"/>
+<text x="662" y="1552" font-size="12" fill="#D97706" font-weight="bold" text-anchor="middle">S</text>
+<text x="684" y="1553" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Should have</text>
+<rect x="840" y="1537" width="24" height="20" rx="4" fill="#FFF" stroke="#6B7280" stroke-width="1.5"/>
+<text x="852" y="1552" font-size="12" fill="#6B7280" font-weight="bold" text-anchor="middle">N</text>
+<text x="874" y="1553" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Nice to have</text>
+<line x1="1060" y1="1548" x2="1130" y2="1548" stroke="#374151" stroke-width="2.2" marker-end="url(#ah)"/>
+<text x="1140" y="1553" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Primary handoff</text>
+<line x1="1300" y1="1548" x2="1370" y2="1548" stroke="#B91C1C" stroke-width="2.2" stroke-dasharray="7 5" marker-end="url(#ah)"/>
+<text x="1380" y="1553" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Return / feedback loop</text>
+<line x1="1590" y1="1548" x2="1660" y2="1548" stroke="#334155" stroke-width="2.2" stroke-dasharray="5 4" marker-end="url(#ah)" marker-start="url(#ahs)"/>
+<text x="1670" y="1553" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Read / write to SIC</text>
+<line x1="1860" y1="1548" x2="1930" y2="1548" stroke="#15803D" stroke-width="2.2" stroke-dasharray="5 4" marker-end="url(#ah)"/>
+<text x="1940" y="1553" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">Evidence to OI</text>
+<rect x="2100" y="1537" width="60" height="22" rx="4" fill="#F9FAFB" stroke="#6B7280" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="2172" y="1553" font-size="14" fill="#111827" font-weight="normal" text-anchor="start">TBD module (no requirement doc)</text>
+<text x="80" y="1590" font-size="13" fill="#6B7280" font-weight="normal" text-anchor="start">Numbers 1 to 4 show the typical order of a manuscript; activities may be combined, reordered or skipped by journal configuration (TR v4 §E). Use-case labels match the 'Use Case Title' rows in Editorial_Strategy_Use_Cases.xlsx.</text>
+<metadata><c2pa:manifest>AAAWgmp1bWIAAAAeanVtZGMycGEAEQAQgAAAqgA4m3EDYzJwYQAAABZcanVtYgAAAEdqdW1kYzJtYQARABCAAACqADibcQN1cm46YzJwYToyNWUzZWM3NS0xYzI0LTQxZTktYmU4Zi1hMDdhZDkyYjA4MmIAAAADl2p1bWIAAAApanVtZGMyYXMAEQAQgAAAqgA4m3EDYzJwYS5hc3NlcnRpb25zAAAAALxqdW1iAAAARGp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuaW5ncmVkaWVudC52MwAAAAAYYzJzaLMVQYhUqrBhS/md6OKTNOAAAABwY2JvcqNpZGM6Zm9ybWF0bWltYWdlL3N2Zyt4bWxqaW5zdGFuY2VJRHgseG1wOmlpZDpmNWI5ZDMyMi1mOTY2LTQyZDktOTZkMS1iMmUzNmFhNzQ4MzhscmVsYXRpb25zaGlwaHBhcmVudE9mAAAB4mp1bWIAAABBanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5hY3Rpb25zLnYyAAAAABhjMnNoNN4yCJVq2wtg4ZWvsAdXDgAAAZljYm9yomdhY3Rpb25zgqJmYWN0aW9ua2MycGEub3BlbmVkanBhcmFtZXRlcnOha2luZ3JlZGllbnRzgaJjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFggH4UF4XrunW2vVWOp1O+4EVdM/h4kLOy3+I2WaZi/ZHCkZmFjdGlvbngdY29tLmFudGhyb3BpYy5jbGF1ZGUucHJvdmlkZWRqcGFyYW1ldGVyc6F4H2NvbS5hbnRocm9waWMub3JpZ2luLWNvbmZpZGVuY2VndW5rbm93bmtkZXNjcmlwdGlvbnhmQ2xhdWRlIHByb3ZpZGVkIHRoaXMgZmlsZSBhdCB0aGUgcmVxdWVzdCBvZiBhIHVzZXIgYW5kIG1heSBoYXZlIGNyZWF0ZWQgb3IgbW9kaWZpZWQgdGhlIGZpbGUgY29udGVudHMubXNvZnR3YXJlQWdlbnShZG5hbWVmQ2xhdWRlcmFsbEFjdGlvbnNJbmNsdWRlZPUAAADIanVtYgAAAEBqdW1kY2JvcgARABCAAACqADibcRNjMnBhLmhhc2guZGF0YQAAAAAYYzJzaAVk3Tz2cYyxbDf4QzmUjR4AAACAY2JvcqVjYWxnZnNoYTI1NmNwYWRMAAAAAAAAAAAAAAAAZGhhc2hYIF81CW/oD3SPl/fd39LCHZohMCtgiwj0buHy625slo2QZG5hbWVuanVtYmYgbWFuaWZlc3RqZXhjbHVzaW9uc4GiZXN0YXJ0GeqlZmxlbmd0aBkeBAAAAj5qdW1iAAAAJ2p1bWRjMmNsABEAEIAAAKoAOJtxA2MycGEuY2xhaW0udjIAAAACD2Nib3KlY2FsZ2ZzaGEyNTZpc2lnbmF0dXJleE1zZWxmI2p1bWJmPS9jMnBhL3VybjpjMnBhOjI1ZTNlYzc1LTFjMjQtNDFlOS1iZThmLWEwN2FkOTJiMDgyYi9jMnBhLnNpZ25hdHVyZWppbnN0YW5jZUlEeCx4bXA6aWlkOmVmYzY2YjgzLWYwZDAtNDZkOS1hMmUxLTJkMDczN2ZhZGJhMXJjcmVhdGVkX2Fzc2VydGlvbnODomN1cmx4LXNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuaW5ncmVkaWVudC52M2RoYXNoWCAfhQXheu6dba9VY6nU77gRV0z+HiQs7Lf4jZZpmL9kcKJjdXJseCpzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmFjdGlvbnMudjJkaGFzaFggVVwmjBSVAuzQwQ6SBVMnJcWUuXBJQF6zvwctEARrDFWiY3VybHgpc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5oYXNoLmRhdGFkaGFzaFggMU2uX6SUTpHzfVO1sZrCmNGm5NF7NG0VRVv9M+nluKx0Y2xhaW1fZ2VuZXJhdG9yX2luZm+jZG5hbWVvQW50aHJvcGljIEZpbGVzZ3ZlcnNpb25lMS4wLjBrc3BlY1ZlcnNpb25lMi40LjAAABA4anVtYgAAAChqdW1kYzJjcwARABCAAACqADibcQNjMnBhLnNpZ25hdHVyZQAAABAIY2JvctKEWQISogEmGCFZAgowggIGMIIBjaADAgECAhRA5aAK7sI50L64g/oGQgU9Z1UTADAKBggqhkjOPQQDAzBJMRcwFQYDVQQKEw5BbnRocm9waWMsIFBCQzEuMCwGA1UEAxMlQW50aHJvcGljIENvbnRlbnQgQ3JlZGVudGlhbHMgUm9vdCBDQTAeFw0yNjA4MDcxODQzNTZaFw0yODA4MDYxOTQzNTZaMEQxFzAVBgNVBAoTDkFudGhyb3BpYywgUEJDMSkwJwYDVQQDEyBBbnRocm9waWMgQ2xhdWRlIENvbnRlbnQgU2lnbmluZzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABJh6CmvLUBgFFNU0vUKlOVtE6djd17L5SuwX0LemFisBM3dkd/3cyjxFA3Qo5S46fX0/ihY0VZ7mfb9KF703t5OjWDBWMA4GA1UdDwEB/wQEAwIHgDAVBgNVHSUEDjAMBgorBgEEAYPoXgIBMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAUzlHiBIFOZFsj+OPEz5o+nMHXXMIwCgYIKoZIzj0EAwMDZwAwZAIwMXMdFJ4BetLLVY7ORuE9noqbbAZOZn/aArXyTwFAZfKrPzxF2vPoJNf1+UCdg1XGAjBwX1zd9WGqYkqmL5SFqw1QySjr1zJfpJM9+1rdDwSPLMOPOjKuiXjoU/pUUeG9RwmhY3BhZFkNngAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPZYQPk2ja3B2m3yev9mC/g3ijD7ojE+GPi3OlFqJag9sypPKmvbAbK5KgD42VHiKpmdpcWPvxTTUIrwKLx8rGQDhvA=</c2pa:manifest></metadata></svg>
